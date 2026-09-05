@@ -275,7 +275,12 @@ function MapPools() {
           className="dispute pool"
           key={mode}
           open={open[mode]}
-          onToggle={(e) => setOpen((o) => ({ ...o, [mode]: e.currentTarget.open }))}
+          // Read the flag here, not in the updater: React clears currentTarget
+          // once the handler returns, and the updater runs a render later.
+          onToggle={(e) => {
+            const isOpen = e.currentTarget.open;
+            setOpen((o) => (o[mode] === isOpen ? o : { ...o, [mode]: isOpen }));
+          }}
         >
           <summary className="dispute-head">
             <strong>{mode}</strong>
