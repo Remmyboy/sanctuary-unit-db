@@ -60,6 +60,18 @@ function MatchRoom() {
     if (match.status !== 'in_progress') clearOpenMatch(matchId);
   }, [match, matchId]);
 
+  // Auto-launch: the ding is only there to get you back to the browser
+  // before the countdown runs out. Once it has, the game itself is what has
+  // your attention — a ding still going then just rings under the match, and
+  // nobody is going to alt-tab out to click "OK, I'm here".
+  const countdownGone =
+    match?.mmMode === 'auto' &&
+    match.countdownEndsAt !== null &&
+    secondsUntil(match.countdownEndsAt, now) === 0;
+  useEffect(() => {
+    if (countdownGone) stopMatchAlert();
+  }, [countdownGone]);
+
   const matchRef = useRef(match);
   useEffect(() => {
     matchRef.current = match;
