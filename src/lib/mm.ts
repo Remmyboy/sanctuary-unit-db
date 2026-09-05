@@ -34,6 +34,11 @@ export const TICKET_IDENTITY = 'sanctuarydb-ladder';
 
 export const LAUNCHABLE_WINDOW_S = 15; // a heartbeat older than this means the game is gone
 export const COUNTDOWN_S = 10;
+// The gate at the end of the countdown is stricter than LAUNCHABLE_WINDOW_S
+// and has no constant of its own: it wants a heartbeat since the match was
+// made (see not_startable_reason in 0012). Ten seconds of countdown is one to
+// two heartbeats, and 15 s of tolerance would pass a game closed the moment
+// the match formed.
 export const SESSION_TTL_H = 6;
 export const TIMEOUT_SESSION_S = 20; // host must post the lobby's session id
 export const TIMEOUT_JOIN_S = 30; // joiner must report `joined` after the session id

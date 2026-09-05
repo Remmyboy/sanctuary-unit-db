@@ -60,9 +60,14 @@ ready") but never gates queueing on it.
   launch — it only reports the result when the game ends. `map` is `null`,
   `factions` and `slots` are empty on manual matches.
 - `auto` matches start in `countdown` (10 s, site-owned, cancellable on the
-  site). At zero, if both players are still launchable the status becomes
+  site). At zero, if both players are still startable the status becomes
   `launch`; otherwise the match **falls back to `mode: manual`** with `reason`
   saying who dropped ("Skoub closed the game, so host manually").
+- **Startable** is stricter than launchable: the mod has to have heartbeated
+  _since the match was made_, not merely in the last 15 s. Ten seconds of
+  countdown is one to two heartbeats, so a running game has always checked in
+  — and a game closed the moment the match formed, whose last heartbeat is
+  still under 15 s old at zero, is caught rather than launched into nothing.
 - The heartbeat keeps returning an ended auto match (`cancelled`/`failed`) for
   ten minutes after it was created, so a mod mid-launch learns to stop.
 - Match ids are the ladder's UUIDs.
@@ -97,6 +102,11 @@ Timeouts after `launch`, enforced lazily by every poll (site or mod):
 | host `sessionId` | 20 s                   | "Remmy's game could not create a lobby" |
 | joiner `joined`  | 30 s after `sessionId` | "Skoub didn't join the lobby"           |
 | both `started`   | 60 s after `launch`    | "The game didn't start"                 |
+
+Unless a mod has gone quiet (no heartbeat for 15 s), in which case the match
+**falls back to `mode: manual`** instead of failing — someone closed their
+game rather than the launch breaking, and the pair still have a match they
+can host by hand.
 
 A failed or cancelled auto match is a cancelled ladder match: no rating
 change, and both players are free to queue again.
