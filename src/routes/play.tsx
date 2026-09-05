@@ -6,7 +6,7 @@
 // backend (the static e2e build).
 
 import { useEffect, useRef, useState } from 'react';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
 import { AlertSettings } from '../components/AlertSettings';
 import { QueueCard } from '../components/QueueCard';
 import { ReporterCard } from '../components/ReporterCard';
@@ -55,13 +55,16 @@ export const Route = createFileRoute('/play')({
 
 function PlayPage() {
   const [me, setMe] = useState<Me | null | undefined>(undefined);
-  const { status, joinedAt } = useQueueState();
+  const { status, fetchedAt, joinedAt } = useQueueState();
   const [counts, setCounts] = useState<QueueCounts | null>(null);
   const [busy, setBusy] = useState<Mode | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [factions, setFactions] = useState<Faction[]>(loadFactions);
   const navigate = useNavigate();
   const alive = useRef(true);
+  // The answer already in hand when this page opened: the redirect below
+  // waits for a newer one.
+  const cached = useRef(fetchedAt);
 
   useEffect(() => {
     alive.current = true;
@@ -89,11 +92,17 @@ function PlayPage() {
   // whether it just formed or it's one from earlier. You can't queue with
   // one open anyway, and the match room links back here once it's done.
   // (The banner handles the alert for a match that formed from a queue.)
+  //
+  // Only ever on an answer that arrived since this page opened. The shared
+  // status is a cache, and nothing polls it while you are in a match, so
+  // coming here from the room of the game you just finished it still names
+  // that match for a moment — redirecting on that is what sent "Play again"
+  // straight back into the game you had just played.
   useEffect(() => {
-    if (status?.matchId) {
+    if (fetchedAt !== cached.current && status?.matchId) {
       void navigate({ to: '/ladder/match/$matchId', params: { matchId: status.matchId }, replace: true });
     }
-  }, [status?.matchId, navigate]);
+  }, [status?.matchId, fetchedAt, navigate]);
 
   const act = async (mode: Mode, fn: () => Promise<PlayStatus>) => {
     setBusy(mode);
@@ -131,6 +140,16 @@ function PlayPage() {
               Sign in through Steam
             </a>
           </div>
+        )}
+
+        {status?.settlingMatchId && (
+          <p className="queue-widget play-settling">
+            Your last game's result hasn't landed yet — queue away, and{' '}
+            <Link to="/ladder/match/$matchId" params={{ matchId: status.settlingMatchId }}>
+              confirm or dispute it
+            </Link>{' '}
+            when you get a moment.
+          </p>
         )}
 
         <div className="queue-grid">

@@ -9,6 +9,7 @@ import { Link, createFileRoute } from '@tanstack/react-router';
 import { loadMe } from '../lib/auth';
 import { stopMatchAlert, useMatchAlert } from '../lib/match-alert';
 import { launchProgress } from '../lib/mm';
+import { clearOpenMatch } from '../lib/queue-watch';
 import { useNow } from '../lib/use-now';
 import { matchCancel, matchConfirm, matchDispute, matchGet, matchReport } from '../server/match-fns';
 import type { MatchParticipant, MatchView, Me } from '../lib/ladder-types';
@@ -48,10 +49,28 @@ function MatchRoom() {
     };
   }, []);
 
-  // A match that's over has nothing left to announce.
   useEffect(() => {
-    if (match && !OPEN.includes(match.status)) stopMatchAlert();
-  }, [match]);
+    if (!match) return;
+    // A match that's over has nothing left to announce.
+    if (!OPEN.includes(match.status)) stopMatchAlert();
+    // The app-wide queue status only names a game in progress, and nothing
+    // polls it while you're in one — so from the moment the result is in it
+    // goes on naming this match until told otherwise, and the Play page
+    // bounces "Play again" straight back here.
+    if (match.status !== 'in_progress') clearOpenMatch(matchId);
+  }, [match, matchId]);
+
+  // Auto-launch: the ding is only there to get you back to the browser
+  // before the countdown runs out. Once it has, the game itself is what has
+  // your attention — a ding still going then just rings under the match, and
+  // nobody is going to alt-tab out to click "OK, I'm here".
+  const countdownGone =
+    match?.mmMode === 'auto' &&
+    match.countdownEndsAt !== null &&
+    secondsUntil(match.countdownEndsAt, now) === 0;
+  useEffect(() => {
+    if (countdownGone) stopMatchAlert();
+  }, [countdownGone]);
 
   const matchRef = useRef(match);
   useEffect(() => {

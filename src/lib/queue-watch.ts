@@ -21,6 +21,9 @@ const QUEUED_HINT = 'sdb.queued';
 
 export interface QueueState {
   status: PlayStatus | null;
+  // When that status arrived. A page that opens on a cached answer can
+  // tell it apart from one polled since — see the Play page redirect.
+  fetchedAt: number | null;
   // Local "joined at" anchors derived from each answer, so timers tick
   // every second and re-sync on every poll.
   joinedAt: Record<Mode, number | null>;
@@ -31,6 +34,7 @@ export interface QueueState {
 
 let state: QueueState = {
   status: null,
+  fetchedAt: null,
   joinedAt: { '1v1': null, '2v2': null, '3v3': null },
   newMatchId: null,
 };
@@ -79,7 +83,7 @@ export function applyStatus(s: PlayStatus): void {
   if (newMatchId) startMatchAlert(newMatchId);
   wasQueued = queued;
   writeHint(queued);
-  state = { status: s, joinedAt, newMatchId: newMatchId ?? state.newMatchId };
+  state = { status: s, fetchedAt: at, joinedAt, newMatchId: newMatchId ?? state.newMatchId };
   emit();
   schedule();
 }
@@ -92,6 +96,18 @@ export function markJoining(): void {
 export function consumeNewMatch(): void {
   if (state.newMatchId === null) return;
   state = { ...state, newMatchId: null };
+  emit();
+}
+
+// The match room, once the game it is showing has been played. Nothing polls
+// the queue while you are in a match — you are not queued — so the last
+// answer goes on naming that match for as long as the tab lives, and the
+// Play page would send you straight back into it. This is no more than what
+// the next poll would say, early.
+export function clearOpenMatch(matchId: string): void {
+  const s = state.status;
+  if (!s || s.matchId !== matchId) return;
+  state = { ...state, status: { ...s, matchId: null } };
   emit();
 }
 
@@ -140,13 +156,16 @@ export function resumeQueueWatch(): void {
   }
 }
 
+// The current answer outside React.
+export const queueSnapshot = (): QueueState => state;
+
 export function useQueueState(): QueueState {
   return useSyncExternalStore(
     (l) => {
       listeners.add(l);
       return () => listeners.delete(l);
     },
-    () => state,
-    () => state,
+    queueSnapshot,
+    queueSnapshot,
   );
 }

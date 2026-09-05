@@ -31,7 +31,10 @@ export interface ModPresence {
 
 // One poll answers for every queue at once.
 export interface PlayStatus {
-  matchId: string | null; // an open match to go to instead of queueing
+  matchId: string | null; // a game in progress: go there instead of queueing
+  // A finished game whose result hasn't landed — reported and waiting out the
+  // auto-confirm window, or disputed. Worth a nudge, never a block.
+  settlingMatchId: string | null;
   queues: Record<Mode, QueueModeStatus>;
   liveGames: number; // matches in progress right now, all modes
   mod: ModPresence | null; // null when the mod hasn't heartbeated recently

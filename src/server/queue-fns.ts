@@ -26,17 +26,28 @@ import type {
   QueueModeStatus,
 } from '../lib/ladder-types';
 
-// A player's open match, if any — the one they should be looking at instead
-// of queueing.
-async function openMatchIdFor(playerId: string): Promise<string | null> {
-  const rows = await sql()<{ match_id: string }[]>`
-    select mp.match_id
+// A player's unfinished matches, in one pass. Two different things live in
+// here: the game they are in *right now*, which is the only thing that stops
+// them queueing (pair_queue in 0011 has to agree — change both together),
+// and the most recent result still settling, which does not. A reported
+// result waits 15 minutes for the other side and a dispute waits on an
+// admin; neither is a reason to keep someone off the ladder when their
+// opponent has simply gone offline. The Play page points at the settling one
+// so confirm/dispute is still a click away.
+async function unfinishedFor(
+  playerId: string,
+): Promise<{ matchId: string | null; settlingMatchId: string | null }> {
+  const rows = await sql()<{ match_id: string; status: string }[]>`
+    select mp.match_id, m.status
     from match_participants mp
     join matches m on m.id = mp.match_id
     where mp.player_id = ${playerId}
       and m.status in ('in_progress', 'reported', 'disputed')
-    limit 1`;
-  return rows[0]?.match_id ?? null;
+    order by m.created_at desc`;
+  return {
+    matchId: rows.find((r) => r.status === 'in_progress')?.match_id ?? null,
+    settlingMatchId: rows.find((r) => r.status !== 'in_progress')?.match_id ?? null,
+  };
 }
 
 // The live pool for a mode, curated on the admin page. An emptied pool
@@ -92,7 +103,7 @@ async function presenceFor(playerId: string): Promise<ModPresence | null> {
 }
 
 async function playStatus(playerId: string): Promise<PlayStatus> {
-  const matchId = await openMatchIdFor(playerId);
+  const { matchId, settlingMatchId } = await unfinishedFor(playerId);
   const mine = await sql()<{ mode: Mode; joined_at: Date; factions: Faction[] }[]>`
     select mode, joined_at, factions from queue_entries where player_id = ${playerId}`;
   const counts = await countQueues();
@@ -114,6 +125,7 @@ async function playStatus(playerId: string): Promise<PlayStatus> {
   }
   return {
     matchId,
+    settlingMatchId,
     queues,
     liveGames: counts.liveGames,
     mod,
@@ -141,7 +153,7 @@ export const queueJoin = createServerFn({ method: 'POST' })
   }))
   .handler(async ({ data }): Promise<PlayStatus> => {
     const me = await requirePlayer();
-    if (await openMatchIdFor(me.playerId)) return playStatus(me.playerId);
+    if ((await unfinishedFor(me.playerId)).matchId) return playStatus(me.playerId);
 
     // The rating snapshot the matchmaker balances on is this mode's.
     await sql()`select ensure_rating(${me.playerId}, ${data.mode})`;
