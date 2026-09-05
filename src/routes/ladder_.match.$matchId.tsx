@@ -9,6 +9,7 @@ import { Link, createFileRoute } from '@tanstack/react-router';
 import { loadMe } from '../lib/auth';
 import { stopMatchAlert, useMatchAlert } from '../lib/match-alert';
 import { launchProgress } from '../lib/mm';
+import { clearOpenMatch } from '../lib/queue-watch';
 import { useNow } from '../lib/use-now';
 import { matchCancel, matchConfirm, matchDispute, matchGet, matchReport } from '../server/match-fns';
 import type { MatchParticipant, MatchView, Me } from '../lib/ladder-types';
@@ -48,10 +49,16 @@ function MatchRoom() {
     };
   }, []);
 
-  // A match that's over has nothing left to announce.
+  // A match that's over has nothing left to announce — and the app-wide queue
+  // status has to hear it too: nothing polls it while you're in a match, so
+  // otherwise it goes on naming this one and the Play page bounces "Play
+  // again" straight back here.
   useEffect(() => {
-    if (match && !OPEN.includes(match.status)) stopMatchAlert();
-  }, [match]);
+    if (match && !OPEN.includes(match.status)) {
+      stopMatchAlert();
+      clearOpenMatch(matchId);
+    }
+  }, [match, matchId]);
 
   const matchRef = useRef(match);
   useEffect(() => {
