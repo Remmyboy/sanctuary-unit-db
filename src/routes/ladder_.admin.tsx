@@ -111,73 +111,115 @@ function AdminPage() {
         ← Ladder
       </Link>
 
-      <h1>Disputes</h1>
-      {disputes === null ? null : disputes.length === 0 ? (
-        <p className="empty">Nothing disputed. Lovely.</p>
-      ) : (
-        disputes.map((d) => (
-          <div className="dispute" key={d.matchId}>
-            <div className="dispute-head">
-              <strong>
-                {d.mode} · {d.mapName}
-              </strong>
-              <span className="dim">{new Date(d.createdAt).toLocaleString()}</span>
-            </div>
-            <p>
-              <strong>Team 1:</strong> {team(d.participants, 1)} · <strong>Team 2:</strong>{' '}
-              {team(d.participants, 2)}
-            </p>
-            <p>
-              {d.reportedBy ?? 'Someone'} reported <strong>Team {d.reportedWinnerTeam} won</strong>;{' '}
-              {d.raisedBy} disputed{d.reason ? `: “${d.reason}”` : '.'}
-            </p>
-            <div className="match-actions">
-              <button
-                type="button"
-                className="btn primary"
-                disabled={busy === d.matchId}
-                onClick={() =>
-                  run(d.matchId, () => adminResolve({ data: { matchId: d.matchId, action: 'team1' } }))
-                }
-              >
-                Team 1 won
-              </button>
-              <button
-                type="button"
-                className="btn primary"
-                disabled={busy === d.matchId}
-                onClick={() =>
-                  run(d.matchId, () => adminResolve({ data: { matchId: d.matchId, action: 'team2' } }))
-                }
-              >
-                Team 2 won
-              </button>
+      <div className="admin-cols">
+        <section className="admin-col">
+          <h1>Disputes</h1>
+          {disputes === null ? null : disputes.length === 0 ? (
+            <p className="empty">Nothing disputed. Lovely.</p>
+          ) : (
+            disputes.map((d) => (
+              <div className="dispute" key={d.matchId}>
+                <div className="dispute-head">
+                  <strong>
+                    {d.mode} · {d.mapName}
+                  </strong>
+                  <span className="dim">{new Date(d.createdAt).toLocaleString()}</span>
+                </div>
+                <p>
+                  <strong>Team 1:</strong> {team(d.participants, 1)} · <strong>Team 2:</strong>{' '}
+                  {team(d.participants, 2)}
+                </p>
+                <p>
+                  {d.reportedBy ?? 'Someone'} reported <strong>Team {d.reportedWinnerTeam} won</strong>;{' '}
+                  {d.raisedBy} disputed{d.reason ? `: “${d.reason}”` : '.'}
+                </p>
+                <div className="match-actions">
+                  <button
+                    type="button"
+                    className="btn primary"
+                    disabled={busy === d.matchId}
+                    onClick={() =>
+                      run(d.matchId, () => adminResolve({ data: { matchId: d.matchId, action: 'team1' } }))
+                    }
+                  >
+                    Team 1 won
+                  </button>
+                  <button
+                    type="button"
+                    className="btn primary"
+                    disabled={busy === d.matchId}
+                    onClick={() =>
+                      run(d.matchId, () => adminResolve({ data: { matchId: d.matchId, action: 'team2' } }))
+                    }
+                  >
+                    Team 2 won
+                  </button>
+                  <button
+                    type="button"
+                    className="btn"
+                    disabled={busy === d.matchId}
+                    onClick={() =>
+                      run(d.matchId, () => adminResolve({ data: { matchId: d.matchId, action: 'void' } }))
+                    }
+                  >
+                    Void (no rating change)
+                  </button>
+                  <Link to="/ladder/match/$matchId" params={{ matchId: d.matchId }} className="linkish">
+                    Open match
+                  </Link>
+                </div>
+              </div>
+            ))
+          )}
+        </section>
+
+        <section className="admin-col">
+          <h1>Live games</h1>
+          {matches === null ? null : matches.live.length === 0 ? (
+            <p className="empty">No games on right now.</p>
+          ) : (
+            matches.live.map((m) => (
+              <MatchRow key={m.id} match={m} busy={busy === m.id} onDelete={() => remove(m)} />
+            ))
+          )}
+        </section>
+
+        <section className="admin-col">
+          <h1>Recent results</h1>
+          <p className="hint">
+            Deleting a completed match reverses the rating changes it recorded — for test games that shouldn't
+            count. Later games aren't recomputed.
+          </p>
+          {matches === null ? null : matches.recent.length === 0 ? (
+            <p className="empty">{recentPage === 0 ? 'No completed games yet.' : 'Nothing older.'}</p>
+          ) : (
+            matches.recent.map((m) => (
+              <MatchRow key={m.id} match={m} busy={busy === m.id} onDelete={() => remove(m)} />
+            ))
+          )}
+          {matches !== null && (recentPage > 0 || matches.recentHasMore) && (
+            <div className="match-actions pager">
               <button
                 type="button"
                 className="btn"
-                disabled={busy === d.matchId}
-                onClick={() =>
-                  run(d.matchId, () => adminResolve({ data: { matchId: d.matchId, action: 'void' } }))
-                }
+                disabled={recentPage === 0}
+                onClick={() => setRecentPage((p) => Math.max(0, p - 1))}
               >
-                Void (no rating change)
+                ← Newer
               </button>
-              <Link to="/ladder/match/$matchId" params={{ matchId: d.matchId }} className="linkish">
-                Open match
-              </Link>
+              <span className="dim">page {recentPage + 1}</span>
+              <button
+                type="button"
+                className="btn"
+                disabled={!matches.recentHasMore}
+                onClick={() => setRecentPage((p) => p + 1)}
+              >
+                Older →
+              </button>
             </div>
-          </div>
-        ))
-      )}
-
-      <h1>Live games</h1>
-      {matches === null ? null : matches.live.length === 0 ? (
-        <p className="empty">No games on right now.</p>
-      ) : (
-        matches.live.map((m) => (
-          <MatchRow key={m.id} match={m} busy={busy === m.id} onDelete={() => remove(m)} />
-        ))
-      )}
+          )}
+        </section>
+      </div>
 
       <h1>Map pools</h1>
       <p className="hint">
@@ -187,40 +229,6 @@ function AdminPage() {
         changes apply to the next match that forms.
       </p>
       <MapPools />
-
-      <h1>Recent results</h1>
-      <p className="hint">
-        Deleting a completed match reverses the rating changes it recorded — for test games that shouldn't
-        count. Later games aren't recomputed.
-      </p>
-      {matches === null ? null : matches.recent.length === 0 ? (
-        <p className="empty">{recentPage === 0 ? 'No completed games yet.' : 'Nothing older.'}</p>
-      ) : (
-        matches.recent.map((m) => (
-          <MatchRow key={m.id} match={m} busy={busy === m.id} onDelete={() => remove(m)} />
-        ))
-      )}
-      {matches !== null && (recentPage > 0 || matches.recentHasMore) && (
-        <div className="match-actions pager">
-          <button
-            type="button"
-            className="btn"
-            disabled={recentPage === 0}
-            onClick={() => setRecentPage((p) => Math.max(0, p - 1))}
-          >
-            ← Newer
-          </button>
-          <span className="dim">page {recentPage + 1}</span>
-          <button
-            type="button"
-            className="btn"
-            disabled={!matches.recentHasMore}
-            onClick={() => setRecentPage((p) => p + 1)}
-          >
-            Older →
-          </button>
-        </div>
-      )}
     </main>
   );
 }
@@ -233,6 +241,11 @@ function MapPools() {
     '3v3': { name: '', size: '512' },
   });
   const [busy, setBusy] = useState(false);
+  const [open, setOpen] = useState<Record<Mode, boolean>>({
+    '1v1': true,
+    '2v2': true,
+    '3v3': true,
+  });
 
   const load = () =>
     adminMapPools()
@@ -258,11 +271,16 @@ function MapPools() {
   return (
     <div className="map-pools">
       {MODES.map((mode) => (
-        <div className="dispute" key={mode}>
-          <div className="dispute-head">
+        <details
+          className="dispute pool"
+          key={mode}
+          open={open[mode]}
+          onToggle={(e) => setOpen((o) => ({ ...o, [mode]: e.currentTarget.open }))}
+        >
+          <summary className="dispute-head">
             <strong>{mode}</strong>
             <span className="dim">{rows.filter((r) => r.mode === mode && r.enabled).length} in rotation</span>
-          </div>
+          </summary>
           <table className="lb-table maps-table">
             <tbody>
               {rows
@@ -272,7 +290,7 @@ function MapPools() {
                     <td>{r.name}</td>
                     <td className="dim">{r.size}</td>
                     {mode === '1v1' && (
-                      <td>
+                      <td className="map-path-cell">
                         <MapPathField
                           row={r}
                           busy={busy}
@@ -339,7 +357,7 @@ function MapPools() {
               Add
             </button>
           </form>
-        </div>
+        </details>
       ))}
     </div>
   );

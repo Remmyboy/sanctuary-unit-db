@@ -1863,9 +1863,67 @@ img.unit-icon[data-muted='true'] {
 }
 
 /* Admin lists. */
+.profile.admin {
+  max-width: 1440px;
+}
 .admin h1 {
   font-size: 16px;
   margin: 22px 0 8px;
+}
+/* Disputes / live / recent side by side, then the three map pools below. */
+.admin-cols,
+.map-pools {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px 18px;
+  align-items: start;
+}
+.admin-col {
+  min-width: 0;
+}
+.admin-col h1 {
+  margin-top: 0;
+}
+.admin-col .hint {
+  margin-top: 0;
+}
+/* The 1v1 pool carries an extra column (the auto-launch path), so give it room. */
+.map-pools {
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr) minmax(0, 1fr);
+}
+.map-pools .pool {
+  min-width: 0;
+  margin-bottom: 0;
+  overflow-x: auto;
+}
+.pool > summary {
+  cursor: pointer;
+  list-style: none;
+  align-items: center;
+  margin-bottom: 0;
+}
+.pool > summary::-webkit-details-marker {
+  display: none;
+}
+.pool > summary strong::before {
+  content: '▸';
+  display: inline-block;
+  width: 12px;
+  margin-right: 4px;
+  color: var(--text-dim);
+  transition: transform 0.12s ease;
+}
+.pool[open] > summary {
+  margin-bottom: 6px;
+}
+.pool[open] > summary strong::before {
+  transform: rotate(90deg);
+}
+@media (max-width: 1100px) {
+  .admin-cols,
+  .map-pools {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 .btn.danger {
   border-color: #e5747f;
@@ -1884,8 +1942,16 @@ img.unit-icon[data-muted='true'] {
 .pager {
   margin-top: 10px;
 }
+.maps-table {
+  width: 100%;
+}
 .maps-table td {
-  padding: 4px 8px;
+  padding: 4px 6px;
+  white-space: nowrap;
+}
+/* The auto-launch path takes whatever the map names leave over. */
+.maps-table td.map-path-cell {
+  width: 100%;
 }
 .maps-table tr[data-disabled] td:first-child {
   color: var(--text-dim);
@@ -1910,6 +1976,7 @@ img.unit-icon[data-muted='true'] {
 }
 .map-add input:first-child {
   flex: 1;
+  min-width: 0;
 }
 .map-add input[type='number'] {
   width: 84px;
@@ -2295,9 +2362,11 @@ img.unit-icon[data-muted='true'] {
   display: flex;
   gap: 6px;
   align-items: center;
+  min-width: 0;
 }
 .map-path input {
-  width: 260px;
+  width: 100%;
+  min-width: 90px;
   font-size: 11.5px;
   padding: 3px 6px;
   border: 1px solid var(--border);
