@@ -39,6 +39,21 @@ manually:
 SANCTUARY_PATH="D:/SteamLibrary/steamapps/common/Sanctuary Shattered Sun Demo" npm run extract
 ```
 
+### Maintaining modding snapshots
+
+Each release gets an immutable URL namespace under
+`src/content/modding/docs/<game-version>-<steam-build>/`. Add and order its MDX
+pages in that directory's `meta.json`, add matching build metadata under
+`src/content/modding/snapshots/`, then register the snapshot in
+`src/content/modding/registry.ts`. The highest numeric Steam build becomes the
+default; array order does not control it.
+
+Every MDX page needs `title`, `description`, and `navTitle` frontmatter. Keep
+links snapshot-relative so the version switcher can preserve the current page.
+Corrections to an old snapshot should stay scoped to what was true for that
+inspected build; new game behavior belongs in a new snapshot. Unit tests reject
+missing metadata, broken internal links, duplicate builds, and navigation drift.
+
 ## Publishing maps
 
 `/maps` lists community maps. The zips are not in the repo — each map is a
@@ -603,9 +618,14 @@ can't, because there's no game install on a build server. The split is:
   in a serverless function for the server functions and `/api/auth/*` routes.
   The ladder needs env vars (see `.env.example`): `DATABASE_URL`,
   `STEAM_API_KEY`, `SESSION_SECRET`, `SITE_URL`.
+
+  Production builds and servers require `SITE_URL` as an absolute HTTP(S) origin without a path, query, or
+  fragment. Document canonicals and sitemap entries use that origin. Missing or invalid values fail the build.
+  Use the deployed public origin in hosting configuration; `http://localhost:4173` is only for local browser tests.
   Steam sign-in only works on the origin `SITE_URL` names — not on preview
   deployment URLs. The database schema lives in `supabase/migrations/`, applied
   with `supabase db push` (or pasted into the SQL editor).
+
 - `npm run extract` / `icons` / `refresh` need the game install and only ever
   run on your machine. Their output is committed.
 
