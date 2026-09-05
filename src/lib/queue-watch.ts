@@ -99,11 +99,11 @@ export function consumeNewMatch(): void {
   emit();
 }
 
-// The match room, once the match it is showing has settled. Nothing polls
+// The match room, once the game it is showing has been played. Nothing polls
 // the queue while you are in a match — you are not queued — so the last
-// answer goes on naming a finished match for as long as the tab lives, and
-// the Play page would send you straight back into it. This is no more than
-// what the next poll would say, early.
+// answer goes on naming that match for as long as the tab lives, and the
+// Play page would send you straight back into it. This is no more than what
+// the next poll would say, early.
 export function clearOpenMatch(matchId: string): void {
   const s = state.status;
   if (!s || s.matchId !== matchId) return;

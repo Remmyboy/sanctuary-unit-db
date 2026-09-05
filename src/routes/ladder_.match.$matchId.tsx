@@ -49,15 +49,15 @@ function MatchRoom() {
     };
   }, []);
 
-  // A match that's over has nothing left to announce — and the app-wide queue
-  // status has to hear it too: nothing polls it while you're in a match, so
-  // otherwise it goes on naming this one and the Play page bounces "Play
-  // again" straight back here.
   useEffect(() => {
-    if (match && !OPEN.includes(match.status)) {
-      stopMatchAlert();
-      clearOpenMatch(matchId);
-    }
+    if (!match) return;
+    // A match that's over has nothing left to announce.
+    if (!OPEN.includes(match.status)) stopMatchAlert();
+    // The app-wide queue status only names a game in progress, and nothing
+    // polls it while you're in one — so from the moment the result is in it
+    // goes on naming this match until told otherwise, and the Play page
+    // bounces "Play again" straight back here.
+    if (match.status !== 'in_progress') clearOpenMatch(matchId);
   }, [match, matchId]);
 
   const matchRef = useRef(match);

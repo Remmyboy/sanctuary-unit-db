@@ -6,7 +6,7 @@
 // backend (the static e2e build).
 
 import { useEffect, useRef, useState } from 'react';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
 import { AlertSettings } from '../components/AlertSettings';
 import { QueueCard } from '../components/QueueCard';
 import { ReporterCard } from '../components/ReporterCard';
@@ -140,6 +140,16 @@ function PlayPage() {
               Sign in through Steam
             </a>
           </div>
+        )}
+
+        {status?.settlingMatchId && (
+          <p className="queue-widget play-settling">
+            Your last game's result hasn't landed yet — queue away, and{' '}
+            <Link to="/ladder/match/$matchId" params={{ matchId: status.settlingMatchId }}>
+              confirm or dispute it
+            </Link>{' '}
+            when you get a moment.
+          </p>
         )}
 
         <div className="queue-grid">
