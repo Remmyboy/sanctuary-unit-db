@@ -1897,16 +1897,21 @@ img.unit-icon[data-muted='true'] {
   margin-bottom: 0;
   overflow-x: auto;
 }
-.pool > summary {
+/* The <summary> heading any collapsible admin section: a map pool, or the
+   recent-results column. The chevron hangs off the first child so it stays
+   put next to the label rather than becoming a flex item of its own. */
+.fold-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
   cursor: pointer;
   list-style: none;
-  align-items: center;
-  margin-bottom: 0;
 }
-.pool > summary::-webkit-details-marker {
+.fold-head::-webkit-details-marker {
   display: none;
 }
-.pool > summary strong::before {
+.fold-head > :first-child::before {
   content: '▸';
   display: inline-block;
   width: 12px;
@@ -1914,11 +1919,21 @@ img.unit-icon[data-muted='true'] {
   color: var(--text-dim);
   transition: transform 0.12s ease;
 }
-.pool[open] > summary {
+[open] > .fold-head > :first-child::before {
+  transform: rotate(90deg);
+}
+.pool > .fold-head {
+  margin-bottom: 0;
+}
+.pool[open] > .fold-head {
   margin-bottom: 6px;
 }
-.pool[open] > summary strong::before {
-  transform: rotate(90deg);
+/* Sits where the sibling columns' <h1> sits, so the three headings line up. */
+.admin-fold > .fold-head {
+  margin-bottom: 8px;
+}
+.admin-fold > .fold-head h1 {
+  margin: 0;
 }
 @media (max-width: 1100px) {
   .admin-cols,
