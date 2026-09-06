@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-09-04T07:23:16.919Z",
+  "generatedAt": "2026-09-06T20:33:16.322Z",
   "source": "Sanctuary Shattered Sun Playtest",
   "unitCount": 295,
   "game": {
     "appId": 4511930,
     "name": "Sanctuary: Shattered Sun Playtest",
-    "buildId": 25114838,
-    "updatedAt": "2026-09-04T06:39:37.000Z"
+    "buildId": 25135612,
+    "updatedAt": "2026-09-05T06:36:23.000Z"
   }
 }
