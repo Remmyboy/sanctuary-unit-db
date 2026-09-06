@@ -2097,9 +2097,97 @@ img.unit-icon[data-muted='true'] {
   display: inline-block;
   margin-bottom: 16px;
 }
+/* The matched map: its own preview art beside the name. The picture is
+   optional (see MapPreview), so the row has to look right without it. */
+.match-map {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
 .match-map h1 {
-  margin: 2px 0 18px;
+  margin: 2px 0 0;
   font-size: 26px;
+}
+.map-preview {
+  position: relative;
+  flex: none;
+  width: 172px;
+}
+/* Direct child only: the markers inside carry an avatar each, which must not
+   be stretched to the width of the map. */
+.map-preview > img {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--bg-raised);
+}
+/* One player on their start. The span itself is the point: a zero-size box at
+   the spawn, so the ring and the name hang off it in whichever direction
+   keeps them on the picture. */
+.map-start {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+.map-start-ring {
+  position: absolute;
+  left: -8px;
+  top: -8px;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--text);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 55%);
+}
+/* The Steam avatar sits *on* the game's own numbered circle rather than beside
+   it, so the marker stays one thing to look at. */
+.map-start-face {
+  position: absolute;
+  left: -13px;
+  top: -13px;
+  width: 26px;
+  height: 26px;
+  border: 2px solid var(--text);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 55%);
+  background: var(--bg-raised);
+  object-fit: cover;
+}
+.map-start-name {
+  position: absolute;
+  max-width: 96px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 1px 5px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.map-start[data-side='left'] .map-start-name {
+  left: -10px;
+}
+.map-start[data-side='right'] .map-start-name {
+  right: -10px;
+}
+.map-start[data-vside='below'] .map-start-name {
+  top: 16px;
+}
+.map-start[data-vside='above'] .map-start-name {
+  bottom: 16px;
+}
+.map-start[data-you] .map-start-ring,
+.map-start[data-you] .map-start-face {
+  border-color: var(--accent);
+}
+.map-start[data-you] .map-start-name {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 .match-vs {
   display: grid;
@@ -2142,6 +2230,9 @@ img.unit-icon[data-muted='true'] {
 }
 .match-instructions p {
   margin: 0;
+}
+.match-instructions p + p {
+  margin-top: 6px;
 }
 .match-actions {
   display: flex;
@@ -2256,6 +2347,14 @@ img.unit-icon[data-muted='true'] {
   }
   .team-vs {
     display: none;
+  }
+  .match-map {
+    display: block;
+  }
+  .map-preview {
+    width: 100%;
+    max-width: 320px;
+    margin-bottom: 10px;
   }
 }
 

@@ -56,3 +56,17 @@ export const LADDER_MAPS: Record<Mode, LadderMap[]> = {
 };
 
 export const ladderMapNames = (mode: Mode): string[] => LADDER_MAPS[mode].map((m) => m.name);
+
+// The file name of a map's preview art in public/ladder-maps/, derived from
+// the map's own name — the same slug rule the community maps use, so
+// "Daroza's Sanctuary" and the generated "~TEAM-1v1_Tropical_256_47940" both
+// land on something URL-safe. scripts/ladder-previews.js writes the files;
+// nothing guarantees one exists (a map added to a pool since the last run has
+// none), so anything rendering it must cope with a missing image.
+export const mapPreviewSlug = (name: string): string =>
+  name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+
+export const mapPreviewSrc = (name: string): string => `/ladder-maps/${mapPreviewSlug(name)}.png`;

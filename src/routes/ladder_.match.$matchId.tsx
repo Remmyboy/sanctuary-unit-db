@@ -6,6 +6,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Link, createFileRoute } from '@tanstack/react-router';
+import { MapPreview } from '../components/MapPreview';
 import { loadMe } from '../lib/auth';
 import { stopMatchAlert, useMatchAlert } from '../lib/match-alert';
 import { launchProgress } from '../lib/mm';
@@ -136,6 +137,21 @@ function MatchRoom() {
     joiner !== undefined &&
     launchProgress(match.mmEvents, match.hostPlayerId, joiner.playerId).started;
 
+  // Who starts where. Every 1v1 is given the two army numbers at pairing
+  // (migration 0013); an auto-launched lobby sets them for real, a manually
+  // hosted one is asked to. Team modes get none — a 2v2 or 3v3 map doesn't
+  // order its armies by team — so their preview stays a plain picture.
+  const starts = match.participants
+    .filter((p) => p.slot !== null)
+    .map((p) => ({
+      army: p.slot as number,
+      name: p.personaName,
+      avatarUrl: p.avatarUrl,
+      you: p.playerId === mine?.playerId,
+    }));
+  const myStart = mine?.slot ?? null;
+  const otherStart = starts.find((s) => !s.you);
+
   return (
     <main className="match-room">
       {alerting && (
@@ -152,15 +168,18 @@ function MatchRoom() {
       </Link>
 
       <div className="match-map">
-        <div className="rk">
-          Ranked {match.mode} · map
-          {match.mode === '1v1' && (
-            <span className="mm-badge" data-auto={match.mmMode === 'auto' || undefined}>
-              {match.mmMode === 'auto' ? 'auto-launch' : 'manual hosting'}
-            </span>
-          )}
+        <MapPreview name={match.mapName} starts={starts} />
+        <div>
+          <div className="rk">
+            Ranked {match.mode} · map
+            {match.mode === '1v1' && (
+              <span className="mm-badge" data-auto={match.mmMode === 'auto' || undefined}>
+                {match.mmMode === 'auto' ? 'auto-launch' : 'manual hosting'}
+              </span>
+            )}
+          </div>
+          <h1>{match.mapName}</h1>
         </div>
-        <h1>{match.mapName}</h1>
       </div>
 
       <div className="match-teams">
@@ -226,6 +245,15 @@ function MatchRoom() {
               <p>
                 <strong>{host?.personaName} hosts.</strong> Join their lobby in Sanctuary — the map is{' '}
                 <strong>{match.mapName}</strong>.
+              </p>
+            )}
+            {/* Where to sit down. Nothing in a manually hosted lobby enforces
+                this — it's a request, and the game is played wherever they
+                actually start. */}
+            {mine && myStart !== null && otherStart !== undefined && (
+              <p className="dim">
+                Take the starts marked on the map: you're <strong>slot {myStart}</strong>, {otherStart.name}{' '}
+                is <strong>slot {otherStart.army}</strong>.
               </p>
             )}
           </div>
@@ -353,10 +381,15 @@ function TeamColumn({
               {p.personaName}
             </Link>
             {p.playerId === hostId && <span className="host-badge">host</span>}
-            {p.faction && (
-              <span className="assign" title="Assigned for the auto-launched game">
-                {p.faction}
-                {p.slot && ` · slot ${p.slot}`}
+            {/* A faction is only ever assigned for an auto-launched game; a
+                slot is assigned for every 1v1, and in a manual one it is a
+                request rather than something the lobby enforces. */}
+            {(p.faction || p.slot) && (
+              <span
+                className="assign"
+                title={p.faction ? 'Assigned for the auto-launched game' : 'The start to take in the lobby'}
+              >
+                {[p.faction, p.slot && `slot ${p.slot}`].filter(Boolean).join(' · ')}
               </span>
             )}
             <div className="dim">
