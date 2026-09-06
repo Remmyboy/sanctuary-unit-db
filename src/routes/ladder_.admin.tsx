@@ -50,6 +50,7 @@ function AdminPage() {
   const [disputes, setDisputes] = useState<DisputeView[] | null>(null);
   const [matches, setMatches] = useState<AdminMatches | null>(null);
   const [recentPage, setRecentPage] = useState(0);
+  const [recentOpen, setRecentOpen] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
 
   useEffect(() => {
@@ -185,39 +186,52 @@ function AdminPage() {
         </section>
 
         <section className="admin-col">
-          <h1>Recent results</h1>
-          <p className="hint">
-            Deleting a completed match reverses the rating changes it recorded — for test games that shouldn't
-            count. Later games aren't recomputed.
-          </p>
-          {matches === null ? null : matches.recent.length === 0 ? (
-            <p className="empty">{recentPage === 0 ? 'No completed games yet.' : 'Nothing older.'}</p>
-          ) : (
-            matches.recent.map((m) => (
-              <MatchRow key={m.id} match={m} busy={busy === m.id} onDelete={() => remove(m)} />
-            ))
-          )}
-          {matches !== null && (recentPage > 0 || matches.recentHasMore) && (
-            <div className="match-actions pager">
-              <button
-                type="button"
-                className="btn"
-                disabled={recentPage === 0}
-                onClick={() => setRecentPage((p) => Math.max(0, p - 1))}
-              >
-                ← Newer
-              </button>
-              <span className="dim">page {recentPage + 1}</span>
-              <button
-                type="button"
-                className="btn"
-                disabled={!matches.recentHasMore}
-                onClick={() => setRecentPage((p) => p + 1)}
-              >
-                Older →
-              </button>
-            </div>
-          )}
+          <details
+            className="admin-fold"
+            open={recentOpen}
+            // currentTarget is read here, not in the updater — see MapPools.
+            onToggle={(e) => {
+              const isOpen = e.currentTarget.open;
+              setRecentOpen((v) => (v === isOpen ? v : isOpen));
+            }}
+          >
+            <summary className="fold-head">
+              <h1>Recent results</h1>
+              {matches !== null && <span className="dim">{matches.recent.length} listed</span>}
+            </summary>
+            <p className="hint">
+              Deleting a completed match reverses the rating changes it recorded — for test games that
+              shouldn't count. Later games aren't recomputed.
+            </p>
+            {matches === null ? null : matches.recent.length === 0 ? (
+              <p className="empty">{recentPage === 0 ? 'No completed games yet.' : 'Nothing older.'}</p>
+            ) : (
+              matches.recent.map((m) => (
+                <MatchRow key={m.id} match={m} busy={busy === m.id} onDelete={() => remove(m)} />
+              ))
+            )}
+            {matches !== null && (recentPage > 0 || matches.recentHasMore) && (
+              <div className="match-actions pager">
+                <button
+                  type="button"
+                  className="btn"
+                  disabled={recentPage === 0}
+                  onClick={() => setRecentPage((p) => Math.max(0, p - 1))}
+                >
+                  ← Newer
+                </button>
+                <span className="dim">page {recentPage + 1}</span>
+                <button
+                  type="button"
+                  className="btn"
+                  disabled={!matches.recentHasMore}
+                  onClick={() => setRecentPage((p) => p + 1)}
+                >
+                  Older →
+                </button>
+              </div>
+            )}
+          </details>
         </section>
       </div>
 
@@ -282,7 +296,7 @@ function MapPools() {
             setOpen((o) => (o[mode] === isOpen ? o : { ...o, [mode]: isOpen }));
           }}
         >
-          <summary className="dispute-head">
+          <summary className="fold-head">
             <strong>{mode}</strong>
             <span className="dim">{rows.filter((r) => r.mode === mode && r.enabled).length} in rotation</span>
           </summary>
