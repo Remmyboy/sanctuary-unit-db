@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit",
     "extract": "node scripts/extract.js",
     "addmap": "node scripts/add-map.js",
+    "mappreviews": "node scripts/ladder-previews.js",
     "icons": "node scripts/build-icons.js",
     "refresh": "npm run extract && npm run icons && npm run diff",
     "verify": "node scripts/verify.js",

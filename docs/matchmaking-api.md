@@ -57,8 +57,13 @@ ready") but never gates queueing on it.
 ```
 
 - `status: manual` is this site's addition: an open match the mod must not
-  launch — it only reports the result when the game ends. `map` is `null`,
-  `factions` and `slots` are empty on manual matches.
+  launch — it only reports the result when the game ends. `map` is `null` and
+  `factions` is empty on manual matches.
+- `slots` is populated for every 1v1, manual ones included: the site shows each
+  player which start to take and puts them there on the map preview. On a
+  manual match it is a request to a human, not something to act on — the mod
+  still must not launch one. It stays empty in team modes, whose maps don't
+  order their armies by team.
 - `auto` matches start in `countdown` (10 s, site-owned, cancellable on the
   site). At zero, if both players are still startable the status becomes
   `launch`; otherwise the match **falls back to `mode: manual`** with `reason`

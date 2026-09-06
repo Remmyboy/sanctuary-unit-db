@@ -8,6 +8,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { LADDER_MAPS, mapPreviewSlug } from '../src/lib/ladder-maps.ts';
 
 const PUBLIC = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'public');
 
@@ -38,6 +39,7 @@ function main() {
 
   checkIcons(units);
   checkPreviews(units);
+  checkLadderPreviews();
   report();
 }
 
@@ -104,6 +106,41 @@ function checkPreviews(units) {
     `status split: ${statuses['in-game'] ?? 0} in game, ` +
       `${statuses['in-progress'] ?? 0} in progress, ${statuses['no-model'] ?? 0} no model`,
   );
+}
+
+// The ranked pools shipped in src/lib/ladder-maps.ts against the art in
+// public/ladder-maps/. A missing one is not fatal — the match room just
+// shows the map name on its own — but it is always worth knowing about.
+function checkLadderPreviews() {
+  const names = [
+    ...new Set(
+      Object.values(LADDER_MAPS)
+        .flat()
+        .map((m) => m.name),
+    ),
+  ];
+  const missing = names.filter((n) => !exists(`ladder-maps/${mapPreviewSlug(n)}.png`));
+  if (missing.length) {
+    notes.push(
+      `${missing.length}/${names.length} pool maps have no preview art ` +
+        '(run npm run mappreviews): ' +
+        missing.join(', '),
+    );
+  } else {
+    notes.push(`${names.length} ranked pool maps, all with preview art`);
+  }
+
+  // Start positions are what put a player's name on the picture; without them
+  // the preview still draws, just with nobody on it.
+  if (!exists('ladder-maps/spawns.json')) {
+    notes.push('no ladder-maps/spawns.json — no player is drawn on any map');
+    return;
+  }
+  const spawns = read('ladder-maps/spawns.json');
+  const unplaced = names.filter((n) => !(spawns[mapPreviewSlug(n)] ?? []).length);
+  if (unplaced.length) {
+    notes.push(`${unplaced.length} pool maps have no start positions: ${unplaced.join(', ')}`);
+  }
 }
 
 const comboOf = (u) => `${u.icon?.shape}_${u.icon?.tech}_${u.icon?.symbol}`;
