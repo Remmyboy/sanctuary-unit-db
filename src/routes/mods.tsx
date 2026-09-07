@@ -45,10 +45,7 @@ function ModsPage() {
         </a>
       </div>
       <main className="mods-page">
-        <p className="mods-intro">
-          Quality-of-life mods for the playtest. They change what you see, not how the game plays — so you can
-          still join a lobby with people who have none of them, and nothing here touches your game files.
-        </p>
+        <p className="mods-intro">Quality-of-life UI mods for the playtest.</p>
 
         <Install />
 
