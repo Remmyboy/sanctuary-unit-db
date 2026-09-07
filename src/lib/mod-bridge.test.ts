@@ -82,14 +82,32 @@ describe('mod-bridge', () => {
     expect(bridge.bridgeSnapshot().probed).toBe(false);
   });
 
-  it('is off until the player opts in, and remembers the choice', async () => {
+  it('is off until the player opts in', async () => {
     const bridge = await fresh();
     expect(bridge.bridgeSnapshot().enabled).toBe(false);
     bridge.enableBridge();
     expect(bridge.bridgeSnapshot().enabled).toBe(true);
-    const again = await fresh();
-    expect(again.bridgeSnapshot().enabled).toBe(true);
-    again.disableBridge();
+  });
+
+  it('remembers the choice only once a probe has succeeded — a blocked prompt is not remembered', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+    vi.useFakeTimers();
+    let bridge = await fresh();
+    let release = bridge.watchBridge();
+    bridge.enableBridge();
+    await vi.advanceTimersByTimeAsync(0);
+    release();
+    expect((await fresh()).bridgeSnapshot().enabled).toBe(false);
+
+    vi.stubGlobal('fetch', reply({ state: 'menu' }));
+    bridge = await fresh();
+    release = bridge.watchBridge();
+    bridge.enableBridge();
+    await vi.advanceTimersByTimeAsync(0);
+    release();
+    expect((await fresh()).bridgeSnapshot().enabled).toBe(true);
+
+    (await fresh()).disableBridge();
     expect((await fresh()).bridgeSnapshot().enabled).toBe(false);
   });
 

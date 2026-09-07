@@ -20,14 +20,24 @@ const BLURB: Record<Mode, string> = {
   '3v3': 'Solo queue — six players, split into the most even teams by rating.',
 };
 
-// What follows "Auto-launch ready" or "Game seen", per state. The mod (0.3+)
+// What follows "Auto-launch ready", per launchable state. The mod (0.3+)
 // leaves a lobby or closes a replay itself when the match launches.
-const STATE_NOTE: Record<ModState, string> = {
+const READY_NOTE: Record<ModState, string> = {
   menu: "if your opponent's is too, the game starts itself.",
   lobby: "game seen in a lobby — you'll be taken out of it for the match.",
   replay: "game seen in a replay — it'll be closed for the match.",
-  loading: 'loading a game — back to the main menu to auto-launch.',
-  ingame: 'in a game — back to the main menu to auto-launch.',
+  loading: '',
+  ingame: '',
+};
+
+// Why not, when the game was seen but can't be launched: busy, or (the
+// server's word about an older mod) not heard from for a bit.
+const NOT_READY_NOTE: Record<ModState, string> = {
+  menu: 'Game was seen in the menu, but not for a while — is it still open?',
+  lobby: 'Game was seen in a lobby, but not for a while — is it still open?',
+  replay: 'Game was seen in a replay, but not for a while — is it still open?',
+  loading: 'Game seen loading a game — back to the main menu to auto-launch.',
+  ingame: 'Game seen in a game — back to the main menu to auto-launch.',
 };
 
 // The game on this PC, as far as the page can tell (docs/local-bridge.md).
@@ -59,10 +69,10 @@ function LaunchState({ bridge, serverMod }: { bridge: BridgeState; serverMod: Mo
       <p className="launch-state" data-ready={seen.ready || undefined}>
         {seen.ready ? (
           <>
-            <strong>Auto-launch ready</strong> — {STATE_NOTE[seen.state]}
+            <strong>Auto-launch ready</strong> — {READY_NOTE[seen.state]}
           </>
         ) : (
-          <>Game seen {STATE_NOTE[seen.state]}</>
+          NOT_READY_NOTE[seen.state]
         )}
         {behind && (
           <>
