@@ -3,6 +3,11 @@
 // countdowns and timeouts fire even when nobody has the site open, and
 // answers with the player's current match.
 //
+// Being retired: docs/local-bridge.md moves presence into the polls the
+// browser already makes, and the match object onto the page's local
+// connection to the mod. This route stays until every player has the
+// bridged mod, so the two writers share recordPresence.
+//
 // This is a capability signal, not a gate: queueing happens on the site and
 // works with no mod at all. The heartbeat only decides whether a pair gets
 // the `auto` flow.
@@ -17,9 +22,8 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { sql } from '../server/db';
 import { authenticate, bad, currentModMatch, json, logSlow, readJson } from '../server/mm';
-import { isModState } from '../lib/mm';
-
-const str = (v: unknown, max: number): string | null => (typeof v === 'string' ? v.slice(0, max) : null);
+import { recordPresence } from '../server/presence';
+import { parseModSignal } from '../lib/mm';
 
 export const Route = createFileRoute('/api/mm/heartbeat')({
   server: {
@@ -31,16 +35,12 @@ export const Route = createFileRoute('/api/mm/heartbeat')({
 
         const body = await readJson(request);
         if (!body) return bad(400, 'Body is not JSON.');
-        if (!isModState(body.state)) return bad(400, 'state must be menu, lobby, loading or ingame.');
+        const mod = parseModSignal(body);
+        if (!mod) return bad(400, 'state must be menu, lobby, loading or ingame.');
 
         // Presence first, on its own, so the sweep that follows sees this
         // heartbeat when a countdown is hitting zero right now.
-        await sql()`
-          insert into mod_presence (player_id, state, game_version, mod_version, seen_at)
-          values (${me.playerId}, ${body.state}, ${str(body.gameVersion, 40)}, ${str(body.modVersion, 40)}, now())
-          on conflict (player_id) do update set
-            state = excluded.state, game_version = excluded.game_version,
-            mod_version = excluded.mod_version, seen_at = now()`;
+        await recordPresence(me.playerId, mod);
 
         const [{ queued }] = await sql()<{ queued: boolean }[]>`
           select sweep_all(), exists (
@@ -49,7 +49,7 @@ export const Route = createFileRoute('/api/mm/heartbeat')({
           ) as queued`;
 
         const match = await currentModMatch(me.playerId, me.steamId);
-        logSlow('heartbeat', startedAt, `${me.personaName} ${body.state}`);
+        logSlow('heartbeat', startedAt, `${me.personaName} ${mod.state}`);
         return json(200, { queued, match });
       },
     },

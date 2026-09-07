@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
 import { MODES, type Mode } from '../lib/ladder-modes';
+import { useModBridge } from '../lib/mod-bridge';
 import { applyStatus, consumeNewMatch, isQueued, resumeQueueWatch, useQueueState } from '../lib/queue-watch';
 import { useNow } from '../lib/use-now';
 import { queueLeave } from '../server/queue-fns';
@@ -17,6 +18,7 @@ const elapsed = (ms: number) => {
 
 export function QueueBanner() {
   const { status, joinedAt, newMatchId } = useQueueState();
+  const bridge = useModBridge();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const now = useNow();
@@ -41,7 +43,9 @@ export function QueueBanner() {
 
   const modes = MODES.filter((m) => status.queues[m].inQueue);
   const started = Math.min(...modes.map((m) => joinedAt[m] ?? now));
-  const mod = status.mod;
+  // The game on this PC as the page sees it (the queue watch keeps the
+  // bridge probed while we're queued).
+  const mod = bridge.status;
 
   const leave = async (mode: Mode) => {
     setBusy(mode);
@@ -62,7 +66,7 @@ export function QueueBanner() {
       </span>
       {modes.includes('1v1') && (
         <span className="dim">
-          {mod?.launchable ? 'auto-launch ready' : mod ? 'mod seen, not in the menu' : 'manual hosting'}
+          {mod?.state === 'menu' ? 'auto-launch ready' : mod ? 'mod seen, not in the menu' : 'manual hosting'}
         </span>
       )}
       <span className="queue-banner-actions">

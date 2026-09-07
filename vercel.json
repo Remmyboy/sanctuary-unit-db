@@ -10,8 +10,13 @@
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
     },
     {
-      "source": "/(icons|previews)/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=3600" }]
+      "source": "/(icons|previews|ladder-maps|maps)/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, stale-while-revalidate=604800"
+        }
+      ]
     }
   ]
 }

@@ -3,7 +3,7 @@
 
 import { sql } from './db';
 import { teamSize, type Mode } from '../lib/ladder-modes';
-import { deriveMmStatus, type Faction, type MmEventType, type MmMode } from '../lib/mm';
+import { deriveMmStatus, type Faction, type MmEventType, type MmMode, type ModMatch } from '../lib/mm';
 import type { MatchParticipant, MatchStatus, MatchView, MmEventView } from '../lib/ladder-types';
 
 export const CANCEL_WINDOW_MINUTES = 5;
@@ -109,7 +109,12 @@ const toEvent = (e: MmEventRow): MmEventView => ({
 export const teamOf = (participants: ParticipantRow[], playerId: string | null): number | null =>
   participants.find((p) => p.player_id === playerId)?.team ?? null;
 
-export function toView(m: MatchRow, participants: ParticipantRow[], events: MmEventRow[] = []): MatchView {
+export function toView(
+  m: MatchRow,
+  participants: ParticipantRow[],
+  events: MmEventRow[] = [],
+  modMatch: ModMatch | null = null,
+): MatchView {
   return {
     id: m.id,
     mode: m.mode,
@@ -124,6 +129,7 @@ export function toView(m: MatchRow, participants: ParticipantRow[], events: MmEv
     sessionId: m.session_id,
     mmReason: m.mm_reason,
     mmEvents: events.filter((e) => e.match_id === m.id).map(toEvent),
+    modMatch,
     reportedBy: m.reported_by,
     reportedWinnerTeam: m.reported_winner_team,
     autoConfirmAt: m.auto_confirm_at?.toISOString() ?? null,

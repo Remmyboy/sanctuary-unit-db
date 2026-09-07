@@ -20,10 +20,20 @@ import {
   type MatchRow,
   type ParticipantRow,
 } from './match-data';
+import { toModMatch } from './mm';
 import { requirePlayer } from './player';
+import { recordPresence } from './presence';
 import { overallRating } from '../lib/elo';
 import type { Mode } from '../lib/ladder-modes';
-import type { MatchView, Profile, ProfileMatch, ProfileOpponent, RatingSummary } from '../lib/ladder-types';
+import { parseModSignal, type ModSignal } from '../lib/mm';
+import type {
+  MatchView,
+  Me,
+  Profile,
+  ProfileMatch,
+  ProfileOpponent,
+  RatingSummary,
+} from '../lib/ladder-types';
 
 // Loads a match the caller is allowed to see, as the caller. Open matches are
 // participant-only; finished ones are public record (they're on profiles).
@@ -40,10 +50,14 @@ async function loadMatchAs(
   return { match, participants };
 }
 
-const view = async (matchId: string, playerId: string | null): Promise<MatchView> => {
-  const { match, participants } = await loadMatchAs(matchId, playerId);
+// A participant in a 1v1 also gets the match as the mod sees it, to hand
+// over the local bridge; everyone else gets null there.
+const view = async (matchId: string, me: Me | null): Promise<MatchView> => {
+  const { match, participants } = await loadMatchAs(matchId, me?.playerId ?? null);
   const events = match.mm_mode === 'auto' || match.mm_reason ? await loadMmEvents([matchId]) : [];
-  return toView(match, participants, events);
+  const mine = me !== null && participants.some((p) => p.player_id === me.playerId);
+  const modMatch = mine && match.mode === '1v1' ? toModMatch(match, participants, me.steamId) : null;
+  return toView(match, participants, events, modMatch);
 };
 
 // Overdue auto-confirms, plus the auto-launch countdowns and timeouts.
@@ -57,12 +71,19 @@ const matchIdInput = (data: unknown): { matchId: string } => {
   return { matchId: d.matchId };
 };
 
+// The match room's poll. It carries what the page can see of the local mod
+// (docs/local-bridge.md), which is what keeps a player "launchable" through
+// the countdown and launch — the queue poll stops the moment they're paired.
 export const matchGet = createServerFn({ method: 'POST' })
-  .validator(matchIdInput)
+  .validator((data: unknown): { matchId: string; mod: ModSignal | null } => ({
+    ...matchIdInput(data),
+    mod: parseModSignal((data as { mod?: unknown } | null)?.mod),
+  }))
   .handler(async ({ data }): Promise<MatchView> => {
-    await sweep();
     const me = await requirePlayer().catch(() => null);
-    return view(data.matchId, me?.playerId ?? null);
+    if (me && data.mod) await recordPresence(me.playerId, data.mod);
+    await sweep();
+    return view(data.matchId, me);
   });
 
 // Free inside the no-show window; afterwards one request from each side.
@@ -71,7 +92,7 @@ export const matchCancel = createServerFn({ method: 'POST' })
   .handler(async ({ data }): Promise<MatchView> => {
     const me = await requirePlayer();
     const { match, participants } = await loadMatchAs(data.matchId, me.playerId);
-    if (match.status !== 'in_progress') return view(data.matchId, me.playerId);
+    if (match.status !== 'in_progress') return view(data.matchId, me);
 
     const withinWindow = Date.now() < match.created_at.getTime() + CANCEL_WINDOW_MINUTES * 60_000;
     const otherSideAsked =
@@ -91,7 +112,7 @@ export const matchCancel = createServerFn({ method: 'POST' })
         update matches set cancel_requested_by = ${me.playerId}
         where id = ${data.matchId} and status = 'in_progress'`;
     }
-    return view(data.matchId, me.playerId);
+    return view(data.matchId, me);
   });
 
 export const matchReport = createServerFn({ method: 'POST' })
@@ -111,7 +132,7 @@ export const matchReport = createServerFn({ method: 'POST' })
         reported_winner_team = ${data.winnerTeam},
         auto_confirm_at = now() + interval '1 minute' * ${AUTO_CONFIRM_MINUTES}
       where id = ${data.matchId} and status = 'in_progress'`;
-    return view(data.matchId, me.playerId);
+    return view(data.matchId, me);
   });
 
 // Only the side that didn't report can confirm or dispute.
@@ -126,7 +147,7 @@ export const matchConfirm = createServerFn({ method: 'POST' })
     if (canAnswerReport(match, participants, me.playerId)) {
       await sql()`select apply_match_result(${data.matchId}, ${match.reported_winner_team})`;
     }
-    return view(data.matchId, me.playerId);
+    return view(data.matchId, me);
   });
 
 export const matchDispute = createServerFn({ method: 'POST' })
@@ -146,7 +167,7 @@ export const matchDispute = createServerFn({ method: 'POST' })
         insert into disputes (match_id, raised_by, reason)
         values (${data.matchId}, ${me.playerId}, ${data.reason})`;
     }
-    return view(data.matchId, me.playerId);
+    return view(data.matchId, me);
   });
 
 export const profileGet = createServerFn({ method: 'POST' })

@@ -14,29 +14,31 @@ interface PlayerRow {
   avatar_url: string | null;
   is_admin: boolean;
   banned_at: Date | null;
+  open_match_id: string | null;
 }
 
+// One round trip: this runs at the top of every server function, so the
+// open-match lookup rides along as a subselect rather than a second query.
 export async function loadSessionPlayer(): Promise<Me | null> {
   const session = await readSession();
   if (!session) return null;
   const rows = await sql()<PlayerRow[]>`
-    select id, steam_id, coalesce(display_name, persona_name) as persona_name,
-           avatar_url, is_admin, banned_at
-    from players where id = ${session.playerId}`;
+    select p.id, p.steam_id, coalesce(p.display_name, p.persona_name) as persona_name,
+           p.avatar_url, p.is_admin, p.banned_at,
+           (select mp.match_id
+            from match_participants mp join matches m on m.id = mp.match_id
+            where mp.player_id = p.id and m.status in ('in_progress', 'reported', 'disputed')
+            limit 1) as open_match_id
+    from players p where p.id = ${session.playerId}`;
   const player = rows[0];
   if (!player || player.banned_at) return null;
-  const [open] = await sql()<{ match_id: string }[]>`
-    select mp.match_id
-    from match_participants mp join matches m on m.id = mp.match_id
-    where mp.player_id = ${player.id} and m.status in ('in_progress', 'reported', 'disputed')
-    limit 1`;
   return {
     playerId: player.id,
     steamId: player.steam_id,
     personaName: player.persona_name,
     avatarUrl: player.avatar_url,
     isAdmin: player.is_admin,
-    openMatchId: open?.match_id ?? null,
+    openMatchId: player.open_match_id,
   };
 }
 

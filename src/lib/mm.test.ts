@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { COUNTDOWN_S, LAUNCHABLE_WINDOW_S, deriveMmStatus, isLaunchable, launchProgress } from './mm';
+import {
+  COUNTDOWN_S,
+  LAUNCHABLE_WINDOW_S,
+  deriveMmStatus,
+  isLaunchable,
+  launchProgress,
+  parseModSignal,
+} from './mm';
 
 describe('isLaunchable', () => {
   const now = 1_000_000;
@@ -76,4 +83,28 @@ describe('launchProgress', () => {
 it('pins the timings mirrored in 0009_matchmaking.sql', () => {
   expect(COUNTDOWN_S).toBe(10);
   expect(LAUNCHABLE_WINDOW_S).toBe(15);
+});
+
+describe('parseModSignal', () => {
+  it('keeps a well-formed signal, trimming the version strings', () => {
+    expect(parseModSignal({ state: 'menu', modVersion: '0.3.0', gameVersion: 'x'.repeat(80) })).toEqual({
+      state: 'menu',
+      modVersion: '0.3.0',
+      gameVersion: 'x'.repeat(40),
+    });
+  });
+  it('tolerates missing versions', () => {
+    expect(parseModSignal({ state: 'ingame' })).toEqual({
+      state: 'ingame',
+      modVersion: null,
+      gameVersion: null,
+    });
+  });
+  it('is null, never an error, for anything else', () => {
+    expect(parseModSignal(null)).toBeNull();
+    expect(parseModSignal(undefined)).toBeNull();
+    expect(parseModSignal('menu')).toBeNull();
+    expect(parseModSignal({ state: 'dancing' })).toBeNull();
+    expect(parseModSignal({ modVersion: '0.3.0' })).toBeNull();
+  });
 });

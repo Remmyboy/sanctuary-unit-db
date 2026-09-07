@@ -15,7 +15,7 @@ import {
   TICKET_IDENTITY,
   type Faction,
   type MmMode,
-  type MmStatus,
+  type ModMatch,
 } from '../lib/mm';
 
 export const json = (status: number, body: unknown) =>
@@ -85,33 +85,12 @@ export async function sweepAll(): Promise<void> {
 }
 
 // ---- the match object the mod sees -----------------------------------------
+// The shape itself (ModMatch) lives in src/lib/mm.ts: the match room carries
+// one too, to push over the local bridge.
 
-export interface ModMatch {
-  id: string;
-  mode: MmMode;
-  status: MmStatus;
-  host: string;
-  joiner: string;
-  opponent: { steamId: string; name: string };
-  map: string | null; // the game's map path; null on manual matches
-  mapName: string;
-  factions: Record<string, Faction>;
-  slots: Record<string, number>;
-  sessionId: string | null;
-  countdownEndsAt: string | null;
-  cancelledBy: string | null;
-  reason: string | null;
-}
-
-interface ModPlayerRow {
-  player_id: string;
-  steam_id: string;
-  persona_name: string;
-  faction: Faction | null;
-  slot: number | null;
-}
-
-interface ModMatchRow {
+// The columns toModMatch reads — a subset of both the poll query below and
+// match-data's MatchRow, so either can feed it.
+export interface ModMatchSource {
   id: string;
   status: 'in_progress' | 'reported' | 'completed' | 'disputed' | 'cancelled';
   mm_mode: MmMode;
@@ -120,10 +99,21 @@ interface ModMatchRow {
   map_path: string | null;
   host_player_id: string;
   session_id: string | null;
-  countdown_ends_at: Date | null;
+  countdown_ends_at: Date | string | null;
   cancelled_by: string | null;
   mm_reason: string | null;
-  players: ModPlayerRow[]; // json_agg
+}
+
+export interface ModMatchPlayer {
+  player_id: string;
+  steam_id: string;
+  persona_name: string;
+  faction: Faction | null;
+  slot: number | null;
+}
+
+interface ModMatchRow extends ModMatchSource {
+  players: ModMatchPlayer[]; // json_agg
 }
 
 // The match row with its players folded in, so one query answers a poll.
@@ -140,7 +130,7 @@ const MATCH_SELECT = `
 
 export async function loadModMatch(matchId: string, mySteamId: string): Promise<ModMatch | null> {
   const [m] = await sql().unsafe<ModMatchRow[]>(`${MATCH_SELECT} where m.id = $1`, [matchId]);
-  return m ? toModMatch(m, mySteamId) : null;
+  return m ? toModMatch(m, m.players ?? [], mySteamId) : null;
 }
 
 // The 1v1 match the mod should be acting on: an open one, or an auto one
@@ -157,11 +147,11 @@ export async function currentModMatch(playerId: string, mySteamId: string): Prom
      limit 1`,
     [playerId],
   );
-  return m ? toModMatch(m, mySteamId) : null;
+  return m ? toModMatch(m, m.players ?? [], mySteamId) : null;
 }
 
-function toModMatch(m: ModMatchRow, mySteamId: string): ModMatch | null {
-  const players = m.players ?? [];
+// Only ever a 1v1 with both players present; anything else is null.
+export function toModMatch(m: ModMatchSource, players: ModMatchPlayer[], mySteamId: string): ModMatch | null {
   const host = players.find((p) => p.player_id === m.host_player_id);
   const joiner = players.find((p) => p.player_id !== m.host_player_id);
   if (!host || !joiner || players.length !== 2) return null;

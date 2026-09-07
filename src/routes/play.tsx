@@ -1,9 +1,11 @@
 // The queue hub: every mode's queue with live counts, your open match if you
 // have one, and the reporter mod. The live status comes from the app-wide
-// queue watch (src/lib/queue-watch.ts) — this page just asks it to keep
-// polling while open, so counts stay fresh even before you queue. Degrades
-// to counts-only when signed out, and to "unreachable" when there's no
-// backend (the static e2e build).
+// queue watch (src/lib/queue-watch.ts), which polls only while you're
+// queued; before that the counts come from the CDN-cached public endpoint,
+// shared by every viewer, and the game on this PC is read over the local
+// bridge (src/lib/mod-bridge.ts) for free. Degrades to counts-only when
+// signed out, and to "unreachable" when there's no backend (the static e2e
+// build).
 
 import { useEffect, useRef, useState } from 'react';
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
@@ -15,11 +17,15 @@ import { signInHref } from '../lib/return-to';
 import { MODES, type Mode } from '../lib/ladder-modes';
 import { primeAudio } from '../lib/match-alert';
 import { FACTIONS, isFaction, type Faction } from '../lib/mm';
-import { applyStatus, markJoining, useQueueState, watchQueue } from '../lib/queue-watch';
-import { queueCounts, queueJoin, queueLeave } from '../server/queue-fns';
+import { bridgeSignal, useModBridge, watchBridge } from '../lib/mod-bridge';
+import { fetchQueueCounts } from '../lib/queue-counts';
+import { applyStatus, isQueued, markJoining, refreshQueue, useQueueState } from '../lib/queue-watch';
+import { queueJoin, queueLeave } from '../server/queue-fns';
 import type { Me, PlayStatus, QueueCounts } from '../lib/ladder-types';
 
-const POLL_MS = 5000;
+// The public counts are served from a 10 s CDN cache; asking more often than
+// this only re-reads the same copy.
+const COUNTS_MS = 30_000;
 
 // Factions you'll accept in an auto-launched 1v1, remembered per browser.
 const FACTIONS_KEY = 'sdb.factions';
@@ -56,6 +62,7 @@ export const Route = createFileRoute('/play')({
 function PlayPage() {
   const [me, setMe] = useState<Me | null | undefined>(undefined);
   const { status, fetchedAt, joinedAt } = useQueueState();
+  const bridge = useModBridge();
   const [counts, setCounts] = useState<QueueCounts | null>(null);
   const [busy, setBusy] = useState<Mode | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -74,18 +81,24 @@ function PlayPage() {
     };
   }, []);
 
-  // Signed in: the shared watch polls while this page is open. Signed out:
-  // just the public counts.
+  // The game on this PC, watched for as long as this page is open so the
+  // auto-launch line is right before you click, not after.
+  useEffect(() => watchBridge(), []);
+
+  // The public counts, for everyone. A queued player's own poll carries
+  // fresher ones and wins below.
   useEffect(() => {
-    if (me === undefined) return;
-    if (me) return watchQueue();
-    const tick = () =>
-      queueCounts()
-        .then((c) => alive.current && setCounts(c))
-        .catch(() => {});
+    const tick = () => void fetchQueueCounts().then((c) => alive.current && c && setCounts(c));
     tick();
-    const id = setInterval(tick, POLL_MS);
+    const id = setInterval(tick, COUNTS_MS);
     return () => clearInterval(id);
+  }, []);
+
+  // Signed in: one answer now, so an open match or a queue from another tab
+  // shows up. The shared watch keeps polling only if that answer says we're
+  // queued.
+  useEffect(() => {
+    if (me) refreshQueue();
   }, [me]);
 
   // An open match is the only thing that matters here: go straight to it,
@@ -118,7 +131,10 @@ function PlayPage() {
 
   const signedIn = !!me;
   const blocked = !!status?.matchId;
-  const liveGames = status?.liveGames ?? counts?.liveGames ?? null;
+  // While queued the status poll is the freshest word on the counts; idle,
+  // the shared public copy is.
+  const live = status !== null && isQueued(status);
+  const liveGames = live ? status.liveGames : (counts?.liveGames ?? status?.liveGames ?? null);
 
   return (
     <>
@@ -159,12 +175,16 @@ function PlayPage() {
               mode={mode}
               status={status?.queues[mode] ?? null}
               joinedAtMs={joinedAt[mode]}
-              waiting={status ? status.queues[mode].waiting : (counts?.waiting[mode] ?? null)}
+              waiting={
+                live
+                  ? status.queues[mode].waiting
+                  : (counts?.waiting[mode] ?? status?.queues[mode].waiting ?? null)
+              }
               signedIn={signedIn}
               blocked={blocked}
               busy={busy === mode}
               factions={factions}
-              mod={status?.mod ?? null}
+              bridge={bridge}
               onFactions={(f) => {
                 setFactions(f);
                 saveFactions(f);
@@ -174,7 +194,7 @@ function PlayPage() {
                 primeAudio();
                 // The join itself may complete the match (someone waiting).
                 markJoining();
-                void act(mode, () => queueJoin({ data: { mode, factions } }));
+                void act(mode, () => queueJoin({ data: { mode, factions, mod: bridgeSignal() } }));
               }}
               onLeave={() => act(mode, () => queueLeave({ data: { mode } }))}
             />

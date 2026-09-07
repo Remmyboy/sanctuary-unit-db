@@ -3,10 +3,16 @@
 // is the heartbeat that keeps entries alive, it sweeps overdue auto-confirms,
 // and it runs a pairing pass for every mode the caller is queued in — so
 // matches form and finalise with no cron and no long-running process.
+//
+// Round trips are the cost that matters (docs/local-bridge.md): each poll
+// is a Vercel function that waits on the database, so the status is one
+// query, and the heartbeat bump and the pairing passes are one each.
 
 import { createServerFn } from '@tanstack/react-start';
 import { sql } from './db';
 import { requirePlayer } from './player';
+import { recordPresence } from './presence';
+import { LIVE_GAMES_SQL, WAITING_SQL, toCounts } from './queue-counts';
 import { LADDER_MAPS, type LadderMap } from '../lib/ladder-maps';
 import {
   MODES,
@@ -17,14 +23,16 @@ import {
   type Mode,
 } from '../lib/ladder-modes';
 import { searchRadius } from '../lib/matchmaking';
-import { FACTIONS, isFaction, isLaunchable, type Faction, type ModState } from '../lib/mm';
-import type {
-  LeaderboardRow,
-  ModPresence,
-  PlayStatus,
-  QueueCounts,
-  QueueModeStatus,
-} from '../lib/ladder-types';
+import {
+  FACTIONS,
+  isFaction,
+  isLaunchable,
+  parseModSignal,
+  type Faction,
+  type ModSignal,
+  type ModState,
+} from '../lib/mm';
+import type { LeaderboardRow, ModPresence, PlayStatus, QueueModeStatus } from '../lib/ladder-types';
 
 // A player's unfinished matches, in one pass. Two different things live in
 // here: the game they are in *right now*, which is the only thing that stops
@@ -34,20 +42,49 @@ import type {
 // admin; neither is a reason to keep someone off the ladder when their
 // opponent has simply gone offline. The Play page points at the settling one
 // so confirm/dispute is still a click away.
+const UNFINISHED_SQL = `
+  select json_agg(json_build_object('match_id', mp.match_id, 'status', m.status) order by m.created_at desc)
+  from match_participants mp
+  join matches m on m.id = mp.match_id
+  where mp.player_id = $1
+    and m.status in ('in_progress', 'reported', 'disputed')`;
+
+interface UnfinishedRow {
+  match_id: string;
+  status: string;
+}
+
+const splitUnfinished = (rows: UnfinishedRow[] | null) => ({
+  matchId: rows?.find((r) => r.status === 'in_progress')?.match_id ?? null,
+  settlingMatchId: rows?.find((r) => r.status !== 'in_progress')?.match_id ?? null,
+});
+
 async function unfinishedFor(
   playerId: string,
 ): Promise<{ matchId: string | null; settlingMatchId: string | null }> {
-  const rows = await sql()<{ match_id: string; status: string }[]>`
-    select mp.match_id, m.status
-    from match_participants mp
-    join matches m on m.id = mp.match_id
-    where mp.player_id = ${playerId}
-      and m.status in ('in_progress', 'reported', 'disputed')
-    order by m.created_at desc`;
-  return {
-    matchId: rows.find((r) => r.status === 'in_progress')?.match_id ?? null,
-    settlingMatchId: rows.find((r) => r.status !== 'in_progress')?.match_id ?? null,
-  };
+  const [row] = await sql().unsafe<{ rows: UnfinishedRow[] | null }[]>(`select (${UNFINISHED_SQL}) as rows`, [
+    playerId,
+  ]);
+  return splitUnfinished(row?.rows ?? null);
+}
+
+// The seed pools, for the pairing statement's fallback: an emptied admin
+// pool falls back to the seed list rather than leaving a mode unplayable.
+const SEED_POOLS = JSON.stringify(
+  Object.fromEntries(MODES.map((m) => [m, LADDER_MAPS[m].map((x) => x.name)])),
+);
+
+// A pairing pass per mode, in one statement. The live pool comes from
+// ladder_maps (curated on the admin page); the seed list stands in when it
+// is empty.
+async function pairModes(modes: Mode[]): Promise<void> {
+  if (modes.length === 0) return;
+  await sql()`
+    select (select count(*) from pair_queue(m.mode, coalesce(
+      (select array_agg(l.name order by l.name) from ladder_maps l where l.mode = m.mode and l.enabled),
+      (select array_agg(x.name) from json_array_elements_text(${SEED_POOLS}::json -> m.mode) as x(name))
+    ))) as paired
+    from unnest(${sql().array(modes)}::text[]) as m(mode)`;
 }
 
 // The live pool for a mode, curated on the admin page. An emptied pool
@@ -57,11 +94,6 @@ async function poolFor(mode: Mode): Promise<LadderMap[]> {
     select name, size from ladder_maps where mode = ${mode} and enabled order by name`;
   return rows.length > 0 ? rows : LADDER_MAPS[mode];
 }
-
-const runPairingPass = async (mode: Mode) => {
-  const names = (await poolFor(mode)).map((m) => m.name);
-  await sql()`select pair_queue(${mode}, ${sql().array(names)}::text[])`;
-};
 
 // The enabled pools, for the standings sidebar.
 export const mapPools = createServerFn().handler(async (): Promise<Record<Mode, LadderMap[]>> => {
@@ -73,48 +105,50 @@ export const mapPools = createServerFn().handler(async (): Promise<Record<Mode, 
 // Overdue auto-confirms, plus auto-launch countdowns and timeouts.
 const sweepDueMatches = () => sql()`select sweep_all()`;
 
-// Live entries only: stale ones are swept by pairing passes, but the count is
-// read by visitors who never trigger one. Plus how many games are on right
-// now — the other half of "is anything happening?".
-async function countQueues(): Promise<QueueCounts> {
-  const rows = await sql()<{ mode: Mode; n: number }[]>`
-    select mode, count(*)::int as n from queue_entries
-    where heartbeat_at > now() - interval '90 seconds'
-    group by mode`;
-  const waiting: Record<Mode, number> = { '1v1': 0, '2v2': 0, '3v3': 0 };
-  for (const r of rows) waiting[r.mode] = r.n;
-  const [live] = await sql()<{ n: number }[]>`
-    select count(*)::int as n from matches where status in ('in_progress', 'reported', 'disputed')`;
-  return { waiting, liveGames: live?.n ?? 0 };
+// Times come back as epoch milliseconds rather than JSON-encoded timestamps,
+// so nothing depends on how Postgres spells a fractional second.
+interface StatusRow {
+  unfinished: UnfinishedRow[] | null;
+  mine: { mode: Mode; joined_ms: number; factions: Faction[] }[] | null;
+  waiting: Partial<Record<Mode, number>> | null;
+  live_games: number;
+  mod: { state: ModState; seen_ms: number } | null;
 }
 
-// The mod's last heartbeat, if it's recent enough to mean anything (a minute:
-// long enough to show "mod seen, but in a lobby", not so long it's stale).
-async function presenceFor(playerId: string): Promise<ModPresence | null> {
-  const [row] = await sql()<{ state: ModState; seen_at: Date }[]>`
-    select state, seen_at from mod_presence
-    where player_id = ${playerId} and seen_at > now() - interval '60 seconds'`;
-  if (!row) return null;
-  return {
-    state: row.state,
-    seenAt: row.seen_at.toISOString(),
-    launchable: isLaunchable(row.seen_at.getTime(), row.state, Date.now()),
-  };
-}
-
+// Everything the Play page needs, in one query. The mod's last word counts
+// for a minute: long enough to show "mod seen, but in a lobby", not so long
+// it's stale.
 async function playStatus(playerId: string): Promise<PlayStatus> {
-  const { matchId, settlingMatchId } = await unfinishedFor(playerId);
-  const mine = await sql()<{ mode: Mode; joined_at: Date; factions: Faction[] }[]>`
-    select mode, joined_at, factions from queue_entries where player_id = ${playerId}`;
-  const counts = await countQueues();
-  const mod = await presenceFor(playerId);
+  const [row] = await sql().unsafe<StatusRow[]>(
+    `select
+       (${UNFINISHED_SQL}) as unfinished,
+       (select json_agg(json_build_object(
+          'mode', mode, 'joined_ms', floor(extract(epoch from joined_at) * 1000), 'factions', factions))
+        from queue_entries where player_id = $1) as mine,
+       (${WAITING_SQL}) as waiting,
+       (${LIVE_GAMES_SQL}) as live_games,
+       (select json_build_object('state', state, 'seen_ms', floor(extract(epoch from seen_at) * 1000))
+        from mod_presence
+        where player_id = $1 and seen_at > now() - interval '60 seconds') as mod`,
+    [playerId],
+  );
+  const counts = toCounts(row?.waiting ?? null, row?.live_games ?? 0);
+  const mine = row?.mine ?? [];
+  const now = Date.now();
+
+  let mod: ModPresence | null = null;
+  if (row?.mod) {
+    mod = {
+      state: row.mod.state,
+      seenAt: new Date(row.mod.seen_ms).toISOString(),
+      launchable: isLaunchable(row.mod.seen_ms, row.mod.state, now),
+    };
+  }
 
   const queues = {} as Record<Mode, QueueModeStatus>;
   for (const mode of MODES) {
     const entry = mine.find((m) => m.mode === mode);
-    const queuedSeconds = entry
-      ? Math.max(0, Math.floor((Date.now() - entry.joined_at.getTime()) / 1000))
-      : null;
+    const queuedSeconds = entry ? Math.max(0, Math.floor((now - entry.joined_ms) / 1000)) : null;
     queues[mode] = {
       inQueue: entry !== undefined,
       queuedSeconds,
@@ -124,8 +158,7 @@ async function playStatus(playerId: string): Promise<PlayStatus> {
     };
   }
   return {
-    matchId,
-    settlingMatchId,
+    ...splitUnfinished(row?.unfinished ?? null),
     queues,
     liveGames: counts.liveGames,
     mod,
@@ -146,14 +179,22 @@ const factionsInput = (v: unknown): Faction[] => {
   return picked.length > 0 ? picked : [...FACTIONS];
 };
 
+// What the page can see of the local mod (docs/local-bridge.md); optional
+// on every poll-shaped call.
+const modInput = (data: unknown): ModSignal | null => parseModSignal((data as { mod?: unknown } | null)?.mod);
+
 export const queueJoin = createServerFn({ method: 'POST' })
-  .validator((data: unknown): { mode: Mode; factions: Faction[] } => ({
+  .validator((data: unknown): { mode: Mode; factions: Faction[]; mod: ModSignal | null } => ({
     ...modeInput(data),
     factions: factionsInput((data as { factions?: unknown }).factions),
+    mod: modInput(data),
   }))
   .handler(async ({ data }): Promise<PlayStatus> => {
     const me = await requirePlayer();
     if ((await unfinishedFor(me.playerId)).matchId) return playStatus(me.playerId);
+    // Presence before pairing: the join may complete the match on the spot,
+    // and whether it goes auto turns on this.
+    if (data.mod) await recordPresence(me.playerId, data.mod);
 
     // The rating snapshot the matchmaker balances on is this mode's.
     await sql()`select ensure_rating(${me.playerId}, ${data.mode})`;
@@ -164,7 +205,7 @@ export const queueJoin = createServerFn({ method: 'POST' })
       on conflict (player_id, mode) do update set
         rating = excluded.rating, factions = excluded.factions, heartbeat_at = now()`;
 
-    await runPairingPass(data.mode);
+    await pairModes([data.mode]);
     return playStatus(me.playerId);
   });
 
@@ -176,24 +217,25 @@ export const queueLeave = createServerFn({ method: 'POST' })
     return playStatus(me.playerId);
   });
 
-export const queueStatus = createServerFn({ method: 'POST' }).handler(async (): Promise<PlayStatus> => {
-  const me = await requirePlayer();
+export const queueStatus = createServerFn({ method: 'POST' })
+  .validator((data: unknown): { mod: ModSignal | null } => ({ mod: modInput(data) }))
+  .handler(async ({ data }): Promise<PlayStatus> => {
+    const me = await requirePlayer();
 
-  await sweepDueMatches();
+    if (data.mod) await recordPresence(me.playerId, data.mod);
+    await sweepDueMatches();
 
-  // Bump the heartbeat before pairing so these entries can't be swept as
-  // stale by the very passes they trigger.
-  const mine = await sql()<{ mode: Mode }[]>`
-    update queue_entries set heartbeat_at = now()
-    where player_id = ${me.playerId}
-    returning mode`;
-  for (const { mode } of mine) await runPairingPass(mode);
+    // Bump the heartbeat before pairing so these entries can't be swept as
+    // stale by the very passes they trigger. Its own statement on purpose: a
+    // function called from the same statement would not see the bump.
+    const mine = await sql()<{ mode: Mode }[]>`
+      update queue_entries set heartbeat_at = now()
+      where player_id = ${me.playerId}
+      returning mode`;
+    await pairModes(mine.map((m) => m.mode));
 
-  return playStatus(me.playerId);
-});
-
-// For visitors who aren't signed in: how alive each queue is.
-export const queueCounts = createServerFn().handler(async (): Promise<QueueCounts> => countQueues());
+    return playStatus(me.playerId);
+  });
 
 export const leaderboard = createServerFn()
   .validator((data: unknown): { mode: LeaderboardMode } => {

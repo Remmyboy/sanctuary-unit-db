@@ -5,9 +5,10 @@
 
 import type { Mode } from '../lib/ladder-modes';
 import { searchRadius } from '../lib/matchmaking';
-import { FACTIONS, type Faction } from '../lib/mm';
+import { FACTIONS, type Faction, type ModState } from '../lib/mm';
+import type { BridgeState } from '../lib/mod-bridge';
 import { useNow } from '../lib/use-now';
-import type { ModPresence, QueueModeStatus } from '../lib/ladder-types';
+import type { QueueModeStatus } from '../lib/ladder-types';
 
 const elapsed = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
@@ -17,12 +18,36 @@ const BLURB: Record<Mode, string> = {
   '3v3': 'Solo queue — six players, split into the most even teams by rating.',
 };
 
-const STATE_LABEL: Record<ModPresence['state'], string> = {
+const STATE_LABEL: Record<ModState, string> = {
   menu: 'in the menu',
   lobby: 'in a lobby',
   loading: 'loading a game',
   ingame: 'in a game',
 };
+
+// What the page can see of the game on this PC (docs/local-bridge.md). Says
+// nothing until the first probe has answered, so the line never flashes
+// "manual" at someone whose mod is about to be seen.
+function LaunchState({ bridge }: { bridge: BridgeState }) {
+  if (!bridge.probed) return null;
+  const mod = bridge.status;
+  return (
+    <p className="launch-state" data-ready={mod?.state === 'menu' || undefined}>
+      {mod?.state === 'menu' ? (
+        <>
+          <strong>Auto-launch ready</strong> — if your opponent's is too, the game starts itself.
+        </>
+      ) : mod ? (
+        <>Game seen {STATE_LABEL[mod.state]} — back to the main menu to auto-launch.</>
+      ) : (
+        <>
+          Manual hosting — run the game with the LadderReporter mod for auto-launch. If your browser asks
+          whether this site may reach devices on your network, allow it.
+        </>
+      )}
+    </p>
+  );
+}
 
 export function QueueCard({
   mode,
@@ -33,7 +58,7 @@ export function QueueCard({
   blocked,
   busy,
   factions,
-  mod,
+  bridge,
   onFactions,
   onJoin,
   onLeave,
@@ -46,7 +71,7 @@ export function QueueCard({
   blocked: boolean; // an open match to deal with first
   busy: boolean;
   factions: Faction[]; // 1v1 only: what an auto match may launch you as
-  mod: ModPresence | null; // 1v1 only: the in-game mod's last word
+  bridge: BridgeState; // 1v1 only: the local mod, as the page sees it
   onFactions: (f: Faction[]) => void;
   onJoin: () => void;
   onLeave: () => void;
@@ -115,19 +140,7 @@ export function QueueCard({
           )}
         </>
       )}
-      {auto && (
-        <p className="launch-state" data-ready={mod?.launchable || undefined}>
-          {mod?.launchable ? (
-            <>
-              <strong>Auto-launch ready</strong> — if your opponent's is too, the game starts itself.
-            </>
-          ) : mod ? (
-            <>Game seen {STATE_LABEL[mod.state]} — back to the main menu to auto-launch.</>
-          ) : (
-            <>Manual hosting — run the game with the mod for auto-launch.</>
-          )}
-        </p>
-      )}
+      {auto && <LaunchState bridge={bridge} />}
     </div>
   );
 }
