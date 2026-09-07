@@ -2652,11 +2652,6 @@ img.unit-icon[data-muted='true'] {
   text-decoration: underline;
 }
 
-.mods-install .dim {
-  margin: 0 0 10px;
-  font-size: 12.5px;
-  line-height: 1.6;
-}
 .mods-steps {
   margin: 0 0 12px;
   padding-left: 20px;
@@ -2664,8 +2659,7 @@ img.unit-icon[data-muted='true'] {
   line-height: 1.7;
   color: var(--text-dim);
 }
-.mods-steps strong,
-.mods-install .dim strong {
+.mods-steps strong {
   color: var(--text);
   font-weight: 600;
 }
@@ -2739,14 +2733,18 @@ img.unit-icon[data-muted='true'] {
   text-align: center;
 }
 
-.mod-para {
-  margin: 0 0 8px;
-  font-size: 13px;
-  line-height: 1.6;
-  max-width: 72ch;
+.mod-points {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  max-width: 78ch;
 }
-.mod-para:last-of-type {
-  margin-bottom: 0;
+.mod-points li {
+  margin-bottom: 3px;
+}
+.mod-points li::marker {
+  color: var(--icon-muted);
 }
 
 .mod-entry-foot {
@@ -2774,10 +2772,6 @@ img.unit-icon[data-muted='true'] {
 }
 .mod-links a:hover {
   text-decoration: underline;
-}
-
-.mods-footnote {
-  margin-top: 18px;
 }
 
 @media (max-width: 620px) {

@@ -99,8 +99,7 @@ export function ReporterCard() {
           <a href={sourceHref(REPORTER)} target="_blank" rel="noreferrer">
             check out the source code here
           </a>
-          . There are <Link to="/mods">more mods for Sanctuary</Link> from the same repo: an economy HUD,
-          faction-agnostic build hotkeys, replay tools and more.
+          . Same repo has <Link to="/mods">more mods for Sanctuary</Link>.
         </p>
       </div>
     </div>

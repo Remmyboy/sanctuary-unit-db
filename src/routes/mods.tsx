@@ -1,5 +1,6 @@
-// The mods page: every mod in the sanctuary-mods repo, described in terms of
-// what it does to your game rather than how it does it. The catalogue itself
+// The mods page: every mod in the sanctuary-mods repo, in terms of what it
+// does to your game. Deliberately scannable — a line and a few bullets each,
+// with the repo one click away for anyone who wants the detail. The catalogue
 // lives in src/lib/mods.ts, shared with the Play page's download card, so a
 // version bump moves both.
 
@@ -36,7 +37,7 @@ function ModsPage() {
     <>
       <div className="toolbar">
         <span className="toolbar-summary">
-          Mods · {MODS.length} mods for Sanctuary: Shattered Sun, free and open source
+          Mods · {MODS.length} for Sanctuary: Shattered Sun, free and open source
         </span>
         <a className="toolbar-link" href={MODS_REPO} target="_blank" rel="noreferrer">
           Source on GitHub ↗
@@ -44,10 +45,8 @@ function ModsPage() {
       </div>
       <main className="mods-page">
         <p className="mods-intro">
-          Small quality-of-life mods for the playtest: a readable economy readout, hotkeys that work the same
-          on every faction, proper replay playback, and the mod that reports your ladder games for you. They
-          change what you see, not how the game plays — so you can join a lobby with people who have none of
-          them, and nothing here touches your game files or shows up in Steam&rsquo;s file check.
+          Quality-of-life mods for the playtest. They change what you see, not how the game plays — so you can
+          still join a lobby with people who have none of them, and nothing here touches your game files.
         </p>
 
         <Install />
@@ -57,48 +56,34 @@ function ModsPage() {
             <ModEntry key={m.id} mod={m} />
           ))}
         </div>
-
-        <p className="hint mods-footnote">
-          Every mod is built from{' '}
-          <a href={MODS_REPO} target="_blank" rel="noreferrer">
-            sanctuary-mods
-          </a>{' '}
-          and released there — issues and pull requests welcome, and each release&rsquo;s notes say what
-          changed.
-        </p>
       </main>
     </>
   );
 }
 
-// Two zips per mod is the one thing worth explaining before the list, since
-// picking the wrong one is the only way to get this wrong.
+// Two zips per mod is the one thing worth explaining up front, since picking
+// the wrong one is the only way to get this wrong.
 function Install() {
   const [copied, setCopied] = useState(false);
 
   return (
     <section className="queue-widget mods-install">
       <h2>Installing them</h2>
-      <p className="dim">
-        Every mod ships two downloads. Take <strong>Standalone</strong> for your first one — it carries
-        everything the mod needs. After that, take <strong>for the Mod Manager</strong>, which is just the mod
-        and turns up as a switch on the game&rsquo;s Mods page.
-      </p>
       <ol className="mods-steps">
         <li>
-          Download the <strong>Standalone</strong> zip of the <a href="#ModManager">Mod Manager</a> first.
+          Grab the <strong>Standalone</strong> zip of the <a href="#ModManager">Mod Manager</a> — it carries
+          everything needed to run mods at all.
         </li>
         <li>
-          Extract it into your Sanctuary <code>engine</code> folder, so <code>winhttp.dll</code> ends up next
-          to <code>Sanctuary.exe</code>.
+          Extract it into your Sanctuary <code>engine</code> folder, so <code>winhttp.dll</code> lands next to{' '}
+          <code>Sanctuary.exe</code>.
         </li>
         <li>
-          Start the game — there is now a <strong>Mods</strong> entry in the menu sidebar (or press{' '}
-          <kbd>F8</kbd>).
+          Launch the game: there is now a <strong>Mods</strong> entry in the menu sidebar (<kbd>F8</kbd> too).
         </li>
         <li>
-          For every other mod, download its <strong>for the Mod Manager</strong> zip and extract it into the
-          same <code>engine</code> folder. It appears on the Mods page, ready to switch on.
+          After that, take each mod&rsquo;s <strong>for the Mod Manager</strong> zip into the same folder. It
+          turns up as a switch on that page.
         </li>
       </ol>
       <div className="install-path">
@@ -117,10 +102,9 @@ function Install() {
         </button>
       </div>
       <p className="hint">
-        That path is the usual one for the Steam playtest; yours moves with your Steam library. To remove
-        everything again, delete <code>engine\winhttp.dll</code>, <code>engine\BepInEx\</code> and{' '}
-        <code>engine\SanctuaryMods\</code> — none of them are game files, so Steam&rsquo;s &ldquo;verify
-        integrity&rdquo; never notices they were there.
+        Yours moves with your Steam library. To undo the lot, delete <code>engine\winhttp.dll</code>,{' '}
+        <code>engine\BepInEx\</code> and <code>engine\SanctuaryMods\</code> — Steam&rsquo;s file check never
+        knows they were there.
       </p>
     </section>
   );
@@ -146,11 +130,11 @@ function ModEntry({ mod }: { mod: Mod }) {
         </div>
       </header>
 
-      {mod.detail.map((para) => (
-        <p key={para.slice(0, 40)} className="mod-para">
-          {para}
-        </p>
-      ))}
+      <ul className="mod-points">
+        {mod.points.map((point) => (
+          <li key={point}>{point}</li>
+        ))}
+      </ul>
 
       <footer className="mod-entry-foot">
         {mod.keys && <span className="mod-keys">{mod.keys}</span>}
