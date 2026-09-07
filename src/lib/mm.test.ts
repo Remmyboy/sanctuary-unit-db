@@ -18,8 +18,11 @@ describe('isLaunchable', () => {
     expect(isLaunchable(now - LAUNCHABLE_WINDOW_S * 1000, 'menu', now)).toBe(false);
     expect(isLaunchable(null, 'menu', now)).toBe(false);
   });
-  it('is false anywhere but the menu', () => {
-    expect(isLaunchable(now, 'lobby', now)).toBe(false);
+  it('is true wherever the mod can launch from: menu, lobby, replay', () => {
+    expect(isLaunchable(now, 'lobby', now)).toBe(true);
+    expect(isLaunchable(now, 'replay', now)).toBe(true);
+  });
+  it('is false while a game is loading or being played', () => {
     expect(isLaunchable(now, 'loading', now)).toBe(false);
     expect(isLaunchable(now, 'ingame', now)).toBe(false);
     expect(isLaunchable(now, null, now)).toBe(false);
