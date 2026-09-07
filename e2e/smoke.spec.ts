@@ -76,6 +76,11 @@ test('mods page lists every mod with live download links', async ({ page }) => {
   );
   await expect(page.locator('.install-path code')).toContainText('Playtest\\engine');
 
+  // The Mod Manager is the loader, so it ships Standalone only — every other
+  // mod offers both zips.
+  await expect(page.locator('#ModManager .dl-mini')).toHaveCount(0);
+  await expect(page.locator('#SanctuaryHud .dl-mini')).toHaveCount(1);
+
   // The header's repo link, on every page.
   await expect(page.locator('.ghlink')).toHaveAttribute('href', /github\.com\/.+\/sanctuary-unit-db/);
 

@@ -11,6 +11,7 @@ import {
   ENGINE_PATH,
   MODS,
   MODS_REPO,
+  hasManagerZip,
   managerHref,
   releaseNotes,
   sourceHref,
@@ -61,29 +62,27 @@ function ModsPage() {
   );
 }
 
-// Two zips per mod is the one thing worth explaining up front, since picking
-// the wrong one is the only way to get this wrong.
+// Which of the two zips to take is the one thing worth explaining up front,
+// since picking the wrong one is the only way to get this wrong.
 function Install() {
   const [copied, setCopied] = useState(false);
 
   return (
     <section className="queue-widget mods-install">
       <h2>Installing them</h2>
+      <p className="mods-choice">
+        <strong>Standalone</strong> is a mod plus everything it needs to run — take that if it&rsquo;s the
+        only mod you want. <strong>For the Mod Manager</strong> is the mod on its own, for an install that
+        already has the <a href="#ModManager">Mod Manager</a>.
+      </p>
       <ol className="mods-steps">
         <li>
-          Grab the <strong>Standalone</strong> zip of the <a href="#ModManager">Mod Manager</a> — it carries
-          everything needed to run mods at all.
+          Extract the zip into your Sanctuary <code>engine</code> folder, so it sits next to{' '}
+          <code>Sanctuary.exe</code>. Both kinds go in the same place.
         </li>
         <li>
-          Extract it into your Sanctuary <code>engine</code> folder, so <code>winhttp.dll</code> lands next to{' '}
-          <code>Sanctuary.exe</code>.
-        </li>
-        <li>
-          Launch the game: there is now a <strong>Mods</strong> entry in the menu sidebar (<kbd>F8</kbd> too).
-        </li>
-        <li>
-          After that, take each mod&rsquo;s <strong>for the Mod Manager</strong> zip into the same folder. It
-          turns up as a switch on that page.
+          Launch the game. With the Mod Manager there is a <strong>Mods</strong> entry in the menu sidebar (
+          <kbd>F8</kbd> too), listing everything you have dropped in with a switch each.
         </li>
       </ol>
       <div className="install-path">
@@ -124,9 +123,12 @@ function ModEntry({ mod }: { mod: Mod }) {
           <a className="dl-btn" href={standaloneHref(mod)}>
             Download · Standalone
           </a>
-          <a className="dl-mini" href={managerHref(mod)}>
-            for the Mod Manager
-          </a>
+          {/* The Mod Manager is the loader, so it has nothing to plug into. */}
+          {hasManagerZip(mod) && (
+            <a className="dl-mini" href={managerHref(mod)}>
+              for the Mod Manager
+            </a>
+          )}
         </div>
       </header>
 

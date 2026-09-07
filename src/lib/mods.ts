@@ -38,11 +38,12 @@ export const MODS: Mod[] = [
     id: 'ModManager',
     name: 'Mod Manager',
     version: '0.3.0',
-    summary: 'A Mods page in the game menu. Install this one first.',
+    summary: 'A Mods page in the game menu. Start here if you want more than one mod.',
     points: [
       'Every mod gets a switch, and its own settings underneath.',
       'Changes apply with no restart, and stick between sessions.',
       'Loads Lua mods too, and shows the lobby hash for comparing with friends.',
+      'Carries the mod loader, so every other mod becomes a small drop-in zip.',
     ],
     keys: 'F8',
   },
@@ -147,11 +148,17 @@ export const releaseNotes = (m: Mod): string => `${MODS_REPO}/releases/tag/${rel
 
 export const sourceHref = (m: Mod): string => `${MODS_REPO}/tree/main/${m.id}`;
 
-/** Everything in one zip — BepInEx, the loader and the mod — for an install
- *  with no mods on it yet. */
+/** Self-contained: the mod plus BepInEx and the loader it runs on. What you
+ *  want if this is the only mod you're after. */
 export const standaloneHref = (m: Mod): string =>
   `${MODS_REPO}/releases/download/${releaseTag(m)}/${releaseTag(m)}-Standalone.zip`;
 
-/** Just the mod, for an install that already has the Mod Manager. */
+/** Just the mod itself, for an install that already has the Mod Manager —
+ *  zipped as a folder so it drops into the same place as everything else.
+ *
+ *  The Mod Manager has no such build: it *is* the manager and the loader, so
+ *  there is nothing for it to plug into. `hasManagerZip` gates the link. */
 export const managerHref = (m: Mod): string =>
   `${MODS_REPO}/releases/download/${releaseTag(m)}/${releaseTag(m)}-ModManager.zip`;
+
+export const hasManagerZip = (m: Mod): boolean => m.id !== 'ModManager';

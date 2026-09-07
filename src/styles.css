@@ -2652,6 +2652,16 @@ img.unit-icon[data-muted='true'] {
   text-decoration: underline;
 }
 
+.mods-choice {
+  margin: 0 0 10px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+.mods-choice strong {
+  color: var(--text);
+  font-weight: 600;
+}
 .mods-steps {
   margin: 0 0 12px;
   padding-left: 20px;
@@ -2750,7 +2760,6 @@ img.unit-icon[data-muted='true'] {
 .mod-entry-foot {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
   gap: 14px;
   margin-top: 12px;
   padding-top: 10px;
@@ -2761,10 +2770,13 @@ img.unit-icon[data-muted='true'] {
 .mod-keys {
   min-width: 0;
 }
+/* Pushed right by the margin rather than by space-between, so the links stay
+   in the same column whether or not the mod has a hotkey line to its left. */
 .mod-links {
   flex: none;
   display: flex;
   gap: 14px;
+  margin-left: auto;
 }
 .mod-links a {
   color: var(--accent);
@@ -2785,5 +2797,9 @@ img.unit-icon[data-muted='true'] {
   .mod-entry-foot {
     flex-direction: column;
     gap: 6px;
+  }
+  /* Stacked, so the auto margin would shove the links off to the right. */
+  .mod-links {
+    margin-left: 0;
   }
 }
