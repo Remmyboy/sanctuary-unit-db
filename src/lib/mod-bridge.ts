@@ -54,6 +54,11 @@ export interface BridgeState {
 
 const canFetch = () => typeof window !== 'undefined' && typeof fetch === 'function';
 
+// The remembered opt-in. Written only once a probe has actually succeeded:
+// that is the one moment the page knows the browser allowed the connection
+// and the mod was there. A click that ended in the prompt being blocked or
+// dismissed, or with the game closed, is not remembered — so the next visit
+// shows the Connect button again rather than raising the prompt unasked.
 const readEnabled = (): boolean => {
   try {
     return typeof localStorage !== 'undefined' && localStorage.getItem(ENABLED_KEY) === '1';
@@ -115,6 +120,7 @@ const same = (a: BridgeStatus | null, b: BridgeStatus | null): boolean =>
 // answer must not re-render anything.
 function set(status: BridgeStatus | null): void {
   failures = status ? 0 : failures + 1;
+  if (status && state.enabled) writeEnabled(true);
   if (state.probed && same(state.status, status)) return;
   state = { ...state, status, probed: true };
   emit();
@@ -180,9 +186,9 @@ export function watchBridge(): () => void {
   };
 }
 
-// The "Connect to Sanctuary" click. Probes straight away.
+// The "Connect to Sanctuary" click. Probes straight away; remembered only
+// once that probe (or a later one) succeeds — see readEnabled.
 export function enableBridge(): void {
-  writeEnabled(true);
   failures = 0;
   state = { enabled: true, probed: false, status: null };
   emit();
