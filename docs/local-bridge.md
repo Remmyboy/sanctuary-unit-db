@@ -301,3 +301,21 @@ Settled 7 Sep 2026:
   default.
 - The Play page probes the mod whenever it is open, queued or not.
 - No `steamId` in `/status` for v1; the two-accounts-one-PC case is ignored.
+
+## Compatibility while players are still on the old mod
+
+The site half ships first, and nothing here needs a database migration:
+`mod_presence` keeps its shape and the heartbeat keeps writing it through
+the same upsert. What each combination does:
+
+| Mod             | Site | Result                                                                                                                                                                                                                                                                                                               |
+| --------------- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0.2.x heartbeat | old  | Today.                                                                                                                                                                                                                                                                                                               |
+| 0.2.x heartbeat | new  | Unchanged: presence comes from the heartbeat, the match object from the heartbeat reply. Auto-launch works. The page's probe finds no listener and sends `mod: null`, which never touches presence. The Play page and banner show the server's last word about the mod, so the line still reads "Auto-launch ready". |
+| 0.3.x bridge    | old  | The listener sits idle. No presence is written, so every match pairs as manual; results still report.                                                                                                                                                                                                                |
+| 0.3.x bridge    | new  | The design above.                                                                                                                                                                                                                                                                                                    |
+
+An already-open tab running the previous client bundle keeps working across
+the deploy: its `queueStatus()` call without a `mod` field validates to
+`null`, and its `queueCounts` call (the server function this replaces with
+the cached endpoint) fails quietly and shows dashes until the tab reloads.

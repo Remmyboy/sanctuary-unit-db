@@ -44,8 +44,10 @@ export function QueueBanner() {
   const modes = MODES.filter((m) => status.queues[m].inQueue);
   const started = Math.min(...modes.map((m) => joinedAt[m] ?? now));
   // The game on this PC as the page sees it (the queue watch keeps the
-  // bridge probed while we're queued).
-  const mod = bridge.status;
+  // bridge probed while we're queued); an older, heartbeating mod shows up
+  // through the poll instead, until everyone has the bridged one.
+  const ready = bridge.status ? bridge.status.state === 'menu' : (status.mod?.launchable ?? false);
+  const seen = bridge.status !== null || status.mod !== null;
 
   const leave = async (mode: Mode) => {
     setBusy(mode);
@@ -66,7 +68,7 @@ export function QueueBanner() {
       </span>
       {modes.includes('1v1') && (
         <span className="dim">
-          {mod?.state === 'menu' ? 'auto-launch ready' : mod ? 'mod seen, not in the menu' : 'manual hosting'}
+          {ready ? 'auto-launch ready' : seen ? 'mod seen, not in the menu' : 'manual hosting'}
         </span>
       )}
       <span className="queue-banner-actions">

@@ -8,7 +8,7 @@ import { searchRadius } from '../lib/matchmaking';
 import { FACTIONS, type Faction, type ModState } from '../lib/mm';
 import type { BridgeState } from '../lib/mod-bridge';
 import { useNow } from '../lib/use-now';
-import type { QueueModeStatus } from '../lib/ladder-types';
+import type { ModPresence, QueueModeStatus } from '../lib/ladder-types';
 
 const elapsed = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
@@ -27,18 +27,24 @@ const STATE_LABEL: Record<ModState, string> = {
 
 // What the page can see of the game on this PC (docs/local-bridge.md). Says
 // nothing until the first probe has answered, so the line never flashes
-// "manual" at someone whose mod is about to be seen.
-function LaunchState({ bridge }: { bridge: BridgeState }) {
-  if (!bridge.probed) return null;
-  const mod = bridge.status;
+// "manual" at someone whose mod is about to be seen. Until every player has
+// the bridged mod, the server's last word — an older mod's heartbeat, as the
+// status poll reports it — fills in when the page itself sees nothing.
+function LaunchState({ bridge, serverMod }: { bridge: BridgeState; serverMod: ModPresence | null }) {
+  const seen = bridge.status
+    ? { state: bridge.status.state, ready: bridge.status.state === 'menu' }
+    : serverMod
+      ? { state: serverMod.state, ready: serverMod.launchable }
+      : null;
+  if (!seen && !bridge.probed) return null;
   return (
-    <p className="launch-state" data-ready={mod?.state === 'menu' || undefined}>
-      {mod?.state === 'menu' ? (
+    <p className="launch-state" data-ready={seen?.ready || undefined}>
+      {seen?.ready ? (
         <>
           <strong>Auto-launch ready</strong> — if your opponent's is too, the game starts itself.
         </>
-      ) : mod ? (
-        <>Game seen {STATE_LABEL[mod.state]} — back to the main menu to auto-launch.</>
+      ) : seen ? (
+        <>Game seen {STATE_LABEL[seen.state]} — back to the main menu to auto-launch.</>
       ) : (
         <>
           Manual hosting — run the game with the LadderReporter mod for auto-launch. If your browser asks
@@ -59,6 +65,7 @@ export function QueueCard({
   busy,
   factions,
   bridge,
+  serverMod,
   onFactions,
   onJoin,
   onLeave,
@@ -72,6 +79,7 @@ export function QueueCard({
   busy: boolean;
   factions: Faction[]; // 1v1 only: what an auto match may launch you as
   bridge: BridgeState; // 1v1 only: the local mod, as the page sees it
+  serverMod: ModPresence | null; // 1v1 only: the mod as the last status poll reported it
   onFactions: (f: Faction[]) => void;
   onJoin: () => void;
   onLeave: () => void;
@@ -140,7 +148,7 @@ export function QueueCard({
           )}
         </>
       )}
-      {auto && <LaunchState bridge={bridge} />}
+      {auto && <LaunchState bridge={bridge} serverMod={serverMod} />}
     </div>
   );
 }
