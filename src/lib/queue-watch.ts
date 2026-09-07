@@ -1,10 +1,16 @@
 // App-wide queue state. The 5-second status poll is the queue heartbeat
 // (entries older than 90 s are swept), so it can't belong to the Play page
 // alone: a player browsing units while waiting would silently drop out. It
-// lives here instead, module-level like the match alert, and runs while
-// either the Play page is open or the last answer said we're queued. A
-// localStorage hint carries "queued" across a refresh or a new tab so the
-// poll resumes before the first answer.
+// lives here instead, module-level like the match alert, and runs only
+// while the last answer said we're queued. A localStorage hint carries
+// "queued" across a refresh or a new tab so the poll resumes before the
+// first answer.
+//
+// It runs *only* while queued: an idle Play page reads the public counts
+// from the CDN-cached endpoint instead, and one refresh on arrival is enough
+// to learn about an open match. Each poll carries what the page can see of
+// the local mod (docs/local-bridge.md), so the bridge is watched for as long
+// as the poll runs.
 //
 // Not signed in, no session hint → nothing runs, which keeps the static
 // build and anonymous visits free of requests.
@@ -13,6 +19,7 @@ import { useSyncExternalStore } from 'react';
 import { hasSessionHint } from './auth';
 import { MODES, type Mode } from './ladder-modes';
 import { startMatchAlert } from './match-alert';
+import { bridgeSignal, watchBridge } from './mod-bridge';
 import { queueStatus } from '../server/queue-fns';
 import type { PlayStatus } from './ladder-types';
 
@@ -38,9 +45,10 @@ let state: QueueState = {
   joinedAt: { '1v1': null, '2v2': null, '3v3': null },
   newMatchId: null,
 };
-let watchers = 0; // pages that want polling whether or not we're queued
 let timer: ReturnType<typeof setInterval> | null = null;
+let releaseBridge: (() => void) | null = null;
 let inFlight = false;
+let listening = false; // the storage listener is app-wide and installed once
 // "We were in a queue" as of the last answer — or the join click itself,
 // since the join may complete the match on the spot.
 let wasQueued = false;
@@ -114,7 +122,7 @@ export function clearOpenMatch(matchId: string): void {
 function poll(): void {
   if (inFlight || !hasSessionHint()) return;
   inFlight = true;
-  queueStatus()
+  queueStatus({ data: { mod: bridgeSignal() } })
     .then(applyStatus)
     .catch(() => {})
     .finally(() => {
@@ -122,37 +130,44 @@ function poll(): void {
     });
 }
 
-// Runs while someone is watching or we believe we're queued.
+// Runs while we believe we're queued. The bridge is watched for exactly as
+// long, so every poll has the mod's latest word to carry.
 function schedule(): void {
-  const wanted =
-    hasSessionHint() && (watchers > 0 || isQueued(state.status) || (state.status === null && readHint()));
+  const wanted = hasSessionHint() && (isQueued(state.status) || (state.status === null && readHint()));
   if (wanted && timer === null) {
     timer = setInterval(poll, POLL_MS);
+    releaseBridge ??= watchBridge();
   } else if (!wanted && timer !== null) {
     clearInterval(timer);
     timer = null;
+    releaseBridge?.();
+    releaseBridge = null;
   }
 }
 
-// A page that wants live status regardless (the Play page). Returns the
-// release function.
-export function watchQueue(): () => void {
-  watchers++;
+// One answer now — the Play page on arrival, so it knows about an open
+// match or a queue joined in another tab. Polling only continues if that
+// answer says we're queued.
+export function refreshQueue(): void {
   poll();
-  schedule();
-  return () => {
-    watchers--;
-    schedule();
-  };
 }
 
 // Called once when the app mounts: if the last visit left us queued, pick
-// the heartbeat straight back up.
+// the heartbeat straight back up. Another tab joining or leaving a queue
+// flips the hint, and this tab follows it.
 export function resumeQueueWatch(): void {
   if (state.status === null && readHint()) {
     wasQueued = true;
     poll();
     schedule();
+  }
+  if (typeof window !== 'undefined' && !listening) {
+    listening = true;
+    window.addEventListener('storage', (e) => {
+      if (e.key !== QUEUED_HINT) return;
+      if (e.newValue === '1') wasQueued = true;
+      poll();
+    });
   }
 }
 

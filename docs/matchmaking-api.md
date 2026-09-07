@@ -8,6 +8,13 @@ the `auto` flow (both games launch themselves) or today's `manual` flow.
 All bodies and responses are JSON. Errors are `{ "error": "…" }` with a 4xx
 status; a `401` means the token is gone and the mod should mint a new one.
 
+> **In transition.** The heartbeat below is being replaced by the local
+> bridge (`docs/local-bridge.md`): the page reads the mod on `127.0.0.1` and
+> relays its state inside the site's own polls, and hands the match object to
+> the mod directly. The session, `match/{id}/session`, `match/{id}/event` and
+> `report` endpoints are unchanged by that. The heartbeat keeps working until
+> every player has the bridged mod.
+
 ## `POST /api/mm/session`
 
 ```json

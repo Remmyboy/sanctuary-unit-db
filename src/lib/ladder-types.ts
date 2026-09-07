@@ -2,7 +2,7 @@
 // the ladder UI. Plain JSON shapes — dates travel as ISO strings.
 
 import type { Mode } from './ladder-modes';
-import type { Faction, MmEventType, MmMode, MmStatus, ModState } from './mm';
+import type { Faction, MmEventType, MmMode, MmStatus, ModMatch, ModState } from './mm';
 
 export interface Me {
   playerId: string;
@@ -87,6 +87,9 @@ export interface MatchView {
   sessionId: string | null;
   mmReason: string | null;
   mmEvents: MmEventView[];
+  // The same match as the mod sees it, for the page to hand over the local
+  // bridge (docs/local-bridge.md). Only on a 1v1 the caller is in.
+  modMatch: ModMatch | null;
   participants: MatchParticipant[];
   reportedBy: string | null;
   reportedWinnerTeam: number | null;

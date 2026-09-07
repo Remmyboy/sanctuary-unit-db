@@ -2,21 +2,22 @@
 // page: it names the map, shows both teams and who hosts, and carries the
 // report → confirm/dispute flow plus the cancel handshake. The game has no
 // lobby API, so "create the game" is an instruction to a human, not a
-// button.
+// button — unless both players have the mod, in which case this page is
+// also what hands the match to the game (docs/local-bridge.md): its poll
+// carries the mod's presence to the site, and the answer goes to the mod.
 
 import { useEffect, useRef, useState } from 'react';
 import { Link, createFileRoute } from '@tanstack/react-router';
 import { MapPreview } from '../components/MapPreview';
 import { loadMe } from '../lib/auth';
 import { stopMatchAlert, useMatchAlert } from '../lib/match-alert';
+import { isOpen, pollDelay, shouldPoll } from '../lib/match-poll';
 import { launchProgress } from '../lib/mm';
+import { bridgeSignal, pushMatch, watchBridge } from '../lib/mod-bridge';
 import { clearOpenMatch } from '../lib/queue-watch';
 import { useNow } from '../lib/use-now';
 import { matchCancel, matchConfirm, matchDispute, matchGet, matchReport } from '../server/match-fns';
 import type { MatchParticipant, MatchView, Me } from '../lib/ladder-types';
-
-const POLL_MS = 5000;
-const OPEN = ['in_progress', 'reported', 'disputed'];
 
 export const Route = createFileRoute('/ladder_/match/$matchId')({
   ssr: false,
@@ -50,10 +51,17 @@ function MatchRoom() {
     };
   }, []);
 
+  // The game on this PC, for as long as this room is open: its state rides
+  // on every poll, and every answer is handed to it.
+  useEffect(() => watchBridge(), []);
+  useEffect(() => {
+    if (match?.modMatch) void pushMatch(match.modMatch);
+  }, [match]);
+
   useEffect(() => {
     if (!match) return;
     // A match that's over has nothing left to announce.
-    if (!OPEN.includes(match.status)) stopMatchAlert();
+    if (!isOpen(match)) stopMatchAlert();
     // The app-wide queue status only names a game in progress, and nothing
     // polls it while you're in one — so from the moment the result is in it
     // goes on naming this match until told otherwise, and the Play page
@@ -73,25 +81,50 @@ function MatchRoom() {
     if (countdownGone) stopMatchAlert();
   }, [countdownGone]);
 
-  const matchRef = useRef(match);
+  // The poll: fast through the countdown and launch, slow while a game is
+  // being played or a result is settling, off once the match is record.
+  // Each answer decides the next delay (src/lib/match-poll.ts). Coming back
+  // to a hidden tab asks straight away rather than waiting out a slow tick.
   useEffect(() => {
-    matchRef.current = match;
-  }, [match]);
+    let cancelled = false;
+    let handle: ReturnType<typeof setTimeout> | null = null;
 
-  const refresh = () =>
-    matchGet({ data: { matchId } })
-      .then((m) => alive.current && setMatch(m))
-      .catch(() => alive.current && setMatch(null));
+    const load = (): Promise<MatchView | null> =>
+      matchGet({ data: { matchId, mod: bridgeSignal() } })
+        .then((m) => {
+          if (!cancelled) setMatch(m);
+          return m;
+        })
+        .catch(() => {
+          if (!cancelled) setMatch(null);
+          return null;
+        });
 
-  useEffect(() => {
-    refresh();
-    const id = setInterval(() => {
-      // Only open matches change under us; completed ones are settled record.
-      const current = matchRef.current;
-      if (current === undefined || (current && OPEN.includes(current.status))) refresh();
-    }, POLL_MS);
-    return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const arm = (m: MatchView | null | undefined) => {
+      if (cancelled) return;
+      const delay = pollDelay(m);
+      if (delay === null) return;
+      handle = setTimeout(() => {
+        handle = null;
+        if (shouldPoll(delay, document.hidden)) void load().then(arm);
+        else arm(m);
+      }, delay);
+    };
+
+    void load().then(arm);
+
+    const onVisible = () => {
+      if (document.hidden || cancelled || handle === null) return;
+      clearTimeout(handle);
+      handle = null;
+      void load().then(arm);
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      cancelled = true;
+      if (handle) clearTimeout(handle);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, [matchId]);
 
   const act = async (fn: () => Promise<MatchView>) => {

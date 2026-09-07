@@ -7,7 +7,8 @@ import { useEffect, useState } from 'react';
 import { Link, createFileRoute } from '@tanstack/react-router';
 import { LADDER_MAPS, type LadderMap } from '../lib/ladder-maps';
 import { MODES, isLeaderboardMode, type LeaderboardMode, type Mode } from '../lib/ladder-modes';
-import { leaderboard, mapPools, queueCounts } from '../server/queue-fns';
+import { fetchQueueCounts } from '../lib/queue-counts';
+import { leaderboard, mapPools } from '../server/queue-fns';
 import type { LeaderboardRow, QueueCounts } from '../lib/ladder-types';
 
 interface LadderSearch {
@@ -53,9 +54,7 @@ function LadderPage() {
 
   useEffect(() => {
     let alive = true;
-    queueCounts()
-      .then((c) => alive && setCounts(c))
-      .catch(() => {});
+    void fetchQueueCounts().then((c) => alive && c && setCounts(c));
     mapPools()
       .then((p) => alive && setPools(p))
       .catch(() => {});

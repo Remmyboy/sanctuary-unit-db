@@ -22,6 +22,36 @@ export type MmEventType = (typeof MM_EVENT_TYPES)[number];
 export const isMmEventType = (v: unknown): v is MmEventType =>
   typeof v === 'string' && (MM_EVENT_TYPES as readonly string[]).includes(v);
 
+// What the browser relays about the local mod on each poll (see
+// docs/local-bridge.md): the game's state and the versions, nothing more.
+// Null means the page could not see a mod, which never clears presence — a
+// momentary blip must not look like a closed game; staleness does that.
+export interface ModSignal {
+  state: ModState;
+  modVersion: string | null;
+  gameVersion: string | null;
+}
+
+const shortString = (v: unknown, max: number): string | null =>
+  typeof v === 'string' ? v.slice(0, max) : null;
+
+// Validates a `mod` field from the client or the heartbeat body. Anything
+// that is not a well-formed signal is null, never an error: a broken mod is
+// the same as no mod.
+export function parseModSignal(v: unknown): ModSignal | null {
+  const d = v as { state?: unknown; modVersion?: unknown; gameVersion?: unknown } | null;
+  if (!d || typeof d !== 'object' || !isModState(d.state)) return null;
+  return {
+    state: d.state,
+    modVersion: shortString(d.modVersion, 40),
+    gameVersion: shortString(d.gameVersion, 40),
+  };
+}
+
+// The port the mod's local bridge listens on (docs/local-bridge.md). The
+// page only ever tries the default; the mod's config knob is for testers.
+export const MOD_BRIDGE_PORT = 27555;
+
 export type MmMode = 'auto' | 'manual';
 
 // The lifecycle the mod sees. `manual` is this site's addition to the plan:
@@ -48,6 +78,26 @@ export const TIMEOUT_START_S = 60; // both must report `started` after launch
 export function isLaunchable(seenAtMs: number | null, state: ModState | null, nowMs: number): boolean {
   if (seenAtMs === null || state !== 'menu') return false;
   return nowMs - seenAtMs < LAUNCHABLE_WINDOW_S * 1000;
+}
+
+// The match object the mod acts on — the shape /api/mm/heartbeat returns
+// and the page pushes over the local bridge (docs/matchmaking-api.md, "The
+// match object"). Client-safe: the match room carries one per 1v1.
+export interface ModMatch {
+  id: string;
+  mode: MmMode;
+  status: MmStatus;
+  host: string;
+  joiner: string;
+  opponent: { steamId: string; name: string };
+  map: string | null; // the game's map path; null on manual matches
+  mapName: string;
+  factions: Record<string, Faction>;
+  slots: Record<string, number>;
+  sessionId: string | null;
+  countdownEndsAt: string | null;
+  cancelledBy: string | null;
+  reason: string | null;
 }
 
 export interface MmStatusSource {
