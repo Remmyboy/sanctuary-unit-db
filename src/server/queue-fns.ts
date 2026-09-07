@@ -112,7 +112,7 @@ interface StatusRow {
   mine: { mode: Mode; joined_ms: number; factions: Faction[] }[] | null;
   waiting: Partial<Record<Mode, number>> | null;
   live_games: number;
-  mod: { state: ModState; seen_ms: number } | null;
+  mod: { state: ModState; seen_ms: number; mod_version: string | null } | null;
 }
 
 // Everything the Play page needs, in one query. The mod's last word counts
@@ -127,7 +127,8 @@ async function playStatus(playerId: string): Promise<PlayStatus> {
         from queue_entries where player_id = $1) as mine,
        (${WAITING_SQL}) as waiting,
        (${LIVE_GAMES_SQL}) as live_games,
-       (select json_build_object('state', state, 'seen_ms', floor(extract(epoch from seen_at) * 1000))
+       (select json_build_object('state', state, 'seen_ms', floor(extract(epoch from seen_at) * 1000),
+                                 'mod_version', mod_version)
         from mod_presence
         where player_id = $1 and seen_at > now() - interval '60 seconds') as mod`,
     [playerId],
@@ -142,6 +143,7 @@ async function playStatus(playerId: string): Promise<PlayStatus> {
       state: row.mod.state,
       seenAt: new Date(row.mod.seen_ms).toISOString(),
       launchable: isLaunchable(row.mod.seen_ms, row.mod.state, now),
+      modVersion: row.mod.mod_version,
     };
   }
 

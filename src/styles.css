@@ -2602,3 +2602,11 @@ img.unit-icon[data-muted='true'] {
   max-height: 140px;
   overflow-y: auto;
 }
+
+/* "Your LadderReporter is 0.2.3 — update" on the 1v1 card. */
+.launch-state .mod-update {
+  color: var(--text);
+}
+.launch-state .mod-update a {
+  color: var(--accent);
+}

@@ -27,6 +27,7 @@ export interface ModPresence {
   state: ModState;
   seenAt: string;
   launchable: boolean;
+  modVersion: string | null; // as the mod reported it, so the page can say "update"
 }
 
 // One poll answers for every queue at once.

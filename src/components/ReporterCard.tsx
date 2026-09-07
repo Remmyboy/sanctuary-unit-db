@@ -34,7 +34,7 @@ export function ReporterCard() {
   const [copied, setCopied] = useState(false);
 
   return (
-    <div className="queue-widget reporter-card">
+    <div className="queue-widget reporter-card" id="reporter">
       <h2>Auto-reporting</h2>
       <p className="dim">
         Install the LadderReporter mod to automatically start your game when you match an opponent, and to log
