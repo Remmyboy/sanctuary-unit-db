@@ -6,7 +6,7 @@
 import type { Mode } from '../lib/ladder-modes';
 import { searchRadius } from '../lib/matchmaking';
 import { FACTIONS, type Faction, type ModState } from '../lib/mm';
-import type { BridgeState } from '../lib/mod-bridge';
+import { disableBridge, enableBridge, retryBridge, type BridgeState } from '../lib/mod-bridge';
 import { useNow } from '../lib/use-now';
 import type { ModPresence, QueueModeStatus } from '../lib/ladder-types';
 
@@ -25,32 +25,67 @@ const STATE_LABEL: Record<ModState, string> = {
   ingame: 'in a game',
 };
 
-// What the page can see of the game on this PC (docs/local-bridge.md). Says
-// nothing until the first probe has answered, so the line never flashes
-// "manual" at someone whose mod is about to be seen. Until every player has
-// the bridged mod, the server's last word — an older mod's heartbeat, as the
-// status poll reports it — fills in when the page itself sees nothing.
+// The game on this PC, as far as the page can tell (docs/local-bridge.md).
+//
+// The page only starts looking once the player asks it to: the first
+// request to 127.0.0.1 is what makes Chrome ask whether this site may reach
+// devices on the local network, so the button says what that prompt is for
+// before it appears, and players without the mod never see it.
+//
+// Until every player has the bridged mod, the server's last word — an older
+// mod's heartbeat, as the status poll reports it — stands in whenever the
+// page itself sees nothing.
 function LaunchState({ bridge, serverMod }: { bridge: BridgeState; serverMod: ModPresence | null }) {
   const seen = bridge.status
     ? { state: bridge.status.state, ready: bridge.status.state === 'menu' }
     : serverMod
       ? { state: serverMod.state, ready: serverMod.launchable }
       : null;
-  if (!seen && !bridge.probed) return null;
+
+  if (seen) {
+    return (
+      <p className="launch-state" data-ready={seen.ready || undefined}>
+        {seen.ready ? (
+          <>
+            <strong>Auto-launch ready</strong> — if your opponent's is too, the game starts itself.
+          </>
+        ) : (
+          <>Game seen {STATE_LABEL[seen.state]} — back to the main menu to auto-launch.</>
+        )}
+      </p>
+    );
+  }
+
+  if (!bridge.enabled) {
+    return (
+      <div className="launch-state launch-connect">
+        <button type="button" className="btn" onClick={enableBridge}>
+          Connect to Sanctuary
+        </button>
+        <span>
+          Lets this page see whether Sanctuary is open with the LadderReporter mod, and start your match in
+          it. Your browser will ask whether this site can connect to devices on your local network: that is
+          the permission for reaching the mod inside your game on this PC.
+        </span>
+      </div>
+    );
+  }
+
+  if (!bridge.probed) {
+    return <p className="launch-state">Looking for your game…</p>;
+  }
+
   return (
-    <p className="launch-state" data-ready={seen?.ready || undefined}>
-      {seen?.ready ? (
-        <>
-          <strong>Auto-launch ready</strong> — if your opponent's is too, the game starts itself.
-        </>
-      ) : seen ? (
-        <>Game seen {STATE_LABEL[seen.state]} — back to the main menu to auto-launch.</>
-      ) : (
-        <>
-          Manual hosting — run the game with the LadderReporter mod for auto-launch. If your browser asks
-          whether this site may reach devices on your network, allow it.
-        </>
-      )}
+    <p className="launch-state">
+      Can't see your game — run Sanctuary with the LadderReporter mod. If your browser blocked the connection,
+      allow it in this site's permissions.{' '}
+      <button type="button" className="linkish" onClick={retryBridge}>
+        Retry
+      </button>{' '}
+      ·{' '}
+      <button type="button" className="linkish" onClick={disableBridge}>
+        Stop looking
+      </button>
     </p>
   );
 }
