@@ -5,7 +5,7 @@
 
 import type { Mode } from '../lib/ladder-modes';
 import { searchRadius } from '../lib/matchmaking';
-import { FACTIONS, isLaunchableState, type Faction, type ModState } from '../lib/mm';
+import { FACTIONS, STEAM_RUN_URL, isLaunchableState, type Faction, type ModState } from '../lib/mm';
 import { disableBridge, enableBridge, retryBridge, type BridgeState } from '../lib/mod-bridge';
 import { useNow } from '../lib/use-now';
 import { isOlderVersion } from '../lib/version';
@@ -105,10 +105,16 @@ function LaunchState({ bridge, serverMod }: { bridge: BridgeState; serverMod: Mo
     return <p className="launch-state">Looking for your game…</p>;
   }
 
+  // Nothing there. The Steam link starts the game (with the mod, which loads
+  // with it); the probe keeps looking and picks it up once the menu is in.
   return (
     <p className="launch-state">
-      Can't see your game — run Sanctuary with the LadderReporter mod. If your browser blocked the connection,
-      allow it in this site's permissions.{' '}
+      Can't see your game —{' '}
+      <a href={STEAM_RUN_URL} onClick={retryBridge}>
+        open Sanctuary through Steam
+      </a>{' '}
+      with the LadderReporter mod installed. If your browser blocked the connection, allow it in this site's
+      permissions.{' '}
       <button type="button" className="linkish" onClick={retryBridge}>
         Retry
       </button>{' '}

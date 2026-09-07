@@ -60,6 +60,13 @@ export function parseModSignal(v: unknown): ModSignal | null {
 // page only ever tries the default; the mod's config knob is for testers.
 export const MOD_BRIDGE_PORT = 27555;
 
+// The Playtest on Steam — what the ladder is played on today (the server's
+// ticket check in src/server/steam.ts accepts the full game too). Steam
+// registers the steam:// scheme, so this link starts the game through the
+// Steam client, mod included; without Steam it does nothing.
+export const STEAM_APP_ID = 4511930;
+export const STEAM_RUN_URL = `steam://run/${STEAM_APP_ID}`;
+
 export type MmMode = 'auto' | 'manual';
 
 // The lifecycle the mod sees. `manual` is this site's addition to the plan:
