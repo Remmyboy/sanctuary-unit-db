@@ -215,9 +215,13 @@ On the Play page, on the 1v1 card, one block driven by the bridge:
 - Mod seen, in the menu: **Auto-launch ready**.
 - Mod seen, in a lobby / loading / in a game: "Game seen in a lobby, back
   to the main menu to auto-launch".
-- Connected but nothing seen: "Can't see your game. Run Sanctuary with the
-  LadderReporter mod. If your browser blocked the connection, allow it in
-  this site's permissions." with **Retry** and **Stop looking**.
+- Connected but nothing seen: "Can't see your game — open Sanctuary through
+  Steam with the LadderReporter mod installed. If your browser blocked the
+  connection, allow it in this site's permissions." with **Retry** and
+  **Stop looking**. The Steam link is `steam://run/4511930`, the Playtest:
+  Steam's protocol handler starts the game (the browser asks once whether
+  the site may open Steam), the mod loads with it, and the probe picks it up
+  once the menu is in. Without Steam the link does nothing.
 
 While players are still on the heartbeat mod, the server's last word about
 their mod (from the status poll) stands in for the "seen" lines, so nobody
