@@ -130,6 +130,7 @@ prerendered at build time and hydrates into an SPA.
 | `/`           | `src/routes/index.tsx`      | Unit database — the aligned faction board |
 | `/calculator` | `src/routes/calculator.tsx` | Build time, drain and economy planning    |
 | `/maps`       | `src/routes/maps.tsx`       | Community maps, and each map's own page   |
+| `/mods`       | `src/routes/mods.tsx`       | The sanctuary-mods catalogue and installs |
 
 All UI state lives in the URL as typed search params — filters, sort, the open
 unit, the calculator setup — using the same param names and encoding as the
@@ -698,6 +699,7 @@ src/                the site, TanStack Start + React + TypeScript
     __root.tsx      document shell, head, shared header
     index.tsx       unit board route: filters, sort, detail — all URL state
     calculator.tsx  calculator route: build/economy setup — all URL state
+    mods.tsx        the mod catalogue, rendered from lib/mods.ts
     ladder*.tsx     ladder: leaderboard/queue, match room, player profiles
     api.auth.*.ts   server-only routes for Steam OpenID sign-in/out
   server/           server-function layer (service-role Supabase, sessions,
@@ -709,6 +711,7 @@ src/                the site, TanStack Start + React + TypeScript
     calc.ts         build/economy maths, option pools, URL row packing
     economy.ts      standing economy roles, upgrade price/time/payback
     maps.ts         maps.json fetch, download counts, size labels
+    mods.ts         the mod catalogue: versions, blurbs, release/download URLs
     clipboard.ts    copy-to-clipboard with a fallback
     elo.ts          ladder rating maths (mirrored in supabase/migrations)
     matchmaking.ts  queue radius/pairing rules (mirrored likewise)

@@ -62,6 +62,26 @@ test('maps listing renders cards and opens a map page by slug', async ({ page })
   expect(errors).toEqual([]);
 });
 
+test('mods page lists every mod with live download links', async ({ page }) => {
+  const errors = collectErrors(page);
+
+  // The catalogue is static, so this page is fully prerendered — content, not
+  // a shell. Its downloads are release assets whose URL is derived from the
+  // version in src/lib/mods.ts, which is the thing that goes stale.
+  await page.goto('/mods');
+  expect(await page.locator('.mod-entry').count()).toBe(8);
+  await expect(page.locator('#LadderReporter .dl-btn')).toHaveAttribute(
+    'href',
+    /sanctuary-mods\/releases\/download\/LadderReporter-[\d.]+\/LadderReporter-[\d.]+-Standalone\.zip/,
+  );
+  await expect(page.locator('.install-path code')).toContainText('Playtest\\engine');
+
+  // The header's repo link, on every page.
+  await expect(page.locator('.ghlink')).toHaveAttribute('href', /github\.com\/.+\/sanctuary-unit-db/);
+
+  expect(errors).toEqual([]);
+});
+
 test('ladder and play pages render their shells with no backend', async ({ page }) => {
   // e2e serves the static build — no server functions exist here, so this
   // pins the degradation contract: both pages must render signed-out/empty

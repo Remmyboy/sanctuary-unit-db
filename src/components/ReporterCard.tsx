@@ -1,34 +1,23 @@
 // The mod download card on the Play page: what the LadderReporter does, the
 // three ways to get it, and the install steps, always open (the maps page
-// uses the same box collapsed). The zips are release assets on
-// the open-source sanctuary-mods repo, so bumping a version here is the
-// whole deploy.
+// uses the same box collapsed). The zips are release assets on the
+// open-source sanctuary-mods repo, and the versions come from the shared
+// catalogue in src/lib/mods.ts — so bumping one there is the whole deploy,
+// and this card can never disagree with the /mods page.
 
 import { useState } from 'react';
+import { Link } from '@tanstack/react-router';
 import { copyText } from '../lib/clipboard';
+import { ENGINE_PATH, managerHref, mod, sourceHref, standaloneHref } from '../lib/mods';
 
-export const MODS_REPO = 'https://github.com/Remmyboy/sanctuary-mods';
-export const MOD_MANAGER_VERSION = '0.2.0';
-export const REPORTER_VERSION = '0.3.0';
+const MANAGER = mod('ModManager');
+const REPORTER = mod('LadderReporter');
 
-const release = (tag: string, file: string) => `${MODS_REPO}/releases/download/${tag}/${file}`;
-
-export const DOWNLOADS = {
-  modManager: release(`ModManager-${MOD_MANAGER_VERSION}`, `ModManager-${MOD_MANAGER_VERSION}.zip`),
-  reporterForModManager: release(
-    `LadderReporter-${REPORTER_VERSION}`,
-    `LadderReporter-${REPORTER_VERSION}-ModManager.zip`,
-  ),
-  reporterStandalone: release(
-    `LadderReporter-${REPORTER_VERSION}`,
-    `LadderReporter-${REPORTER_VERSION}-Standalone.zip`,
-  ),
+const DOWNLOADS = {
+  modManager: standaloneHref(MANAGER),
+  reporterForModManager: managerHref(REPORTER),
+  reporterStandalone: standaloneHref(REPORTER),
 };
-
-// Where the game reads mods from. The install root moves with the branch and
-// the Steam library, so this is the common default rather than a promise.
-const ENGINE_PATH =
-  'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Sanctuary Shattered Sun Playtest\\engine';
 
 export function ReporterCard() {
   const [copied, setCopied] = useState(false);
@@ -51,7 +40,7 @@ export function ReporterCard() {
             </p>
           </div>
           <a className="dl-btn" href={DOWNLOADS.modManager}>
-            Download · v{MOD_MANAGER_VERSION}
+            Download · v{MANAGER.version}
           </a>
         </li>
         <li>
@@ -63,7 +52,7 @@ export function ReporterCard() {
             </p>
           </div>
           <a className="dl-btn" href={DOWNLOADS.reporterForModManager}>
-            Download · v{REPORTER_VERSION}
+            Download · v{REPORTER.version}
           </a>
         </li>
         <li>
@@ -72,7 +61,7 @@ export function ReporterCard() {
             <p className="dim">The same mod with everything it needs to run, without the Mod Manager.</p>
           </div>
           <a className="dl-btn" href={DOWNLOADS.reporterStandalone}>
-            Download · v{REPORTER_VERSION}
+            Download · v{REPORTER.version}
           </a>
         </li>
       </ul>
@@ -103,11 +92,15 @@ export function ReporterCard() {
         </div>
         <p className="hint">
           The mod only reports Steam lobby 1v1s that match an open ladder game — skirmish, LAN, observing and
-          casual games are ignored. Source and release notes:{' '}
-          <a href={MODS_REPO} target="_blank" rel="noreferrer">
-            sanctuary-mods on GitHub
+          casual games are ignored.
+        </p>
+        <p className="hint">
+          It's open source —{' '}
+          <a href={sourceHref(REPORTER)} target="_blank" rel="noreferrer">
+            check out the source code here
           </a>
-          .
+          . There are <Link to="/mods">more mods for Sanctuary</Link> from the same repo: an economy HUD,
+          faction-agnostic build hotkeys, replay tools and more.
         </p>
       </div>
     </div>
