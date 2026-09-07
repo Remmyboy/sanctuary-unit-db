@@ -3,6 +3,12 @@
 // doing and hands it the match to launch. Nothing here touches Vercel: the
 // answers ride along inside the polls the page already makes.
 //
+// Opt-in. The first request to 127.0.0.1 makes Chrome (and Safari) ask the
+// player whether this site may connect to devices on their local network,
+// so nothing here speaks to the mod until the player has pressed "Connect
+// to Sanctuary" on the Play page, and that choice is remembered per browser.
+// Players without the mod never see the prompt.
+//
 // Module-level like the queue watch: the probe runs while any page wants it
 // (the Play page, a queued player on any page, a 1v1 match room) and the
 // last answer is what the site polls report. A failed probe means "no mod
@@ -13,7 +19,13 @@ import { useSyncExternalStore } from 'react';
 import { MOD_BRIDGE_PORT, isModState, type ModMatch, type ModSignal, type ModState } from './mm';
 
 const BASE = `http://127.0.0.1:${MOD_BRIDGE_PORT}`;
+const ENABLED_KEY = 'sdb.bridge';
 const PROBE_MS = 2000;
+// After this many straight failures the probe slows right down: the game
+// is not running, or the browser said no. A dismissed permission prompt
+// must not come back every two seconds.
+const BACKOFF_AFTER = 5;
+const SLOW_PROBE_MS = 15_000;
 const TIMEOUT_MS = 1500;
 
 export interface BridgeStatus {
@@ -23,22 +35,41 @@ export interface BridgeStatus {
 }
 
 export interface BridgeState {
-  // null until the first probe answers either way; then the mod's last
-  // word, or null when it can't be reached.
-  status: BridgeStatus | null;
-  // Whether a probe has ever run: the UI says nothing before that.
+  // Whether the player has opted in on this browser.
+  enabled: boolean;
+  // Whether a probe has run since enabling: the UI says "looking" before that.
   probed: boolean;
+  // The mod's last word, or null when it can't be reached.
+  status: BridgeStatus | null;
 }
 
-let state: BridgeState = { status: null, probed: false };
+const canFetch = () => typeof window !== 'undefined' && typeof fetch === 'function';
+
+const readEnabled = (): boolean => {
+  try {
+    return typeof localStorage !== 'undefined' && localStorage.getItem(ENABLED_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
+
+const writeEnabled = (on: boolean): void => {
+  try {
+    if (on) localStorage.setItem(ENABLED_KEY, '1');
+    else localStorage.removeItem(ENABLED_KEY);
+  } catch {
+    // Blocked storage: the choice still holds for this page's lifetime.
+  }
+};
+
+let state: BridgeState = { enabled: readEnabled(), probed: false, status: null };
 let watchers = 0;
-let timer: ReturnType<typeof setInterval> | null = null;
+let timer: ReturnType<typeof setTimeout> | null = null;
 let inFlight = false;
+let failures = 0;
 
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
-
-const canFetch = () => typeof window !== 'undefined' && typeof fetch === 'function';
 
 function parseStatus(v: unknown): BridgeStatus | null {
   const d = v as { state?: unknown; modVersion?: unknown; gameVersion?: unknown } | null;
@@ -61,8 +92,9 @@ const same = (a: BridgeStatus | null, b: BridgeStatus | null): boolean =>
 // Only a change is news: the probe answers every two seconds and the same
 // answer must not re-render anything.
 function set(status: BridgeStatus | null): void {
+  failures = status ? 0 : failures + 1;
   if (state.probed && same(state.status, status)) return;
-  state = { status, probed: true };
+  state = { ...state, status, probed: true };
   emit();
 }
 
@@ -86,21 +118,37 @@ function tick(): void {
     .then(set)
     .finally(() => {
       inFlight = false;
+      arm();
     });
 }
 
-function schedule(): void {
-  const wanted = watchers > 0 && canFetch();
-  if (wanted && timer === null) {
-    tick();
-    timer = setInterval(tick, PROBE_MS);
-  } else if (!wanted && timer !== null) {
-    clearInterval(timer);
+const wanted = () => state.enabled && watchers > 0 && canFetch();
+
+// Queues the next probe; the delay stretches once the mod has gone quiet.
+function arm(): void {
+  if (timer !== null || !wanted()) return;
+  const delay = failures >= BACKOFF_AFTER ? SLOW_PROBE_MS : PROBE_MS;
+  timer = setTimeout(() => {
     timer = null;
+    if (wanted()) tick();
+  }, delay);
+}
+
+function stop(): void {
+  if (timer !== null) clearTimeout(timer);
+  timer = null;
+}
+
+function schedule(): void {
+  if (wanted()) {
+    if (timer === null && !inFlight) tick();
+  } else {
+    stop();
   }
 }
 
-// A page that wants the mod watched. Returns the release function.
+// A page that wants the mod watched. Returns the release function. Does
+// nothing until the player has opted in.
 export function watchBridge(): () => void {
   watchers++;
   schedule();
@@ -108,6 +156,32 @@ export function watchBridge(): () => void {
     watchers--;
     schedule();
   };
+}
+
+// The "Connect to Sanctuary" click. Probes straight away.
+export function enableBridge(): void {
+  writeEnabled(true);
+  failures = 0;
+  state = { enabled: true, probed: false, status: null };
+  emit();
+  schedule();
+}
+
+// Forget the choice and stop talking to 127.0.0.1.
+export function disableBridge(): void {
+  writeEnabled(false);
+  stop();
+  failures = 0;
+  state = { enabled: false, probed: false, status: null };
+  emit();
+}
+
+// The Retry link: one probe now, whatever the back-off says.
+export function retryBridge(): void {
+  if (!state.enabled) return;
+  failures = 0;
+  stop();
+  tick();
 }
 
 // What the site polls carry: the mod's state and versions, or null when the
@@ -120,9 +194,10 @@ export function bridgeSignal(): ModSignal | null {
 // Hands the mod the match it should be acting on — or null, which is "stand
 // down" (the match ended, or you're not in one). Idempotent on the mod's
 // side, so the match room sends it on every poll. Failures are the mod's
-// absence, not an error the page can act on.
+// absence, not an error the page can act on. Never before opting in: this
+// request would raise the browser's prompt just like the probe.
 export async function pushMatch(match: ModMatch | null): Promise<boolean> {
-  if (!canFetch()) return false;
+  if (!state.enabled || !canFetch()) return false;
   try {
     const res = await fetch(`${BASE}/match`, {
       method: 'POST',
@@ -148,8 +223,3 @@ export function useModBridge(): BridgeState {
     bridgeSnapshot,
   );
 }
-
-// Exported for the unit test only.
-export const _reset = (): void => {
-  state = { status: null, probed: false };
-};

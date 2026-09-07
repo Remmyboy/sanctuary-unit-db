@@ -142,10 +142,17 @@ A new module, `src/lib/mod-bridge.ts`, module-level like `queue-watch.ts`:
 - `probe()`: `GET http://127.0.0.1:27555/status` with a 1.5 s timeout.
   Returns the status or `null`. Any failure (no listener, blocked by the
   browser, wrong origin) is `null`; the reason is kept for the UI.
-- Polls every 2 s while something wants it: the Play page is open (queued or
-  not, so the "Auto-launch ready" line is live before the click; it costs a
-  loopback request and nothing on Vercel), the player is queued, or an open
-  1v1 match room is showing. Stops otherwise.
+- Opt-in. Nothing is sent to `127.0.0.1` until the player presses
+  **Connect to Sanctuary** on the 1v1 card; the choice is kept in
+  `localStorage` (`sdb.bridge`), so it is one click per browser, ever, and
+  players without the mod never see the browser's prompt. "Stop looking"
+  forgets it.
+- Once enabled, polls every 2 s while something wants it: the Play page is
+  open (queued or not, so the "Auto-launch ready" line is live before the
+  click; it costs a loopback request and nothing on Vercel), the player is
+  queued, or an open 1v1 match room is showing. Stops otherwise. After five
+  straight failures it slows to every 15 s, so a dismissed permission prompt
+  is not raised again every two seconds; Retry probes at once.
 - `pushMatch(match)`: `POST /match`. Called by the match room on every
   answer it gets for a 1v1 the player is in, ended matches included, so the
   mod also learns when to stand down. (A match that forms from a queue sends
@@ -182,15 +189,25 @@ listed here only because it is what lets the idle Play page stop polling.
 
 ### What the player sees
 
-On the Play page, next to the 1v1 card, one line driven by the probe:
+On the Play page, on the 1v1 card, one block driven by the bridge:
 
-- Mod seen, in the menu: **Auto-launch ready** (as today).
+- Not yet connected: a **Connect to Sanctuary** button with one sentence on
+  what it does and what the browser's prompt is for: "Your browser will ask
+  whether this site can connect to devices on your local network: that is
+  the permission for reaching the mod inside your game on this PC." The
+  prompt's own wording is the browser's and cannot be changed from either
+  side, so the page says what it is for just before it appears.
+- Connected, looking: "Looking for your game…" until the first probe answers.
+- Mod seen, in the menu: **Auto-launch ready**.
 - Mod seen, in a lobby / loading / in a game: "Game seen in a lobby, back
-  to the main menu to auto-launch" (as today).
-- Mod not reachable: "Manual hosting. Run the game with the LadderReporter
-  mod for auto-launch." plus, when the failure looks like a browser block
-  rather than no listener, a hint: "Your browser asked whether this site may
-  reach software on your PC; allow it and press Retry."
+  to the main menu to auto-launch".
+- Connected but nothing seen: "Can't see your game. Run Sanctuary with the
+  LadderReporter mod. If your browser blocked the connection, allow it in
+  this site's permissions." with **Retry** and **Stop looking**.
+
+While players are still on the heartbeat mod, the server's last word about
+their mod (from the status poll) stands in for the "seen" lines, so nobody
+who will get the auto flow is told otherwise.
 
 The site never gates queueing on any of this.
 
@@ -200,7 +217,10 @@ An https page may fetch `http://127.0.0.1`: loopback is exempt from
 mixed-content blocking. What varies is the local-network permission:
 
 - **Chrome and Edge** show a one-time "allow this site to access your local
-  network" prompt on the first request. Allowed is remembered per site.
+  network" prompt on the first request. Allowed is remembered per site. The
+  text is the same for a printer on the LAN and for `127.0.0.1` on the same
+  PC; there is no API, header or fetch option that changes it, which is why
+  the page asks first and explains before the request is made.
 - **Safari** prompts similarly on recent macOS.
 - **Firefox** currently allows it without a prompt.
 - **Brave** blocks localhost access until the user allows it in the site's

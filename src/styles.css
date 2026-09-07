@@ -2409,6 +2409,20 @@ img.unit-icon[data-muted='true'] {
 .launch-state[data-ready] strong {
   color: var(--accent);
 }
+/* The opt-in: the button, then what the browser's prompt is for. */
+.launch-connect {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.launch-connect .btn {
+  padding: 5px 11px;
+  font-size: 12px;
+}
+.launch-state .linkish {
+  font-size: inherit;
+}
 
 /* Match room: the countdown and the launch progress. */
 .countdown {
