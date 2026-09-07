@@ -9,12 +9,20 @@ export type Faction = (typeof FACTIONS)[number];
 export const isFaction = (v: unknown): v is Faction =>
   typeof v === 'string' && (FACTIONS as readonly string[]).includes(v);
 
-// What the mod says the game is doing. Only `menu` can be launched into a match.
-export const MOD_STATES = ['menu', 'lobby', 'loading', 'ingame'] as const;
+// What the mod says the game is doing. The mod (0.3+) can leave a lobby or
+// close a replay by itself before launching, so those count as launchable;
+// a game that is loading or being played does not. Mirrored in migration
+// 0014 — change both together.
+export const MOD_STATES = ['menu', 'lobby', 'loading', 'ingame', 'replay'] as const;
 export type ModState = (typeof MOD_STATES)[number];
 
 export const isModState = (v: unknown): v is ModState =>
   typeof v === 'string' && (MOD_STATES as readonly string[]).includes(v);
+
+export const LAUNCHABLE_STATES: readonly ModState[] = ['menu', 'lobby', 'replay'];
+
+export const isLaunchableState = (state: ModState | null): boolean =>
+  state !== null && LAUNCHABLE_STATES.includes(state);
 
 export const MM_EVENT_TYPES = ['lobby_created', 'joined', 'ready', 'started', 'failed', 'left'] as const;
 export type MmEventType = (typeof MM_EVENT_TYPES)[number];
@@ -74,9 +82,10 @@ export const TIMEOUT_SESSION_S = 20; // host must post the lobby's session id
 export const TIMEOUT_JOIN_S = 30; // joiner must report `joined` after the session id
 export const TIMEOUT_START_S = 60; // both must report `started` after launch
 
-// A player is launchable while their last heartbeat is fresh and says `menu`.
+// A player is launchable while their last heartbeat is fresh and the game
+// is somewhere the mod can launch from.
 export function isLaunchable(seenAtMs: number | null, state: ModState | null, nowMs: number): boolean {
-  if (seenAtMs === null || state !== 'menu') return false;
+  if (seenAtMs === null || !isLaunchableState(state)) return false;
   return nowMs - seenAtMs < LAUNCHABLE_WINDOW_S * 1000;
 }
 

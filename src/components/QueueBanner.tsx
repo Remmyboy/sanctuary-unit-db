@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
 import { MODES, type Mode } from '../lib/ladder-modes';
+import { isLaunchableState } from '../lib/mm';
 import { useModBridge } from '../lib/mod-bridge';
 import { applyStatus, consumeNewMatch, isQueued, resumeQueueWatch, useQueueState } from '../lib/queue-watch';
 import { useNow } from '../lib/use-now';
@@ -46,7 +47,7 @@ export function QueueBanner() {
   // The game on this PC as the page sees it (the queue watch keeps the
   // bridge probed while we're queued); an older, heartbeating mod shows up
   // through the poll instead, until everyone has the bridged one.
-  const ready = bridge.status ? bridge.status.state === 'menu' : (status.mod?.launchable ?? false);
+  const ready = bridge.status ? isLaunchableState(bridge.status.state) : (status.mod?.launchable ?? false);
   const seen = bridge.status !== null || status.mod !== null;
 
   const leave = async (mode: Mode) => {
@@ -68,7 +69,7 @@ export function QueueBanner() {
       </span>
       {modes.includes('1v1') && (
         <span className="dim">
-          {ready ? 'auto-launch ready' : seen ? 'mod seen, not in the menu' : 'manual hosting'}
+          {ready ? 'auto-launch ready' : seen ? 'mod seen, in a game' : 'manual hosting'}
         </span>
       )}
       <span className="queue-banner-actions">

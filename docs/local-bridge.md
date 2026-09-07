@@ -2,10 +2,10 @@
 
 Design for replacing the LadderReporter's 5-second heartbeat with a local
 connection from the SanctuaryDB page to the mod. Covers both repos: the site
-(this one) and `sanctuary-hud/LadderReporter`. Status: the site side is
-implemented (`src/lib/mod-bridge.ts`, the `mod` field on the polls, the
-match room hand-off); the mod side is **not yet built**, so today's mod keeps
-heartbeating and everything still works as before.
+(this one) and `sanctuary-hud/LadderReporter`. Status: both halves are
+implemented — the site (`src/lib/mod-bridge.ts`, the `mod` field on the
+polls, the match room hand-off, the admin test bench) and LadderReporter
+0.3. The heartbeat route stays until players have updated.
 
 ## Why
 
@@ -89,14 +89,21 @@ touches the game, same as the ticket callback does today.
 {
   "modVersion": "0.3.0",
   "gameVersion": "1.0",
-  "state": "menu | lobby | loading | ingame",
+  "state": "menu | lobby | loading | ingame | replay",
   "match": { "id": "5a4c…", "status": "launch", "phase": "HostWaiting" } | null
 }
 ```
 
-`state` is `CurrentState()` as today. The optional `match` block is what the
-mod is currently acting on, for the match room's progress display and for
-debugging; the site's own record stays the authority. (A `steamId` field, so
+`state` is `CurrentState()`, with one state more than the heartbeat had:
+`replay` (watching a replay, which used to report as `ingame`). The mod can
+leave a lobby or close a replay by itself when a match launches, so `menu`,
+`lobby` and `replay` are all launchable; only `loading` and `ingame` are not
+(migration 0014 says the same on the server). The optional `match` block is
+what the mod is currently acting on, for the admin test bench and for
+debugging; the site's own record stays the authority. `phase` is the mod's
+own state machine (`Idle`, `Leaving`, `HostCreating`, `HostWaiting`,
+`JoinerWaiting`, `JoinerJoining`, `JoinerInLobby`, `Started`) — `Leaving` is
+the lobby-or-replay exit before a launch. (A `steamId` field, so
 the page could spot a second Steam account on the same PC, was considered and
 left out of v1 as not worth the Steamworks call.)
 
@@ -107,7 +114,11 @@ Body: the match object, exactly the shape `/api/mm/heartbeat` returns today
 posts it on every poll while the match is open, and the mod handles repeats
 the way it handles repeated heartbeat replies now. Response: `{ "ok": true }`
 or `{ "ok": false, "error": "…" }` with a 4xx. The mod applies the object via
-`ApplyMatch`; nothing about the phases, timeouts or lobby handling changes.
+`ApplyMatch`; nothing about the timeouts or lobby handling changes. A
+`failed` event's `detail` is now one of `in a game`, `loading a game`,
+`stuck in lobby`, `stuck in replay`, `leave failed: …`, or the unchanged
+`map missing` — the only one the server treats specially (it falls back to
+manual rather than failing the match).
 
 `POST /match` with `null` (or a match whose status is `done`, `cancelled`,
 `failed` or `manual`) is what today's heartbeat reply with `match: null`

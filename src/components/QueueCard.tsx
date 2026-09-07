@@ -5,9 +5,11 @@
 
 import type { Mode } from '../lib/ladder-modes';
 import { searchRadius } from '../lib/matchmaking';
-import { FACTIONS, type Faction, type ModState } from '../lib/mm';
+import { FACTIONS, isLaunchableState, type Faction, type ModState } from '../lib/mm';
 import { disableBridge, enableBridge, retryBridge, type BridgeState } from '../lib/mod-bridge';
 import { useNow } from '../lib/use-now';
+import { isOlderVersion } from '../lib/version';
+import { REPORTER_VERSION } from './ReporterCard';
 import type { ModPresence, QueueModeStatus } from '../lib/ladder-types';
 
 const elapsed = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
@@ -18,11 +20,14 @@ const BLURB: Record<Mode, string> = {
   '3v3': 'Solo queue — six players, split into the most even teams by rating.',
 };
 
-const STATE_LABEL: Record<ModState, string> = {
-  menu: 'in the menu',
-  lobby: 'in a lobby',
-  loading: 'loading a game',
-  ingame: 'in a game',
+// What follows "Auto-launch ready" or "Game seen", per state. The mod (0.3+)
+// leaves a lobby or closes a replay itself when the match launches.
+const STATE_NOTE: Record<ModState, string> = {
+  menu: "if your opponent's is too, the game starts itself.",
+  lobby: "game seen in a lobby — you'll be taken out of it for the match.",
+  replay: "game seen in a replay — it'll be closed for the match.",
+  loading: 'loading a game — back to the main menu to auto-launch.',
+  ingame: 'in a game — back to the main menu to auto-launch.',
 };
 
 // The game on this PC, as far as the page can tell (docs/local-bridge.md).
@@ -37,20 +42,35 @@ const STATE_LABEL: Record<ModState, string> = {
 // page itself sees nothing.
 function LaunchState({ bridge, serverMod }: { bridge: BridgeState; serverMod: ModPresence | null }) {
   const seen = bridge.status
-    ? { state: bridge.status.state, ready: bridge.status.state === 'menu' }
+    ? {
+        state: bridge.status.state,
+        ready: isLaunchableState(bridge.status.state),
+        version: bridge.status.modVersion,
+      }
     : serverMod
-      ? { state: serverMod.state, ready: serverMod.launchable }
+      ? { state: serverMod.state, ready: serverMod.launchable, version: serverMod.modVersion }
       : null;
 
   if (seen) {
+    // The mod says which version it is, whichever way it was seen; a player
+    // behind the release on the card below gets told, with the link.
+    const behind = isOlderVersion(seen.version, REPORTER_VERSION);
     return (
       <p className="launch-state" data-ready={seen.ready || undefined}>
         {seen.ready ? (
           <>
-            <strong>Auto-launch ready</strong> — if your opponent's is too, the game starts itself.
+            <strong>Auto-launch ready</strong> — {STATE_NOTE[seen.state]}
           </>
         ) : (
-          <>Game seen {STATE_LABEL[seen.state]} — back to the main menu to auto-launch.</>
+          <>Game seen {STATE_NOTE[seen.state]}</>
+        )}
+        {behind && (
+          <>
+            {' '}
+            <span className="mod-update">
+              Your LadderReporter is {seen.version} — <a href="#reporter">update to {REPORTER_VERSION}</a>.
+            </span>
+          </>
         )}
       </p>
     );

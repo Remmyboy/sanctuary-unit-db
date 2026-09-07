@@ -32,15 +32,17 @@ Every endpoint below takes `Authorization: Bearer <token>`.
 ## `POST /api/mm/heartbeat` — every 5 s while the game runs
 
 ```json
-{ "state": "menu | lobby | loading | ingame", "gameVersion": "…", "modVersion": "…" }
+{ "state": "menu | lobby | loading | ingame | replay", "gameVersion": "…", "modVersion": "…" }
 ```
 
 → `{ queued, match }`. `queued` says whether the player is in any site queue;
 `match` is `null` or the match object below.
 
 A player is **launchable** while their last heartbeat is under 15 s old and
-its state is `menu`. The site shows this next to the queue ("Auto-launch
-ready") but never gates queueing on it.
+its state is `menu`, `lobby` or `replay` — the mod leaves a lobby or closes
+a replay itself before launching. `loading` and `ingame` are not launchable.
+The site shows this next to the queue ("Auto-launch ready") but never gates
+queueing on it.
 
 ## The match object
 
@@ -137,7 +139,8 @@ least one player's mod had heartbeated in the last minute:
 
 - `Skoub isn't running the mod`
 - `Skoub's last heartbeat was 22 s old` (the mod was there but the poll stalled or stopped)
-- `Skoub is in a lobby` / `is loading a game` / `is in a game`
+- `Skoub is loading a game` / `is in a game` (a lobby or a replay is no
+  longer a reason: the mod leaves it)
 - `no map in the 1v1 pool has a path set`
 
 Two players' reasons are joined with `; `. A countdown that falls back to

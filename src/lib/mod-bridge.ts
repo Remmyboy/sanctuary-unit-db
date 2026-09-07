@@ -28,10 +28,19 @@ const BACKOFF_AFTER = 5;
 const SLOW_PROBE_MS = 15_000;
 const TIMEOUT_MS = 1500;
 
+// What the mod is currently acting on, for the admin test bench and for
+// debugging; the site's own record stays the authority.
+export interface BridgeMatch {
+  id: string;
+  status: string;
+  phase: string;
+}
+
 export interface BridgeStatus {
   modVersion: string | null;
   gameVersion: string | null;
   state: ModState;
+  match: BridgeMatch | null;
 }
 
 export interface BridgeState {
@@ -71,15 +80,27 @@ let failures = 0;
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
 
+const str = (v: unknown): string | null => (typeof v === 'string' ? v : null);
+
+function parseMatch(v: unknown): BridgeMatch | null {
+  const d = v as { id?: unknown; status?: unknown; phase?: unknown } | null;
+  if (!d || typeof d !== 'object' || typeof d.id !== 'string') return null;
+  return { id: d.id, status: str(d.status) ?? '', phase: str(d.phase) ?? '' };
+}
+
 function parseStatus(v: unknown): BridgeStatus | null {
-  const d = v as { state?: unknown; modVersion?: unknown; gameVersion?: unknown } | null;
+  const d = v as { state?: unknown; modVersion?: unknown; gameVersion?: unknown; match?: unknown } | null;
   if (!d || typeof d !== 'object' || !isModState(d.state)) return null;
   return {
     state: d.state,
-    modVersion: typeof d.modVersion === 'string' ? d.modVersion : null,
-    gameVersion: typeof d.gameVersion === 'string' ? d.gameVersion : null,
+    modVersion: str(d.modVersion),
+    gameVersion: str(d.gameVersion),
+    match: parseMatch(d.match),
   };
 }
+
+const sameMatch = (a: BridgeMatch | null, b: BridgeMatch | null): boolean =>
+  a === b || (a !== null && b !== null && a.id === b.id && a.status === b.status && a.phase === b.phase);
 
 const same = (a: BridgeStatus | null, b: BridgeStatus | null): boolean =>
   a === b ||
@@ -87,7 +108,8 @@ const same = (a: BridgeStatus | null, b: BridgeStatus | null): boolean =>
     b !== null &&
     a.state === b.state &&
     a.modVersion === b.modVersion &&
-    a.gameVersion === b.gameVersion);
+    a.gameVersion === b.gameVersion &&
+    sameMatch(a.match, b.match));
 
 // Only a change is news: the probe answers every two seconds and the same
 // answer must not re-render anything.

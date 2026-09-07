@@ -5,6 +5,7 @@
 
 import { useEffect, useState } from 'react';
 import { Link, createFileRoute } from '@tanstack/react-router';
+import { ModTestBench } from '../components/ModTestBench';
 import { loadMe } from '../lib/auth';
 import { MODES, type Mode } from '../lib/ladder-modes';
 import {
@@ -243,6 +244,9 @@ function AdminPage() {
         changes apply to the next match that forms.
       </p>
       <MapPools />
+
+      <h1>Mod test bench</h1>
+      <ModTestBench me={me} />
     </main>
   );
 }

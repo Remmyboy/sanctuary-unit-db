@@ -36,7 +36,26 @@ describe('mod-bridge', () => {
   it('reads a well-formed status', async () => {
     vi.stubGlobal('fetch', reply({ state: 'menu', modVersion: '0.3.0', gameVersion: '1.0' }));
     const bridge = await fresh();
-    expect(await bridge.probe()).toEqual({ state: 'menu', modVersion: '0.3.0', gameVersion: '1.0' });
+    expect(await bridge.probe()).toEqual({
+      state: 'menu',
+      modVersion: '0.3.0',
+      gameVersion: '1.0',
+      match: null,
+    });
+  });
+
+  it('keeps what the mod is acting on, for the test bench', async () => {
+    vi.stubGlobal(
+      'fetch',
+      reply({ state: 'replay', match: { id: 'm1', status: 'launch', phase: 'HostWaiting' } }),
+    );
+    const bridge = await fresh();
+    expect(await bridge.probe()).toEqual({
+      state: 'replay',
+      modVersion: null,
+      gameVersion: null,
+      match: { id: 'm1', status: 'launch', phase: 'HostWaiting' },
+    });
   });
 
   it('treats an unknown state as no mod', async () => {
