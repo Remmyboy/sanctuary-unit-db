@@ -154,10 +154,13 @@ A new module, `src/lib/mod-bridge.ts`, module-level like `queue-watch.ts`:
   Returns the status or `null`. Any failure (no listener, blocked by the
   browser, wrong origin) is `null`; the reason is kept for the UI.
 - Opt-in. Nothing is sent to `127.0.0.1` until the player presses
-  **Connect to Sanctuary** on the 1v1 card; the choice is kept in
-  `localStorage` (`sdb.bridge`), so it is one click per browser, ever, and
-  players without the mod never see the browser's prompt. "Stop looking"
-  forgets it.
+  **Connect to Sanctuary** on the 1v1 card, and players without the mod
+  never see the browser's prompt. The choice is kept in `localStorage`
+  (`sdb.bridge`) only once a probe has succeeded — that is the one moment
+  the page knows the browser allowed the connection and the mod was there.
+  A click that ended with the prompt blocked or dismissed, or with the game
+  closed, is not remembered, so the next visit shows the button again
+  rather than raising the prompt unasked. "Stop looking" forgets it.
 - Once enabled, polls every 2 s while something wants it: the Play page is
   open (queued or not, so the "Auto-launch ready" line is live before the
   click; it costs a loopback request and nothing on Vercel), the player is
