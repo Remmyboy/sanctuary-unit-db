@@ -9,7 +9,7 @@ import { copyText } from '../lib/clipboard';
 
 export const MODS_REPO = 'https://github.com/Remmyboy/sanctuary-mods';
 export const MOD_MANAGER_VERSION = '0.2.0';
-export const REPORTER_VERSION = '0.2.3';
+export const REPORTER_VERSION = '0.3.0';
 
 const release = (tag: string, file: string) => `${MODS_REPO}/releases/download/${tag}/${file}`;
 
