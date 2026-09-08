@@ -756,6 +756,12 @@ img.unit-icon[data-muted='true'] {
     height: auto;
     padding: 8px 14px;
   }
+  /* So does the nav: at phone widths six links fit only with the narrowest
+     system fonts, and Linux fallbacks push the row past the viewport. */
+  .nav {
+    flex-wrap: wrap;
+    min-width: 0;
+  }
   .header-slot {
     flex: none;
     width: 100%;
