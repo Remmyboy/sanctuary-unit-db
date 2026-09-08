@@ -1,7 +1,19 @@
+import path from 'node:path';
+import { createRequire } from 'node:module';
 import { defineConfig, loadEnv } from 'vite';
 import { tanstackStart } from '@tanstack/react-start/plugin/vite';
 import { nitro } from 'nitro/vite';
 import viteReact from '@vitejs/plugin-react';
+
+// Where npm actually put the dependencies. Normally that's `node_modules`
+// right here and this is a no-op — but a git worktree has none of its own, so
+// they resolve to the main checkout, outside the dev server's root. Vite
+// refuses to read outside the root unless the directory is listed in
+// `server.fs.allow`, and the failure looks like a missing file ("Failed to
+// load url ...nitro/dist/runtime/internal/vite/dev-entry.mjs. Does the file
+// exist?") rather than a permission error, so it is worth naming here.
+// `npm run build` is unaffected either way.
+const DEPS_DIR = path.dirname(path.dirname(createRequire(import.meta.url).resolve('vite/package.json')));
 
 // Split personality: the content pages (units, calculator, maps) are
 // prerendered to plain HTML and hydrate into an SPA, exactly as before — but
@@ -22,7 +34,7 @@ export default defineConfig(({ mode }) => {
   }
 
   return {
-    server: { port: 5173 },
+    server: { port: 5173, fs: { allow: [process.cwd(), DEPS_DIR] } },
     plugins: [
       tanstackStart({
         prerender: { enabled: true, crawlLinks: true },
