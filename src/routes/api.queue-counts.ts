@@ -1,6 +1,6 @@
 // How alive the queues are, for anyone: the Play page before you queue, the
 // signed-out Play page, the ladder sidebar. One answer for every viewer, so
-// the CDN holds it for ten seconds and a room full of tabs costs one
+// the CDN holds it for thirty seconds and a room full of tabs costs one
 // function call per region — the point being that nothing about "3 in
 // queue" needs a database query per person per five seconds.
 //
@@ -20,7 +20,7 @@ export const Route = createFileRoute('/api/queue-counts')({
         return new Response(JSON.stringify(counts), {
           headers: {
             'Content-Type': 'application/json',
-            'Cache-Control': 'public, max-age=0, s-maxage=10, stale-while-revalidate=30',
+            'Cache-Control': 'public, max-age=0, s-maxage=30, stale-while-revalidate=90',
           },
         });
       },
