@@ -14,8 +14,20 @@ const match = (over: Partial<MatchView>): MatchView =>
     status: 'in_progress',
     mmMode: 'manual',
     mmStatus: 'manual',
+    hostPlayerId: 'host',
+    participants: [{ playerId: 'host' }, { playerId: 'joiner' }],
+    mmEvents: [],
     ...over,
   }) as MatchView;
+
+const started = (...players: string[]) =>
+  players.map((playerId) => ({
+    type: 'started' as const,
+    playerId,
+    personaName: playerId,
+    detail: null,
+    at: '',
+  }));
 
 describe('pollDelay', () => {
   it('keeps trying until the match has loaded', () => {
@@ -26,9 +38,16 @@ describe('pollDelay', () => {
     expect(pollDelay(null)).toBeNull();
   });
 
-  it('is fast through the auto-launch countdown and launch', () => {
+  it('is fast through the auto-launch countdown and launch handshake', () => {
     expect(pollDelay(match({ mmMode: 'auto', mmStatus: 'countdown' }))).toBe(FAST_MS);
     expect(pollDelay(match({ mmMode: 'auto', mmStatus: 'launch' }))).toBe(FAST_MS);
+    expect(pollDelay(match({ mmMode: 'auto', mmStatus: 'launch', mmEvents: started('host') }))).toBe(FAST_MS);
+  });
+
+  it('slows down once both games have started — the match stays in launch until its result', () => {
+    expect(
+      pollDelay(match({ mmMode: 'auto', mmStatus: 'launch', mmEvents: started('host', 'joiner') })),
+    ).toBe(SLOW_MS);
   });
 
   it('is slow while a game is played or a result settles', () => {

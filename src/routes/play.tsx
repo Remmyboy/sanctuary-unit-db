@@ -23,9 +23,10 @@ import { applyStatus, isQueued, markJoining, refreshQueue, useQueueState } from 
 import { queueJoin, queueLeave } from '../server/queue-fns';
 import type { Me, PlayStatus, QueueCounts } from '../lib/ladder-types';
 
-// The public counts are served from a 10 s CDN cache; asking more often than
-// this only re-reads the same copy.
-const COUNTS_MS = 30_000;
+// The public counts are served from a 30 s CDN cache (a further 90 s stale);
+// every open tab asking once a minute keeps that copy warm between them,
+// and a lone tab costs one function call a minute.
+const COUNTS_MS = 60_000;
 
 // Factions you'll accept in an auto-launched 1v1, remembered per browser.
 const FACTIONS_KEY = 'sdb.factions';
@@ -86,12 +87,26 @@ function PlayPage() {
   useEffect(() => watchBridge(), []);
 
   // The public counts, for everyone. A queued player's own poll carries
-  // fresher ones and wins below.
+  // fresher ones and wins below. A hidden tab doesn't ask — nobody is
+  // looking, and an idle tab left open must cost nothing — and asks the
+  // moment it is shown again.
   useEffect(() => {
-    const tick = () => void fetchQueueCounts().then((c) => alive.current && c && setCounts(c));
+    let id: ReturnType<typeof setTimeout> | null = null;
+    const tick = () => {
+      if (!document.hidden) void fetchQueueCounts().then((c) => alive.current && c && setCounts(c));
+      id = setTimeout(tick, COUNTS_MS);
+    };
+    const onVisible = () => {
+      if (document.hidden) return;
+      if (id) clearTimeout(id);
+      tick();
+    };
     tick();
-    const id = setInterval(tick, COUNTS_MS);
-    return () => clearInterval(id);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      if (id) clearTimeout(id);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, []);
 
   // Signed in: one answer now, so an open match or a queue from another tab
