@@ -7,10 +7,13 @@ import type { Mode } from '../lib/ladder-modes';
 import { searchRadius } from '../lib/matchmaking';
 import { FACTIONS, STEAM_RUN_URL, isLaunchableState, type Faction, type ModState } from '../lib/mm';
 import { disableBridge, enableBridge, retryBridge, type BridgeState } from '../lib/mod-bridge';
+import { mod } from '../lib/mods';
 import { useNow } from '../lib/use-now';
 import { isOlderVersion } from '../lib/version';
-import { REPORTER_VERSION } from './ReporterCard';
 import type { ModPresence, QueueModeStatus } from '../lib/ladder-types';
+
+// The release the card below offers, so a player running an older one is told.
+const REPORTER_VERSION = mod('LadderReporter').version;
 
 const elapsed = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 

@@ -824,6 +824,21 @@ img.unit-icon[data-muted='true'] {
   color: var(--text);
 }
 
+/* The repo link in the header's right corner: an icon, so it reads as chrome
+   rather than as a sixth page. */
+.ghlink {
+  display: flex;
+  align-items: center;
+  flex: none;
+  padding: 4px;
+  border-radius: 6px;
+  color: var(--text-dim);
+}
+.ghlink:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
 /* ---------- calculator ---------- */
 
 /* Full-bleed workbench (option 2a): two input columns and an answer rail,
@@ -3139,4 +3154,182 @@ html.modding-route {
 }
 .launch-state .mod-update a {
   color: var(--accent);
+}
+
+/* ---------- mods ---------- */
+
+/* A reading page rather than a grid: one column, wide enough for a paragraph
+   and no wider, with each mod's downloads pulled out to the right of its
+   heading so the list scans as "what it is / how to get it". */
+.mods-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 14px 16px 60px;
+}
+.mods-intro {
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+.toolbar-link {
+  flex: none;
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.toolbar-link:hover {
+  text-decoration: underline;
+}
+
+.mods-choice {
+  margin: 0 0 10px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+.mods-choice strong {
+  color: var(--text);
+  font-weight: 600;
+}
+.mods-steps {
+  margin: 0 0 12px;
+  padding-left: 20px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--text-dim);
+}
+.mods-steps strong {
+  color: var(--text);
+  font-weight: 600;
+}
+.mods-steps kbd {
+  font-family: inherit;
+  font-size: 10.5px;
+  padding: 0 5px;
+  color: var(--text-dim);
+  background: var(--bg-hover);
+  border: 1px solid #364050;
+  border-radius: 4px;
+}
+.mods-install .hint {
+  margin: 10px 0 0;
+}
+
+.mod-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.mod-entry {
+  padding: 14px 16px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  /* Deep-linked from the Play page and from the install steps: keep the
+     heading clear of the sticky header and toolbar when it is jumped to. */
+  scroll-margin-top: calc(var(--header-h) + 44px);
+}
+.mod-entry-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+.mod-entry h2 {
+  margin: 0;
+  font-size: 15px;
+}
+.mod-version {
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-dim);
+}
+.mod-summary {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+/* The buttons keep one column so Standalone and the manager zip read as the
+   same choice made twice, not as a row of unrelated actions. */
+.mod-entry-dl {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+  text-align: center;
+}
+.mod-entry-dl .dl-btn {
+  padding: 6px 14px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.mod-entry-dl .dl-mini {
+  text-align: center;
+}
+
+.mod-points {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  max-width: 78ch;
+}
+.mod-points li {
+  margin-bottom: 3px;
+}
+.mod-points li::marker {
+  color: var(--icon-muted);
+}
+
+.mod-entry-foot {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  font-size: 11.5px;
+  color: var(--text-dim);
+}
+.mod-keys {
+  min-width: 0;
+}
+/* Pushed right by the margin rather than by space-between, so the links stay
+   in the same column whether or not the mod has a hotkey line to its left. */
+.mod-links {
+  flex: none;
+  display: flex;
+  gap: 14px;
+  margin-left: auto;
+}
+.mod-links a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.mod-links a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 620px) {
+  .mod-entry-head {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .mod-entry-dl {
+    align-items: flex-start;
+  }
+  .mod-entry-foot {
+    flex-direction: column;
+    gap: 6px;
+  }
+  /* Stacked, so the auto margin would shove the links off to the right. */
+  .mod-links {
+    margin-left: 0;
+  }
 }

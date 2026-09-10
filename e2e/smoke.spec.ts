@@ -69,6 +69,31 @@ test('maps listing renders cards and opens a map page by slug', async ({ page })
   expect(errors).toEqual([]);
 });
 
+test('mods page lists every mod with live download links', async ({ page }) => {
+  const errors = collectErrors(page);
+
+  // The catalogue is static, so this page is fully prerendered — content, not
+  // a shell. Its downloads are release assets whose URL is derived from the
+  // version in src/lib/mods.ts, which is the thing that goes stale.
+  await page.goto('/mods');
+  expect(await page.locator('.mod-entry').count()).toBe(8);
+  await expect(page.locator('#LadderReporter .dl-btn')).toHaveAttribute(
+    'href',
+    /sanctuary-mods\/releases\/download\/LadderReporter-[\d.]+\/LadderReporter-[\d.]+-Standalone\.zip/,
+  );
+  await expect(page.locator('.install-path code')).toContainText('Playtest\\engine');
+
+  // The Mod Manager is the loader, so it ships Standalone only — every other
+  // mod offers both zips.
+  await expect(page.locator('#ModManager .dl-mini')).toHaveCount(0);
+  await expect(page.locator('#SanctuaryHud .dl-mini')).toHaveCount(1);
+
+  // The header's repo link, on every page.
+  await expect(page.locator('.ghlink')).toHaveAttribute('href', /github\.com\/.+\/sanctuary-unit-db/);
+
+  expect(errors).toEqual([]);
+});
+
 test('modding docs honor the versioned routing and metadata contract', async ({ page, request }) => {
   const errors = collectErrors(page);
 
