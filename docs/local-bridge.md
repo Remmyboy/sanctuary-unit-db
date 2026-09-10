@@ -188,17 +188,17 @@ gone.
 
 Poll cadences after this change:
 
-| Where                          | Today | After                                         |
-| ------------------------------ | ----- | --------------------------------------------- |
-| Play page, signed in, idle     | 5 s   | none; counts come from the cached endpoint    |
-| Queued                         | 5 s   | 5 s (short-lived, and it carries presence)    |
-| Match room, countdown / launch | 5 s   | 5 s                                           |
-| Match room, playing / reported | 5 s   | 30 s, paused while the tab is hidden          |
-| Play page, signed out          | 5 s   | one read of the cached counts, refreshed 30 s |
-| Mod, game open, idle           | 5 s   | none                                          |
+| Where                          | Today | After                                                                 |
+| ------------------------------ | ----- | --------------------------------------------------------------------- |
+| Play page, signed in, idle     | 5 s   | none; cached counts once a minute while visible, never while hidden   |
+| Queued                         | 5 s   | 5 s (short-lived, and it carries presence)                            |
+| Match room, countdown / launch | 5 s   | 5 s, until both games have said `started`                             |
+| Match room, playing / reported | 5 s   | 30 s, paused while the tab is hidden (auto matches too, once started) |
+| Play page, signed out          | 5 s   | cached counts once a minute while visible                             |
+| Mod, game open, idle           | 5 s   | none                                                                  |
 
 The cached counts endpoint (`GET /api/queue-counts`,
-`s-maxage=10, stale-while-revalidate=30`) is a separate small change and is
+`s-maxage=30, stale-while-revalidate=90`) is a separate small change and is
 listed here only because it is what lets the idle Play page stop polling.
 
 ### What the player sees

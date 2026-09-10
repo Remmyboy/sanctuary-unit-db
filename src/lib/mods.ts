@@ -37,7 +37,7 @@ export const MODS: Mod[] = [
   {
     id: 'ModManager',
     name: 'Mod Manager',
-    version: '0.3.0',
+    version: '0.4.0',
     summary: 'A Mods page in the game menu. Start here if you want more than one mod.',
     points: [
       'Every mod gets a switch, and its own settings underneath.',
@@ -50,13 +50,14 @@ export const MODS: Mod[] = [
   {
     id: 'SanctuaryHud',
     name: 'SanctuaryDB HUD',
-    version: '0.7.1',
-    summary: 'A readable economy strip across the top of the screen.',
+    version: '0.8.0',
+    summary: 'An economy strip, reclaim values, build countdowns and alerts.',
     points: [
-      'Alloy and energy: stored, in, out, net per second, over a storage bar that reddens as you head for empty.',
-      'A STALL warning when your queue wants more than you earn, and by how much.',
+      'Alloy and energy: stored, in, out, net per second, a stall warning and time until empty.',
+      'Hold Left Alt to see the reclaim in every wreck on screen, summed up when zoomed out.',
+      'A countdown under everything you’re building — red when nothing is building it.',
+      'Alerts when your commander is under attack or a key structure finishes, with optional voice packs.',
       'A commander button top-right — click to select it and snap the camera there.',
-      'Drawn in the game’s own font and colours; can replace the built-in bars.',
     ],
     keys: 'F10',
   },
@@ -84,7 +85,7 @@ export const MODS: Mod[] = [
   {
     id: 'BuildHotkeys',
     name: 'Build Hotkeys',
-    version: '0.1.0',
+    version: '0.1.1',
     summary: 'One key per kind of unit, the same on every faction.',
     points: [
       'E is an engineer, T a tank, W a factory — whoever you are playing. Press again to walk down the tiers.',
