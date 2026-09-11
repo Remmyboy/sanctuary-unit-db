@@ -37,10 +37,10 @@ export const MODS: Mod[] = [
   {
     id: 'ModManager',
     name: 'Mod Manager',
-    version: '0.4.0',
+    version: '0.5.0',
     summary: 'A Mods page in the game menu. Start here if you want more than one mod.',
     points: [
-      'Every mod gets a switch, and its own settings underneath.',
+      'Every mod gets a switch, and its own settings underneath. A mod switched off never starts at all.',
       'Changes apply with no restart, and stick between sessions.',
       'Loads Lua mods too, and shows the lobby hash for comparing with friends.',
       'Carries the mod loader, so every other mod becomes a small drop-in zip.',
@@ -50,13 +50,13 @@ export const MODS: Mod[] = [
   {
     id: 'SanctuaryHud',
     name: 'SanctuaryDB HUD',
-    version: '0.8.0',
+    version: '0.9.0',
     summary: 'An economy strip, reclaim values, build countdowns and alerts.',
     points: [
-      'Alloy and energy: stored, in, out, net per second, a stall warning and time until empty.',
+      'Alloy and energy: stored, in, out, net per second, a stall warning and time until empty — in place of the game’s own panel, if you like.',
       'Hold Left Alt to see the reclaim in every wreck on screen, summed up when zoomed out.',
-      'A countdown under everything you’re building — red when nothing is building it.',
-      'Alerts when your commander is under attack or a key structure finishes, with optional voice packs.',
+      'A countdown under everything you’re building — orange while you’re stalling, red when nothing is building it.',
+      'Alerts when your commander is under attack, a key structure finishes or a player drops out, with optional voice packs.',
       'A commander button top-right — click to select it and snap the camera there.',
     ],
     keys: 'F10',
@@ -64,10 +64,10 @@ export const MODS: Mod[] = [
   {
     id: 'EcoManager',
     name: 'Eco Manager',
-    version: '0.3.0',
+    version: '0.4.0',
     summary: 'Your alloy extractors by tier, and assist that actually upgrades.',
     points: [
-      'One clickable row per extractor tier, plus what is mid-upgrade.',
+      'One clickable row per extractor tier, with its build-menu icon, plus what is mid-upgrade.',
       'Assisting a finished extractor starts its upgrade, instead of the engineer standing there doing nothing.',
       'Each upgrade is held paused until its engineer arrives, so five at once don’t flatten your economy.',
     ],
@@ -75,30 +75,32 @@ export const MODS: Mod[] = [
   {
     id: 'IdleEngineers',
     name: 'Idle Engineers',
-    version: '0.1.0',
-    summary: 'Shows the engineers standing around doing nothing.',
+    version: '0.3.0',
+    summary: 'Shows the engineers and factories standing around doing nothing.',
     points: [
-      'A row per tech tier; click to select that group.',
+      'A row per engineer tier, plus your commander, each with its build-menu icon — click one to select that group.',
+      'Idle land, air and naval factories underneath by tier; click a heading to select every idle one of that type, ready to queue.',
       'Hides itself completely when nothing is idle.',
     ],
   },
   {
     id: 'BuildHotkeys',
     name: 'Build Hotkeys',
-    version: '0.1.1',
+    version: '0.2.0',
     summary: 'One key per kind of unit, the same on every faction.',
     points: [
       'E is an engineer, T a tank, W a factory — whoever you are playing. Press again to walk down the tiers.',
       'Follows Zulan’s hotbuild layout, so FA and FAF players already know it. Shift queues five, Alt goes backwards.',
       'Reaches everything the stock keys can’t: shields, artillery, air and naval factories, tech centres, walls.',
-      'A strip shows what your press picked, and the build buttons relabel themselves. Escape clears a factory queue.',
+      'A strip shows what your press picked, and the build buttons relabel themselves.',
+      'Escape stops the selected factories, assists and all — and the pause menu can move to another key so it never opens by accident.',
     ],
     keys: 'All rebindable',
   },
   {
     id: 'LadderReporter',
     name: 'Ladder Reporter',
-    version: '0.3.0',
+    version: '0.3.1',
     summary: 'Reports your ranked results, and starts your matches for you.',
     points: [
       'Ranked 1v1 results post themselves to the SanctuaryDB ladder when the game ends.',
