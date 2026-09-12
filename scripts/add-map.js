@@ -100,13 +100,21 @@ const previewSrc = ['preview.png', path.join('Textures', 'preview.png')]
   .find((p) => fs.existsSync(p));
 if (!previewSrc) fail(`${folderName}/ has no preview.png — the game writes one when the map is saved.`);
 
+// A map's size is the map, not its terrain. Converted maps now sit in the
+// centre of a terrain twice their size — a border for the engine to mirror
+// instead of the map — as the hand-made ones always have. The PlayableArea
+// can't be the size itself: a few FA maps restrict play to an odd rectangle
+// (Fields of Isis is 504 × 276 of a 512 map). So: a playable area inside the
+// terrain's centre half means a bordered map of half the terrain; anything
+// else fills its terrain.
+const [width, length] = mapSize(san);
 const meta = {
   slug,
   name: san.name || folderName.replace(/_/g, ' '),
   author: san.credits || '',
   players: Object.keys(san.armies ?? {}).length,
-  width: san.width ?? 0,
-  length: san.length ?? 0,
+  width,
+  length,
   hasWater: Boolean(san.hasWater),
 };
 if (!meta.players) fail(`${sanmaps[0]} has no armies — is this a finished map?`);
@@ -184,6 +192,17 @@ console.log(`players:   ${meta.players}   size: ${meta.width}x${meta.length}   w
 console.log(`zip:       ${(sizeBytes / 1048576).toFixed(1)} MB -> ${entry.download}`);
 if (screenshots.length) console.log(`shots:     ${screenshots.join(', ')}`);
 console.log(`\nNow commit and push public/ so the site picks it up.`);
+
+/* ---------------- map size ---------------- */
+
+function mapSize(san) {
+  const w = san.width ?? 0;
+  const l = san.length ?? 0;
+  const a = san.areas?.PlayableArea;
+  const bordered =
+    a && a.x >= w / 4 && a.x + a.width <= (3 * w) / 4 && a.y >= l / 4 && a.y + a.height <= (3 * l) / 4;
+  return bordered ? [w / 2, l / 2] : [w, l];
+}
 
 /* ---------------- preview art ---------------- */
 

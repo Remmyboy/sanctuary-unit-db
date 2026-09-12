@@ -50,16 +50,17 @@ export const MODS: Mod[] = [
   {
     id: 'SanctuaryHud',
     name: 'SanctuaryDB HUD',
-    version: '0.9.0',
-    summary: 'An economy strip, reclaim values, build countdowns and alerts.',
+    version: '0.10.0',
+    summary: 'An economy strip, a mini-map, reclaim values, build countdowns and alerts.',
     points: [
       'Alloy and energy: stored, in, out, net per second, a stall warning and time until empty — in place of the game’s own panel, if you like.',
+      'A mini-map, which the game doesn’t have: fog where you can’t see, every contact the game shows you, and click or drag to move the camera. F2 toggles it.',
       'Hold Left Alt to see the reclaim in every wreck on screen, summed up when zoomed out.',
       'A countdown under everything you’re building — orange while you’re stalling, red when nothing is building it.',
       'Alerts when your commander is under attack, a key structure finishes or a player drops out, with optional voice packs.',
       'A commander button top-right — click to select it and snap the camera there.',
     ],
-    keys: 'F10',
+    keys: 'F10, F2',
   },
   {
     id: 'EcoManager',
@@ -111,12 +112,13 @@ export const MODS: Mod[] = [
   {
     id: 'ReplayManager',
     name: 'Replay Manager',
-    version: '0.2.0',
+    version: '0.3.0',
     summary: 'Watch the game’s replays from any seat, fog-free.',
     points: [
       'Any player’s point of view, or every army at once, with the fog lifted.',
-      'Every army’s economy side by side, including whole-game totals.',
-      'Pause, 0.1× to 16× speed, skip a minute, seek — or hide the timeline so you don’t know when it ends.',
+      'Every army’s economy side by side, including whole-game totals — empty slots no longer get a row.',
+      'Pause, 0.25× to 16× speed, skip ahead a minute, restart — or hide the timeline so you don’t know when it ends.',
+      'Drag the corner to resize the panel; it remembers the size.',
     ],
     keys: 'F7',
   },
