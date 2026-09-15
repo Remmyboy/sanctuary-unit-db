@@ -50,7 +50,7 @@ export const MODS: Mod[] = [
   {
     id: 'SanctuaryHud',
     name: 'SanctuaryDB HUD',
-    version: '0.11.1',
+    version: '0.11.2',
     summary:
       'An economy strip, a mini-map, reclaim values, build countdowns, alerts and tidier bottom panels.',
     points: [
