@@ -50,13 +50,13 @@ export const MODS: Mod[] = [
   {
     id: 'SanctuaryHud',
     name: 'SanctuaryDB HUD',
-    version: '0.11.0',
+    version: '0.11.2',
     summary:
       'An economy strip, a mini-map, reclaim values, build countdowns, alerts and tidier bottom panels.',
     points: [
       'Alloy and energy: stored, in, out, net per second, a stall warning and time until empty — in place of the game’s own panel, if you like.',
       'A mini-map, which the game doesn’t have: fog where you can’t see, every contact the game shows you, and click or drag to move the camera. F2 toggles it, and it can be locked in place.',
-      'Optional stand-ins for the game’s bottom panels: only the orders and build options your selection really has, a readable unit card with costs and build times, and a selection row you click to narrow down. One switch gives the game’s own back.',
+      'Optional stand-ins for the game’s bottom panels: only the orders and build options your selection really has, a readable unit card with shields, costs and build times, and a selection row you click to narrow down. One switch gives the game’s own back.',
       'Hold Left Alt to see the reclaim in every wreck on screen, summed up when zoomed out.',
       'A countdown under everything you’re building — orange while you’re stalling, red when nothing is building it.',
       'Alerts when your commander is under attack, a key structure finishes or a player drops out, with optional voice packs.',
