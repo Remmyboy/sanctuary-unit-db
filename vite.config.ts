@@ -8,6 +8,7 @@ import { readdirSync } from 'node:fs';
 import { dirname, relative, resolve } from 'node:path';
 import { MODDING_SNAPSHOTS } from './src/content/modding/registry.ts';
 import { siteOrigin } from './src/lib/site-origin.ts';
+import { modBundle } from './src/lib/mod-bundle.ts';
 
 // Where npm actually put the dependencies. Normally that's `node_modules`
 // right here and this is a no-op — but a git worktree has none of its own, so
@@ -50,7 +51,8 @@ export default defineConfig(({ mode, command }) => {
   for (const [key, value] of Object.entries(env)) {
     process.env[key] ??= value;
   }
-  process.env.SITE_URL = siteOrigin(process.env.SITE_URL, command === 'build');
+  const site = siteOrigin(process.env.SITE_URL, command === 'build');
+  process.env.SITE_URL = site;
 
   return {
     server: { port: 5173, fs: { allow: [process.cwd(), DEPS_DIR] } },
@@ -61,8 +63,12 @@ export default defineConfig(({ mode, command }) => {
         prerender: {
           enabled: true,
           crawlLinks: true,
+          // /downloads/ holds the everything zip, already in the output: the
+          // crawler follows the link to it and would write it back as text.
           filter: ({ path }) =>
-            path !== '/modding' && !MODDING_SNAPSHOTS.some((snapshot) => path === `/modding/${snapshot.id}`),
+            path !== '/modding' &&
+            !path.startsWith('/downloads/') &&
+            !MODDING_SNAPSHOTS.some((snapshot) => path === `/modding/${snapshot.id}`),
         },
       }),
       // Nitro packages the server for the deployment target: on Vercel it
@@ -71,6 +77,8 @@ export default defineConfig(({ mode, command }) => {
       // every route 404s.
       nitro(),
       viteReact(),
+      // The mods page's "Download everything" zip, merged from the mod releases.
+      modBundle(site),
     ],
   };
 });

@@ -6,140 +6,259 @@
 // Keeping it here rather than in a component means the Play page and the mods
 // page can never disagree about which version is current.
 //
-// Blurbs stay short on purpose: the repo README is the long version, and it is
-// one click away on every card.
+// The copy is a pitch, not a changelog: each feature says what a player gets
+// and why they would want it. How a mod is built (which canvas it draws on,
+// which hook it uses) and what a release fixed belong in the release notes,
+// which are one click away on every card — so when a release lands, bump the
+// version, and touch the features only if the mod can now do something new.
 
 export const MODS_REPO = 'https://github.com/Remmyboy/sanctuary-mods';
 export const SITE_REPO = 'https://github.com/Remmyboy/sanctuary-unit-db';
+
+// The loader on its own: BepInEx, the loader and an empty SanctuaryMods
+// folder. Not a mod anyone picks, so it has no card — it's the base the
+// everything zip is built on. Each Standalone zip carries whichever loader
+// was current when it was packed, so bump this when the loader gets a release
+// of its own and the everything zip always has the newest.
+export const LOADER_VERSION = '1.3.1';
+
+/** Every mod in one zip, built by the site's own build from the releases
+ *  named in this file (src/lib/mod-bundle.ts) and served as a static file,
+ *  so it always holds exactly the versions the page shows. */
+export const EVERYTHING_HREF = '/downloads/SanctuaryMods-Everything.zip';
 
 // Where the game reads mods from. The install root moves with the branch and
 // the Steam library, so this is the common default rather than a promise.
 export const ENGINE_PATH =
   'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Sanctuary Shattered Sun Playtest\\engine';
 
+export interface Feature {
+  /** A few words, read on their own when someone skims. */
+  title: string;
+  /** One or two short sentences on what it does for you. */
+  text: string;
+}
+
 export interface Mod {
   /** Repo folder and release-tag prefix — `SanctuaryHud`, `EcoManager`. */
   id: string;
   name: string;
   version: string;
-  /** One line, shown under the name. */
-  summary: string;
-  /** The two or three things you actually get. One short line each. */
-  points: string[];
-  /** Keys it binds, if any — worth knowing before you install it. */
+  /** The pitch in one line, under the name. */
+  tagline: string;
+  features: Feature[];
+  /** Its keys, in words, if it binds any — worth knowing before you install. */
   keys?: string;
 }
 
-// Ordered the way someone new reads them: the manager first, because every
-// other mod plugs into it, then the ones you would want in a normal game, then
-// the ladder mod, then the tools for watching and recording.
+// Ordered the way someone new reads them: the manager first, because the
+// page's install steps start with it, then the ones you would want in a
+// normal game, then the ladder mod, then the tools for watching and recording.
 export const MODS: Mod[] = [
   {
     id: 'ModManager',
     name: 'Mod Manager',
-    version: '0.5.0',
-    summary: 'A Mods page in the game menu. Start here if you want more than one mod.',
-    points: [
-      'Every mod gets a switch, and its own settings underneath. A mod switched off never starts at all.',
-      'Changes apply with no restart, and stick between sessions.',
-      'Loads Lua mods too, and shows the lobby hash for comparing with friends.',
-      'Carries the mod loader, so every other mod becomes a small drop-in zip.',
+    version: '0.5.1',
+    tagline: 'A Mods page in the game menu, for switching mods on and off and changing their settings.',
+    features: [
+      {
+        title: 'A switch for every mod',
+        text: 'Turn any mod on or off from the menu, or mid-match with F8. It takes effect straight away, with no restart.',
+      },
+      {
+        title: 'Settings in the game',
+        text: 'Every option a mod has, as the game’s own switches and sliders. No config files to edit.',
+      },
+      {
+        title: 'Every other mod is a small drop-in',
+        text: 'It brings the loader the rest run on, so each mod after this is a small zip you extract and you’re done.',
+      },
+      {
+        title: 'Lua mods too',
+        text: 'Switch Lua mods on and off, with the lobby hash on show so you can check you match your friends.',
+      },
     ],
-    keys: 'F8',
+    keys: 'F8 opens it, in the menu or mid-match',
   },
   {
     id: 'SanctuaryHud',
     name: 'SanctuaryDB HUD',
-    version: '0.12.0',
-    summary:
-      'An economy strip, a mini-map, reclaim values, build countdowns, alerts and tidier bottom panels.',
-    points: [
-      'Alloy and energy: stored, in, out, net per second, a stall warning and time until empty — in place of the game’s own panel, if you like.',
-      'A mini-map, which the game doesn’t have: fog where you can’t see, every contact the game shows you, and click or drag to move the camera. F2 toggles it, and it can be locked in place.',
-      'Optional stand-ins for the game’s bottom panels, docked into one: only the orders and build options your selection really has, a readable unit card with shields, costs and build times, and a selection row you click to narrow down. One switch gives the game’s own back.',
-      'Hold Left Alt to see the reclaim in every wreck on screen, summed up when zoomed out.',
-      'A countdown under everything you’re building — orange while you’re stalling, red when nothing is building it.',
-      'Alerts when your commander is under attack, a key structure finishes or a player drops out, with optional voice packs.',
-      'A commander button top-right — click to select it and snap the camera there.',
-      'Built on the game’s own UI — its font, icons and tooltips, sized by your UI Scale — so a click on the HUD never lands on the map.',
+    version: '0.12.2',
+    tagline: 'A mini-map, a proper economy readout, reclaim values, build timers and alerts.',
+    features: [
+      {
+        title: 'A mini-map',
+        text: 'The one thing the game is missing. Fog where you can’t see, every contact you can, and click or drag to move the camera.',
+      },
+      {
+        title: 'Your economy at a glance',
+        text: 'Alloy and energy stored, in, out and net per second, with a stall warning and how long until you run dry.',
+      },
+      {
+        title: 'See what the wrecks are worth',
+        text: 'Hold Left Alt and every wreck on screen shows its reclaim, added up when you zoom out.',
+      },
+      {
+        title: 'Build timers',
+        text: 'A countdown under everything you’re building. Orange means you’re stalling it; red means nothing is building it.',
+      },
+      {
+        title: 'Alerts that matter',
+        text: 'Your commander under attack, a key structure finished, a player dropping out — with optional voice packs.',
+      },
+      {
+        title: 'Cleaner bottom panels',
+        text: 'Only the orders and build options your selection really has, and a unit card you can read at a glance. One switch brings the originals back.',
+      },
+      {
+        title: 'Find your commander',
+        text: 'One click on the top-right button selects your commander and snaps the camera to it.',
+      },
     ],
-    keys: 'F10, F2',
+    keys: 'F10 shows and hides it · F2 the mini-map',
   },
   {
     id: 'EcoManager',
     name: 'Eco Manager',
-    version: '0.6.0',
-    summary: 'What you’re building, your alloy extractors, and assist that actually upgrades.',
-    points: [
-      'Your biggest spenders under construction as tiles, alloy on one side and energy on the other, hungriest first — click to select the builders, right-click to pause them.',
-      'One clickable row of tiles per extractor tier, with the ones mid-upgrade beside them.',
-      'An engineer assisting a finished extractor starts its upgrade, instead of standing there doing nothing.',
-      'Each upgrade is held paused until its engineer arrives, so five at once don’t flatten your economy.',
-      'Built on the game’s own UI, with its tooltips on hover, so a click or drag on a panel never lands on the map.',
+    version: '0.7.1',
+    tagline: 'See what’s eating your economy, and upgrade extractors without babysitting them.',
+    features: [
+      {
+        title: 'What’s spending your resources',
+        text: 'Your biggest builds in progress, alloy on one side and energy on the other, hungriest first. Click to select the builders, right-click to pause them.',
+      },
+      {
+        title: 'Every extractor, by tier',
+        text: 'A row of tiles per tier, with the ones mid-upgrade beside them. Click a tile to select that group.',
+      },
+      {
+        title: 'Assist to upgrade',
+        text: 'Order an engineer to assist a finished extractor and it starts the upgrade, instead of standing there doing nothing.',
+      },
+      {
+        title: 'Upgrades that don’t stall you',
+        text: 'Each upgrade waits, paused, until its engineer actually starts work — so queueing five at once won’t flatten your economy.',
+      },
     ],
   },
   {
     id: 'IdleEngineers',
     name: 'Idle Engineers',
-    version: '0.5.0',
-    summary: 'Shows the engineers and factories standing around doing nothing.',
-    points: [
-      'A tile per engineer tier, with your commander above, each with its build-menu art and count — click one to select that group.',
-      'Idle factories in a row underneath; click the heading to select every one, ready to queue. Selecting them no longer empties the panel.',
-      'Built on the game’s own UI, so clicking a tile no longer clicks the map too. Resizable, lockable, and hidden completely when nothing is idle.',
+    version: '0.5.1',
+    tagline: 'Never lose track of an engineer or factory with nothing to do.',
+    features: [
+      {
+        title: 'Idle engineers, by tier',
+        text: 'A tile for each tech tier with a count on it, and your commander on top. Click one to select that whole group.',
+      },
+      {
+        title: 'Idle factories too',
+        text: 'Every factory with an empty queue, underneath. Click the heading to select them all and queue up in one go.',
+      },
+      {
+        title: 'Gone when you don’t need it',
+        text: 'It disappears completely when nothing is idle. Put it wherever you like and lock it there.',
+      },
     ],
   },
   {
     id: 'BuildHotkeys',
     name: 'Build Hotkeys',
-    version: '0.3.0',
-    summary: 'One key per kind of unit, the same on every faction.',
-    points: [
-      'E is an engineer, T a tank, W a factory — whoever you are playing. Press again to walk down the tiers.',
-      'Follows Zulan’s hotbuild layout, so FA and FAF players already know it. Shift queues five, Alt goes backwards.',
-      'Reaches everything the stock keys can’t: shields, artillery, air and naval factories, tech centres, walls.',
-      'A strip shows what your press picked, and the build buttons relabel themselves.',
-      'Escape stops the selected factories, assists and all — and the pause menu can move to another key so it never opens by accident.',
-      'X pauses and Z repeat-builds what you have selected — unless the same key has something to build, so X is still point defence for engineers.',
-      'Extractors snap onto a deposit from a fixed distance on screen, so placing them zoomed out isn’t pixel-hunting.',
+    version: '0.3.1',
+    tagline: 'One key per kind of unit, the same on every faction.',
+    features: [
+      {
+        title: 'Same keys, every faction',
+        text: 'E is an engineer, T a tank, W a factory — whoever you’re playing. Press again to step up the tiers.',
+      },
+      {
+        title: 'Familiar to FA players',
+        text: 'Follows Zulan’s hotbuild layout, which FA and FAF players already know. Shift queues five, Alt steps back.',
+      },
+      {
+        title: 'Everything within reach',
+        text: 'Shields, artillery, air and naval factories, tech centres and walls — everything the stock keys can’t reach.',
+      },
+      {
+        title: 'Always know what you picked',
+        text: 'A strip shows what each press chose, and the build buttons relabel themselves with your keys.',
+      },
+      {
+        title: 'Order keys',
+        text: 'X pauses and Z repeat-builds your selection, and Escape stops your factories, as in FAF. The pause menu can move to a key you won’t hit by accident.',
+      },
+      {
+        title: 'Extractors snap at any zoom',
+        text: 'Place one near a deposit and it snaps on, even zoomed right out. No more pixel-hunting.',
+      },
     ],
-    keys: 'All rebindable',
+    keys: 'Every key can be rebound',
   },
   {
     id: 'LadderReporter',
     name: 'Ladder Reporter',
-    version: '0.3.1',
-    summary: 'Reports your ranked results, and starts your matches for you.',
-    points: [
-      'Ranked 1v1 results post themselves to the SanctuaryDB ladder when the game ends.',
-      'Match in the queue and you are dropped straight into the game — no hosting, no invites — when both players have it.',
-      'Only ever touches two-player Steam lobbies that match an open ladder game.',
+    version: '0.3.2',
+    tagline: 'Queue for a ranked 1v1 on the site, and the ladder does the rest.',
+    features: [
+      {
+        title: 'Matches start themselves',
+        text: 'Get paired with someone who also has it and both games make the lobby, take their seats and start. No hosting, no invites.',
+      },
+      {
+        title: 'Results report themselves',
+        text: 'When a ranked 1v1 ends, the result goes straight to the SanctuaryDB ladder.',
+      },
+      {
+        title: 'Nothing to set up',
+        text: 'No settings at all. It only ever touches two-player Steam lobbies that match an open ladder game.',
+      },
     ],
   },
   {
     id: 'ReplayManager',
     name: 'Replay Manager',
-    version: '0.4.0',
-    summary: 'Watch the game’s replays from any seat, fog-free.',
-    points: [
-      'Any player’s point of view, or every army at once, with the fog lifted.',
-      'Every army’s economy side by side, including whole-game totals — empty slots no longer get a row.',
-      'Pause, 0.25× to 16× speed, skip ahead a minute, restart — or hide the timeline so you don’t know when it ends.',
-      'Drag the corner to resize the panel; it remembers the size, stays on screen at any resolution, and can be locked in place.',
+    version: '0.4.1',
+    tagline: 'Watch replays properly: any player’s view, no fog, every economy.',
+    features: [
+      {
+        title: 'Any seat, no fog',
+        text: 'Watch through any player’s eyes, or every army at once with the fog lifted.',
+      },
+      {
+        title: 'Compare economies',
+        text: 'Every army’s economy side by side, with whole-game totals, so you can see where it was won.',
+      },
+      {
+        title: 'Full playback control',
+        text: 'Pause, 0.25× to 16×, skip ahead a minute, restart. Or hide the timeline, so you can’t tell when it ends.',
+      },
     ],
-    keys: 'F7',
+    keys: 'F7 shows and hides the panel',
   },
   {
     id: 'CameraUtilities',
     name: 'Camera Utilities',
     version: '0.1.2',
-    summary: 'Strip the overlays off the picture, for screenshots and cinematics.',
-    points: [
-      'Switch off icons, range rings, order lines, build ghosts, health bars and the whole HUD.',
-      'Strategic icons can drop away only when you zoom in, so you keep them where they help.',
-      'Unlock how far out units are drawn, instead of a wide shot turning into icons.',
+    tagline: 'A clean picture for screenshots, videos and casting.',
+    features: [
+      {
+        title: 'Strip the screen bare',
+        text: 'Switch off icons, range rings, order lines, planned buildings, health bars or the whole HUD, one at a time.',
+      },
+      {
+        title: 'Icons only when you’re zoomed out',
+        text: 'Strategic icons can stay for the wide view and drop away as you dive in for the close-up.',
+      },
+      {
+        title: 'See the whole battle',
+        text: 'Units stay drawn much further out, so a wide shot shows the armies instead of a sea of icons.',
+      },
+      {
+        title: 'Change it mid-shot',
+        text: 'Every switch is on a small in-game panel, so you never have to leave the match.',
+      },
     ],
-    keys: 'F4',
+    keys: 'F4 opens the panel',
   },
 ];
 
@@ -160,17 +279,19 @@ export const releaseNotes = (m: Mod): string => `${MODS_REPO}/releases/tag/${rel
 
 export const sourceHref = (m: Mod): string => `${MODS_REPO}/tree/main/${m.id}`;
 
-/** Self-contained: the mod plus BepInEx and the loader it runs on. What you
- *  want if this is the only mod you're after. */
+/** Self-contained: the mod plus BepInEx and the loader it runs on. For the
+ *  Mod Manager this is the install everything else goes on top of; for any
+ *  other mod it's the way to run that one without the manager. */
 export const standaloneHref = (m: Mod): string =>
   `${MODS_REPO}/releases/download/${releaseTag(m)}/${releaseTag(m)}-Standalone.zip`;
 
 /** Just the mod itself, for an install that already has the Mod Manager —
  *  zipped as a folder so it drops into the same place as everything else.
- *
- *  The Mod Manager has no such build: it *is* the manager and the loader, so
- *  there is nothing for it to plug into. `hasManagerZip` gates the link. */
+ *  The Mod Manager has one too (the manager alone, for an install that has
+ *  the loader), but nothing here offers it: the manager is what you start
+ *  from, so its link is always the Standalone. */
 export const managerHref = (m: Mod): string =>
   `${MODS_REPO}/releases/download/${releaseTag(m)}/${releaseTag(m)}-ModManager.zip`;
 
-export const hasManagerZip = (m: Mod): boolean => m.id !== 'ModManager';
+export const loaderHref = (): string =>
+  `${MODS_REPO}/releases/download/ModLoader-${LOADER_VERSION}/ModLoader-${LOADER_VERSION}.zip`;
