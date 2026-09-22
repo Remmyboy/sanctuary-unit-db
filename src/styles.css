@@ -3158,19 +3158,14 @@ html.modding-route {
 
 /* ---------- mods ---------- */
 
-/* A reading page rather than a grid: one column, wide enough for a paragraph
-   and no wider, with each mod's downloads pulled out to the right of its
-   heading so the list scans as "what it is / how to get it". */
+/* A reading page rather than a grid: one column, wide enough for a feature
+   list in two columns and no wider. It runs as two numbered steps — the Mod
+   Manager, then everything that plugs into it — so the order to install
+   things in is the order you read them. */
 .mods-page {
   max-width: 900px;
   margin: 0 auto;
-  padding: 14px 16px 60px;
-}
-.mods-intro {
-  margin: 0 0 14px;
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--text-dim);
+  padding: 18px 16px 60px;
 }
 .toolbar-link {
   flex: none;
@@ -3182,28 +3177,30 @@ html.modding-route {
   text-decoration: underline;
 }
 
-.mods-choice {
-  margin: 0 0 10px;
-  font-size: 12.5px;
+.mods-hero h1 {
+  margin: 0 0 6px;
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+.mods-hero p {
+  margin: 0;
+  max-width: 68ch;
+  font-size: 13.5px;
   line-height: 1.6;
   color: var(--text-dim);
 }
-.mods-choice strong {
+
+.mods-page p code {
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 11.5px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
   color: var(--text);
-  font-weight: 600;
 }
-.mods-steps {
-  margin: 0 0 12px;
-  padding-left: 20px;
-  font-size: 12.5px;
-  line-height: 1.7;
-  color: var(--text-dim);
-}
-.mods-steps strong {
-  color: var(--text);
-  font-weight: 600;
-}
-.mods-steps kbd {
+.mods-page kbd {
   font-family: inherit;
   font-size: 10.5px;
   padding: 0 5px;
@@ -3212,36 +3209,77 @@ html.modding-route {
   border: 1px solid #364050;
   border-radius: 4px;
 }
-.mods-install .hint {
-  margin: 10px 0 0;
+
+.mods-step-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 30px 0 12px;
+}
+.mods-step-num {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--bg);
+  font-size: 13px;
+  font-weight: 700;
+}
+.mods-step-head h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 650;
+}
+.mods-step-text {
+  margin: 0 0 8px;
+  max-width: 78ch;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+.mods-step-text strong {
+  color: var(--text);
+  font-weight: 600;
+}
+.mods-step-text.hint {
+  font-size: 12px;
 }
 
 .mod-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-top: 12px;
+  margin-top: 14px;
 }
 
 .mod-entry {
-  padding: 14px 16px;
+  padding: 16px 18px;
   background: var(--bg-raised);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  /* Deep-linked from the Play page and from the install steps: keep the
-     heading clear of the sticky header and toolbar when it is jumped to. */
+  /* Deep-linked from the Play page: keep the heading clear of the sticky
+     header and toolbar when it is jumped to. */
   scroll-margin-top: calc(var(--header-h) + 44px);
+}
+/* Step 1 is the one download everybody needs, so it is the one that glows. */
+.mod-entry.featured {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  background: color-mix(in srgb, var(--accent) 5%, var(--bg-raised));
 }
 .mod-entry-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 10px;
+  margin-bottom: 14px;
 }
-.mod-entry h2 {
+.mod-entry h3 {
   margin: 0;
-  font-size: 15px;
+  font-size: 16px;
+  font-weight: 650;
 }
 .mod-version {
   margin-left: 6px;
@@ -3249,49 +3287,58 @@ html.modding-route {
   font-weight: 500;
   color: var(--text-dim);
 }
-.mod-summary {
-  margin: 3px 0 0;
-  font-size: 12.5px;
+.mod-tagline {
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
   color: var(--text-dim);
 }
-/* The buttons keep one column so Standalone and the manager zip read as the
-   same choice made twice, not as a row of unrelated actions. */
-.mod-entry-dl {
+.mod-entry-head .dl-btn {
   flex: none;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 5px;
-  text-align: center;
-}
-.mod-entry-dl .dl-btn {
-  padding: 6px 14px;
-  font-size: 12px;
+  padding: 7px 18px;
   white-space: nowrap;
 }
-.mod-entry-dl .dl-mini {
-  text-align: center;
+
+/* Where the Mod Manager goes, between its button and its features, since
+   it's the next thing you need after clicking the button. */
+.mods-where {
+  margin: 0 0 16px;
+}
+.mods-where p {
+  margin: 0 0 8px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-dim);
 }
 
-.mod-points {
+/* Two columns of short selling points: a title you can skim, and a line
+   underneath for anyone who stops on it. */
+.mod-features {
+  list-style: none;
   margin: 0;
-  padding-left: 18px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px 28px;
+}
+.mod-features li {
   font-size: 12.5px;
-  line-height: 1.55;
-  max-width: 78ch;
+  line-height: 1.5;
+  color: var(--text-dim);
 }
-.mod-points li {
-  margin-bottom: 3px;
-}
-.mod-points li::marker {
-  color: var(--icon-muted);
+.mod-features strong {
+  display: block;
+  margin-bottom: 1px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
 }
 
 .mod-entry-foot {
   display: flex;
   align-items: baseline;
   gap: 14px;
-  margin-top: 12px;
+  margin-top: 14px;
   padding-top: 10px;
   border-top: 1px solid var(--border);
   font-size: 11.5px;
@@ -3316,13 +3363,24 @@ html.modding-route {
   text-decoration: underline;
 }
 
+.mods-remove {
+  margin: 28px 0 0;
+}
+
 @media (max-width: 620px) {
+  .mods-hero h1 {
+    font-size: 19px;
+  }
+  .mod-entry {
+    padding: 14px;
+  }
   .mod-entry-head {
     flex-direction: column;
     gap: 10px;
   }
-  .mod-entry-dl {
-    align-items: flex-start;
+  .mod-entry-head .dl-btn {
+    align-self: stretch;
+    text-align: center;
   }
   .mod-entry-foot {
     flex-direction: column;
@@ -3330,6 +3388,7 @@ html.modding-route {
   }
   /* Stacked, so the auto margin would shove the links off to the right. */
   .mod-links {
+    flex-wrap: wrap;
     margin-left: 0;
   }
 }
