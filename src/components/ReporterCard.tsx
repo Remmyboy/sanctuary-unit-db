@@ -1,6 +1,7 @@
-// The mod download card on the Play page: what the LadderReporter does, the
-// three ways to get it, and the install steps, always open (the maps page
-// uses the same box collapsed). The zips are release assets on the
+// The mod download card on the Play page: what the Ladder Reporter does and
+// the two downloads it takes, numbered in install order, as on the /mods
+// page. The standalone zip and the everything zip are one line underneath,
+// for the few who want one or the other. The zips are release assets on the
 // open-source sanctuary-mods repo, and the versions come from the shared
 // catalogue in src/lib/mods.ts — so bumping one there is the whole deploy,
 // and this card can never disagree with the /mods page.
@@ -8,16 +9,10 @@
 import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { copyText } from '../lib/clipboard';
-import { ENGINE_PATH, managerHref, mod, sourceHref, standaloneHref } from '../lib/mods';
+import { ENGINE_PATH, EVERYTHING_HREF, managerHref, mod, sourceHref, standaloneHref } from '../lib/mods';
 
 const MANAGER = mod('ModManager');
 const REPORTER = mod('LadderReporter');
-
-const DOWNLOADS = {
-  modManager: standaloneHref(MANAGER),
-  reporterForModManager: managerHref(REPORTER),
-  reporterStandalone: standaloneHref(REPORTER),
-};
 
 export function ReporterCard() {
   const [copied, setCopied] = useState(false);
@@ -26,55 +21,44 @@ export function ReporterCard() {
     <div className="queue-widget reporter-card" id="reporter">
       <h2>Auto-reporting</h2>
       <p className="dim">
-        Install the LadderReporter mod to automatically start your game when you match an opponent, and to log
-        the result when you finish — automatically.
+        With the Ladder Reporter installed, your ranked 1v1s start themselves when you&rsquo;re matched, and
+        the result posts here when the game ends.
       </p>
 
-      <ul className="mod-downloads">
+      <ol className="mod-downloads">
         <li>
           <div>
-            <strong>Mod Manager</strong>
+            <span className="mod-step-num" aria-hidden="true">
+              1
+            </span>
+            <strong>Mod Manager</strong> <span className="dim">v{MANAGER.version}</span>
             <p className="dim">
-              Everything you need to start modding Sanctuary: a Mods page in the main menu, and it loads any
-              mod in the <code>SanctuaryMods</code> folder.
+              What every mod runs on, and a Mods page in the game menu. Already have it? Skip to 2.
             </p>
           </div>
-          <a className="dl-btn" href={DOWNLOADS.modManager}>
-            Download · v{MANAGER.version}
+          <a className="dl-btn" href={standaloneHref(MANAGER)}>
+            Download the Mod Manager
           </a>
         </li>
         <li>
           <div>
-            <strong>LadderReporter</strong> <span className="dim">for the Mod Manager</span>
-            <p className="dim">
-              Just the mod: auto-launches the game when you're matched and reports the result. Needs the Mod
-              Manager.
-            </p>
+            <span className="mod-step-num" aria-hidden="true">
+              2
+            </span>
+            <strong>Ladder Reporter</strong> <span className="dim">v{REPORTER.version}</span>
+            <p className="dim">Starts your matched games and reports the results. Nothing to set up.</p>
           </div>
-          <a className="dl-btn" href={DOWNLOADS.reporterForModManager}>
-            Download · v{REPORTER.version}
+          <a className="dl-btn" href={managerHref(REPORTER)}>
+            Download the Ladder Reporter
           </a>
         </li>
-        <li>
-          <div>
-            <strong>LadderReporter</strong> <span className="dim">standalone</span>
-            <p className="dim">The same mod with everything it needs to run, without the Mod Manager.</p>
-          </div>
-          <a className="dl-btn" href={DOWNLOADS.reporterStandalone}>
-            Download · v{REPORTER.version}
-          </a>
-        </li>
-      </ul>
+      </ol>
 
-      <div className="install install-static">
-        <h3>How to install it</h3>
-        <ol>
-          <li>
-            Extract the zip into your Sanctuary <code>engine</code> folder, so <code>winhttp.dll</code> sits
-            next to <code>Sanctuary.exe</code>.
-          </li>
-          <li>Launch the game and play ranked — matches start themselves and results appear here.</li>
-        </ol>
+      <div className="reporter-install">
+        <p>
+          Extract both into your game&rsquo;s <code>engine</code> folder, so <code>winhttp.dll</code> sits
+          next to <code>Sanctuary.exe</code>, then launch the game and play ranked.
+        </p>
         <div className="install-path">
           <code>{ENGINE_PATH}</code>
           <button
@@ -91,15 +75,17 @@ export function ReporterCard() {
           </button>
         </div>
         <p className="hint">
-          The mod only reports Steam lobby 1v1s that match an open ladder game — skirmish, LAN, observing and
-          casual games are ignored.
+          Want every mod? <a href={EVERYTHING_HREF}>Download everything</a> in one zip instead &mdash; see{' '}
+          <Link to="/mods">what&rsquo;s in it</Link>. Only want this one, without the Mod Manager? Take the{' '}
+          <a href={standaloneHref(REPORTER)}>standalone Ladder Reporter</a>.
         </p>
         <p className="hint">
-          It's open source —{' '}
+          It only reports Steam lobby 1v1s that match an open ladder game &mdash; skirmish, LAN, observing and
+          casual games are ignored. It&rsquo;s open source:{' '}
           <a href={sourceHref(REPORTER)} target="_blank" rel="noreferrer">
-            check out the source code here
+            read the code
           </a>
-          . Same repo has <Link to="/mods">more mods for Sanctuary</Link>.
+          .
         </p>
       </div>
     </div>

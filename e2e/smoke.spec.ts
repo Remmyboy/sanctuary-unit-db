@@ -69,7 +69,7 @@ test('maps listing renders cards and opens a map page by slug', async ({ page })
   expect(errors).toEqual([]);
 });
 
-test('mods page lists every mod with live download links', async ({ page }) => {
+test('mods page lists every mod with live download links', async ({ page, request }) => {
   const errors = collectErrors(page);
 
   // The catalogue is static, so this page is fully prerendered — content, not
@@ -77,16 +77,33 @@ test('mods page lists every mod with live download links', async ({ page }) => {
   // version in src/lib/mods.ts, which is the thing that goes stale.
   await page.goto('/mods');
   expect(await page.locator('.mod-entry').count()).toBe(8);
-  await expect(page.locator('#LadderReporter .dl-btn')).toHaveAttribute(
-    'href',
-    /sanctuary-mods\/releases\/download\/LadderReporter-[\d.]+\/LadderReporter-[\d.]+-Standalone\.zip/,
-  );
   await expect(page.locator('.install-path code')).toContainText('Playtest\\engine');
 
-  // The Mod Manager is the loader, so it ships Standalone only — every other
-  // mod offers both zips.
-  await expect(page.locator('#ModManager .dl-mini')).toHaveCount(0);
-  await expect(page.locator('#SanctuaryHud .dl-mini')).toHaveCount(1);
+  // Step 1 is the Mod Manager's Standalone zip; every other mod's button is
+  // its drop-in zip, with the Standalone as a footer link.
+  await expect(page.locator('#ModManager .dl-btn')).toHaveAttribute(
+    'href',
+    /sanctuary-mods\/releases\/download\/ModManager-[\d.]+\/ModManager-[\d.]+-Standalone\.zip/,
+  );
+  await expect(page.locator('#ModManager .mod-links a', { hasText: 'Standalone' })).toHaveCount(0);
+  await expect(page.locator('#LadderReporter .dl-btn')).toHaveAttribute(
+    'href',
+    /sanctuary-mods\/releases\/download\/LadderReporter-[\d.]+\/LadderReporter-[\d.]+-ModManager\.zip/,
+  );
+  await expect(page.locator('#LadderReporter .mod-links a', { hasText: 'Standalone' })).toHaveAttribute(
+    'href',
+    /LadderReporter-[\d.]+-Standalone\.zip$/,
+  );
+
+  // The everything zip is built into the site at build time: a real zip, not
+  // the page shell or a prerendered copy mangled into text.
+  const everything = page.locator('.mods-everything .dl-btn');
+  const href = await everything.getAttribute('href');
+  expect(href).toBe('/downloads/SanctuaryMods-Everything.zip');
+  const zip = await request.get(href!);
+  expect(zip.status()).toBe(200);
+  expect(zip.headers()['content-type']).toBe('application/zip');
+  expect((await zip.body()).subarray(0, 2).toString()).toBe('PK');
 
   // The header's repo link, on every page.
   await expect(page.locator('.ghlink')).toHaveAttribute('href', /github\.com\/.+\/sanctuary-unit-db/);

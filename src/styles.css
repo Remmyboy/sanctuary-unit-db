@@ -2028,22 +2028,6 @@ img.unit-icon[data-muted='true'] {
   margin: 4px 0;
 }
 
-.reporter-card .dl-btn {
-  display: block;
-  text-align: center;
-  margin-bottom: 10px;
-}
-.reporter-card .install {
-  margin-bottom: 0;
-  background: var(--bg);
-  max-width: none;
-}
-.install-static h3 {
-  margin: 0 0 8px;
-  font-size: 11.5px;
-  font-weight: 600;
-}
-
 .map-pool h3 {
   margin: 0 0 6px;
   font-size: 10.5px;
@@ -3081,17 +3065,17 @@ html.modding-route {
   scroll-margin-top: calc(var(--header-h) + 20px);
 }
 
-/* The three mod downloads on the Play page's reporter card: one full-width
-   strip under the queue cards. */
+/* The Play page's reporter card: one full-width strip under the queue cards,
+   with its two downloads side by side, numbered in install order. */
 .reporter-card {
   margin-top: 12px;
 }
 .mod-downloads {
   list-style: none;
-  margin: 0 0 10px;
+  margin: 10px 0 12px;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 .mod-downloads li {
@@ -3105,7 +3089,7 @@ html.modding-route {
   border-radius: 7px;
 }
 .mod-downloads li p {
-  margin: 2px 0 0;
+  margin: 4px 0 0;
   font-size: 12px;
 }
 .reporter-card .mod-downloads .dl-btn {
@@ -3114,6 +3098,40 @@ html.modding-route {
   margin: 0;
   padding: 6px 12px;
   font-size: 12px;
+}
+/* The same numbered disc as the /mods page's steps, sized for a card. */
+.mod-step-num {
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 700;
+  width: 18px;
+  height: 18px;
+  margin-right: 7px;
+  font-size: 11px;
+  vertical-align: 1px;
+}
+.reporter-install p {
+  margin: 0 0 8px;
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+.reporter-install .hint {
+  margin: 8px 0 0;
+  font-size: 11.5px;
+}
+.reporter-install .hint a {
+  color: var(--accent);
+}
+.reporter-install p code {
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 11.5px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
 }
 @media (max-width: 720px) {
   .mod-downloads {
@@ -3264,11 +3282,6 @@ html.modding-route {
      header and toolbar when it is jumped to. */
   scroll-margin-top: calc(var(--header-h) + 44px);
 }
-/* Step 1 is the one download everybody needs, so it is the one that glows. */
-.mod-entry.featured {
-  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
-  background: color-mix(in srgb, var(--accent) 5%, var(--bg-raised));
-}
 .mod-entry-head {
   display: flex;
   align-items: flex-start;
@@ -3299,16 +3312,69 @@ html.modding-route {
   white-space: nowrap;
 }
 
-/* Where the Mod Manager goes, between its button and its features, since
-   it's the next thing you need after clicking the button. */
+/* Where every zip goes: said once, above both ways of installing, since the
+   answer is the same for all of them. */
 .mods-where {
-  margin: 0 0 16px;
+  margin: 18px 0 14px;
 }
 .mods-where p {
   margin: 0 0 8px;
-  font-size: 12.5px;
+  max-width: 78ch;
+  font-size: 13px;
   line-height: 1.6;
   color: var(--text-dim);
+}
+
+/* The quickest install, so it is the one that glows. */
+.mods-everything {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 16px 18px;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--border));
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent) 7%, var(--bg-raised));
+}
+.mods-everything h2 {
+  margin: 0 0 4px;
+  font-size: 17px;
+  font-weight: 650;
+}
+.mods-everything p {
+  margin: 0;
+  max-width: 64ch;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+.mods-everything p strong {
+  color: var(--text);
+  font-weight: 600;
+}
+.mods-everything .dl-btn {
+  flex: none;
+  padding: 10px 22px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* "or pick and choose", as a rule across the page between the two routes. */
+.mods-or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 26px 0 0;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+.mods-or::before,
+.mods-or::after {
+  content: '';
+  flex: 1;
+  border-top: 1px solid var(--border);
 }
 
 /* Two columns of short selling points: a title you can skim, and a line
@@ -3371,8 +3437,17 @@ html.modding-route {
   .mods-hero h1 {
     font-size: 19px;
   }
-  .mod-entry {
+  .mod-entry,
+  .mods-everything {
     padding: 14px;
+  }
+  .mods-everything {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .mods-everything .dl-btn {
+    text-align: center;
   }
   .mod-entry-head {
     flex-direction: column;

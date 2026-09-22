@@ -15,6 +15,18 @@
 export const MODS_REPO = 'https://github.com/Remmyboy/sanctuary-mods';
 export const SITE_REPO = 'https://github.com/Remmyboy/sanctuary-unit-db';
 
+// The loader on its own: BepInEx, the loader and an empty SanctuaryMods
+// folder. Not a mod anyone picks, so it has no card — it's the base the
+// everything zip is built on. Each Standalone zip carries whichever loader
+// was current when it was packed, so bump this when the loader gets a release
+// of its own and the everything zip always has the newest.
+export const LOADER_VERSION = '1.3.1';
+
+/** Every mod in one zip, built by the site's own build from the releases
+ *  named in this file (src/lib/mod-bundle.ts) and served as a static file,
+ *  so it always holds exactly the versions the page shows. */
+export const EVERYTHING_HREF = '/downloads/SanctuaryMods-Everything.zip';
+
 // Where the game reads mods from. The install root moves with the branch and
 // the Steam library, so this is the common default rather than a promise.
 export const ENGINE_PATH =
@@ -186,7 +198,7 @@ export const MODS: Mod[] = [
     id: 'LadderReporter',
     name: 'Ladder Reporter',
     version: '0.3.2',
-    tagline: 'Queue for ranked on the site, and the ladder does the rest.',
+    tagline: 'Queue for a ranked 1v1 on the site, and the ladder does the rest.',
     features: [
       {
         title: 'Matches start themselves',
@@ -280,3 +292,6 @@ export const standaloneHref = (m: Mod): string =>
  *  from, so its link is always the Standalone. */
 export const managerHref = (m: Mod): string =>
   `${MODS_REPO}/releases/download/${releaseTag(m)}/${releaseTag(m)}-ModManager.zip`;
+
+export const loaderHref = (): string =>
+  `${MODS_REPO}/releases/download/ModLoader-${LOADER_VERSION}/ModLoader-${LOADER_VERSION}.zip`;

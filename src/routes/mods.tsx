@@ -1,15 +1,16 @@
 // The mods page: every mod in the sanctuary-mods repo, sold on what it does
-// for your game. It reads as two steps — install the Mod Manager, then add
-// the mods you want — because that is the install nearly everyone wants, and
-// the Standalone zips are tucked into each card's footer for the few who only
-// want one mod. The catalogue lives in src/lib/mods.ts, shared with the Play
-// page's download card, so a version bump moves both.
+// for your game. The quickest install comes first — everything in one zip —
+// then the pick-and-choose route as two steps: the Mod Manager, then the mods
+// you want. The Standalone zips are tucked into each card's footer for the
+// few who only want one mod. The catalogue lives in src/lib/mods.ts, shared
+// with the Play page's download card, so a version bump moves both.
 
 import { useState, type ReactNode } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { copyText } from '../lib/clipboard';
 import {
   ENGINE_PATH,
+  EVERYTHING_HREF,
   MODS,
   MODS_REPO,
   managerHref,
@@ -58,19 +59,36 @@ function ModsPage() {
           </p>
         </header>
 
+        <div className="mods-where">
+          <p>
+            Every zip here installs the same way: extract it into your game&rsquo;s <code>engine</code>{' '}
+            folder, so <code>winhttp.dll</code> sits next to <code>Sanctuary.exe</code>. It&rsquo;s usually
+            here:
+          </p>
+          <CopyPath />
+        </div>
+
+        <section className="mods-everything" aria-labelledby="mods-everything">
+          <div>
+            <h2 id="mods-everything">Get everything</h2>
+            <p>
+              The Mod Manager and all {ADD_ONS.length} mods in one zip. Extract it, launch the game, and every
+              mod is on &mdash; switch off any you don&rsquo;t want from <strong>Mods</strong> in the game
+              menu, or <kbd>F8</kbd> mid-match.
+            </p>
+          </div>
+          <a className="dl-btn" href={EVERYTHING_HREF} download>
+            Download everything
+          </a>
+        </section>
+
+        <p className="mods-or">or pick and choose</p>
+
         <section className="mods-step" aria-labelledby="mods-step-1">
           <StepHead n={1} id="mods-step-1">
             Install the Mod Manager
           </StepHead>
-          <ModCard mod={MANAGER} href={standaloneHref(MANAGER)} label="Download the Mod Manager" featured>
-            <div className="mods-where">
-              <p>
-                Extract the zip into your game&rsquo;s <code>engine</code> folder, so <code>winhttp.dll</code>{' '}
-                sits next to <code>Sanctuary.exe</code>. It&rsquo;s usually here:
-              </p>
-              <CopyPath />
-            </div>
-          </ModCard>
+          <ModCard mod={MANAGER} href={standaloneHref(MANAGER)} label="Download the Mod Manager" />
         </section>
 
         <section className="mods-step" aria-labelledby="mods-step-2">
@@ -78,8 +96,8 @@ function ModsPage() {
             Add the mods you want
           </StepHead>
           <p className="mods-step-text">
-            Each <strong>Download</strong> below is a small zip. Extract it into the same <code>engine</code>{' '}
-            folder and launch the game &mdash; it&rsquo;s on. Switch it off or change its settings from{' '}
+            Each <strong>Download</strong> below is a small zip for the same <code>engine</code> folder.
+            Launch the game and it&rsquo;s on &mdash; switch it off or change its settings from{' '}
             <strong>Mods</strong> in the game menu, or <kbd>F8</kbd> mid-match.
           </p>
           <p className="mods-step-text hint">
@@ -88,7 +106,7 @@ function ModsPage() {
           </p>
           <div className="mod-list">
             {ADD_ONS.map((m) => (
-              <ModCard key={m.id} mod={m} href={managerHref(m)} label="Download" />
+              <ModCard key={m.id} mod={m} href={managerHref(m)} label="Download" standalone />
             ))}
           </div>
         </section>
@@ -139,19 +157,17 @@ function ModCard({
   mod,
   href,
   label,
-  featured = false,
-  children,
+  standalone = false,
 }: {
   mod: Mod;
   href: string;
   label: string;
-  /** The Mod Manager: step 1, so it stands out, and its only zip is the
-   *  Standalone, which is already the main button. */
-  featured?: boolean;
-  children?: ReactNode;
+  /** Offer the Standalone zip in the footer. Not for the Mod Manager, whose
+   *  Standalone is already its main button. */
+  standalone?: boolean;
 }) {
   return (
-    <article className={featured ? 'mod-entry featured' : 'mod-entry'} id={mod.id}>
+    <article className="mod-entry" id={mod.id}>
       <header className="mod-entry-head">
         <div>
           <h3>
@@ -159,12 +175,10 @@ function ModCard({
           </h3>
           <p className="mod-tagline">{mod.tagline}</p>
         </div>
-        <a className="dl-btn" href={href} aria-label={featured ? undefined : `Download ${mod.name}`}>
+        <a className="dl-btn" href={href} aria-label={`Download ${mod.name}`}>
           {label}
         </a>
       </header>
-
-      {children}
 
       <ul className="mod-features">
         {mod.features.map((f) => (
@@ -178,7 +192,7 @@ function ModCard({
       <footer className="mod-entry-foot">
         {mod.keys && <span className="mod-keys">{mod.keys}</span>}
         <span className="mod-links">
-          {!featured && (
+          {standalone && (
             <a
               href={standaloneHref(mod)}
               title="This mod with everything it needs, for using it without the Mod Manager"
