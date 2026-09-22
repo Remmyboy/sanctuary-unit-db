@@ -3333,3 +3333,133 @@ html.modding-route {
     margin-left: 0;
   }
 }
+
+/* Lobbies page: Steam's open lobbies as a server-browser list. */
+.lobbies {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 14px 16px 60px;
+}
+.lobbies-intro {
+  margin: 0 0 12px;
+  font-size: 13px;
+}
+.lobbies-updated {
+  flex: none;
+  white-space: nowrap;
+}
+.lobby-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.lobby-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) 150px 116px 68px;
+  grid-template-areas: 'main map seats version join';
+  align-items: center;
+  gap: 14px;
+  padding: 10px 12px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.lobby-row[data-full] {
+  opacity: 0.6;
+}
+.lobby-main {
+  grid-area: main;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.lobby-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lobby-host {
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lobby-map {
+  grid-area: map;
+  min-width: 0;
+  font-size: 12.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lobby-seats {
+  grid-area: seats;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.lobby-pips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  max-width: 96px;
+}
+.lobby-pips > span {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+.lobby-pips > span[data-on] {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+.lobby-count {
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+.lobby-version {
+  grid-area: version;
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 11.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lobby-join {
+  grid-area: join;
+  text-align: center;
+  text-decoration: none;
+}
+.lobby-join[aria-disabled] {
+  opacity: 0.5;
+  cursor: default;
+}
+.lobbies-note {
+  margin: 14px 0 0;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.lobbies-note code {
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 11.5px;
+}
+
+@media (max-width: 720px) {
+  .lobby-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'main join'
+      'map map'
+      'seats version';
+    gap: 6px 12px;
+  }
+  .lobby-version {
+    justify-self: end;
+  }
+}

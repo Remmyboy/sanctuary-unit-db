@@ -90,6 +90,14 @@ export function Header() {
           Play
         </Link>
         <Link
+          to="/lobbies"
+          className="navlink"
+          activeOptions={{ includeSearch: false }}
+          activeProps={{ className: 'navlink active' }}
+        >
+          Lobbies
+        </Link>
+        <Link
           to="/ladder"
           className="navlink"
           activeOptions={{ includeSearch: false }}
