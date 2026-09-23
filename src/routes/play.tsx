@@ -10,6 +10,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
 import { AlertSettings } from '../components/AlertSettings';
+import { HeadStat, PageHead } from '../components/PageHead';
 import { QueueCard } from '../components/QueueCard';
 import { ReporterCard } from '../components/ReporterCard';
 import { loadMe } from '../lib/auth';
@@ -153,6 +154,14 @@ function PlayPage() {
 
   return (
     <>
+      <PageHead
+        eyebrow="Multiplayer"
+        title="Play Ranked"
+        aside={liveGames !== null && <HeadStat value={liveGames} label="Games live" colour="var(--good)" />}
+      >
+        Queue for ranked 1v1, 2v2 or 3v3 against players near your rating. Every mode keeps its own rating,
+        and you can wait in several queues at once.
+      </PageHead>
       <div className="toolbar">
         <span className="toolbar-summary">
           Play ranked

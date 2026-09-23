@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { isFull, joinHref, loadLobbies, mapLabel, type Lobby, type LobbyList } from '../lib/lobbies';
 import { useNow } from '../lib/use-now';
+import { HeadStat, PageHead } from '../components/PageHead';
 
 // The list is cached for 20 s (a further 40 s stale) at the CDN, so asking
 // more often than this would mostly get the same copy back.
@@ -63,6 +64,14 @@ function LobbiesPage() {
 
   return (
     <>
+      <PageHead
+        eyebrow="Multiplayer"
+        title="Open Lobbies"
+        aside={reachable && <HeadStat value={open} label="Open now" colour="var(--good)" />}
+      >
+        Custom games waiting for players, from Steam's server list — the same list the game's Multiplayer
+        browser shows. A lobby drops off once its game starts.
+      </PageHead>
       <div className="toolbar">
         <span className="toolbar-summary">
           Open lobbies
@@ -71,11 +80,6 @@ function LobbiesPage() {
         {reachable && <Updated at={list.fetchedAt} />}
       </div>
       <main className="lobbies">
-        <p className="lobbies-intro dim">
-          Custom games waiting for players, from Steam's server list — the same list the game's Multiplayer
-          browser shows. A lobby drops off once its game starts.
-        </p>
-
         {list === undefined ? (
           <p className="empty">Asking Steam…</p>
         ) : !reachable ? (

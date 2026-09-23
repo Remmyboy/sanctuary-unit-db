@@ -158,7 +158,11 @@ measured header height as `--header-h` so the sticky sidebar and column
 headers line up without a hard-coded offset that drifts whenever the chrome
 changes.
 
-Adding a page means a new file in `src/routes/` and a `<Link>` in the header.
+Adding a page means a new file in `src/routes/` and an entry in the header's
+`NAV` list, under the group it belongs to. Top-level pages open with
+`<PageHead>` (eyebrow, title, one-line lede, optional figures on the right)
+above their sticky `.toolbar`; [docs/design-system.md](docs/design-system.md)
+covers the tokens, type and shared pieces.
 
 ## The calculator
 

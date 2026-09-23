@@ -19,6 +19,7 @@ import { UnitCard } from '../components/UnitCard';
 import { DetailPanel } from '../components/DetailPanel';
 import { HeaderSearch } from '../components/HeaderSearch';
 import { GameVersion } from '../components/GameVersion';
+import { HeadStat, PageHead } from '../components/PageHead';
 
 // Filters, sort, search and the open unit all live in the URL — same param
 // names and comma-joined encoding as the pre-framework site, so shared links
@@ -100,6 +101,12 @@ function BoardPage() {
   const visible = useMemo(() => visibleGroups(groups, filters, sort), [groups, filters, sort]);
   const factions = activeFactions(filters.faction);
   const shownCount = visible.reduce((n, g) => n + g.units.length, 0);
+  // Per-faction counts for the masthead, following the filters like the board.
+  const perFaction = useMemo(() => {
+    const counts = new Map<Faction, number>();
+    for (const g of visible) for (const u of g.units) counts.set(u.faction, (counts.get(u.faction) ?? 0) + 1);
+    return counts;
+  }, [visible]);
 
   const openDetail = (id: string) => patch({ unit: id });
   const closeDetail = () => patch({ unit: undefined });
@@ -137,6 +144,16 @@ function BoardPage() {
         onChange={(q) => patch({ q: q.trim() || undefined })}
         placeholder="Search name, id, role or tag…"
       />
+      <PageHead
+        eyebrow="Database"
+        title="Unit Database"
+        aside={factions.map((f) => (
+          <HeadStat key={f} value={perFaction.get(f) ?? 0} label={f} colour={FACTION_COLOURS[f]} />
+        ))}
+      >
+        Every unit with costs, stats, weapons and build trees, read straight from the game files. Equivalent
+        units line up across the three factions.
+      </PageHead>
 
       <div className="toolbar">
         <span>

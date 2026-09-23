@@ -18,6 +18,7 @@ import { copyText } from '../lib/clipboard';
 import type { Faction, ResourceRates, Unit } from '../lib/types';
 import { FACTION_COLOURS, FACTION_ORDER, UnitIcon } from '../components/UnitIcon';
 import { GameVersion } from '../components/GameVersion';
+import { PageHead } from '../components/PageHead';
 
 // The whole setup lives in the URL — same params as the pre-framework site
 // (t / p / a / e, plus f for the faction lens), so a build can be shared or
@@ -227,6 +228,10 @@ function CalculatorPage() {
 
   return (
     <>
+      <PageHead eyebrow="Database" title="Build Calculator">
+        How long a build takes, what it drains, and whether your economy keeps up — worked from the game's own
+        formulas. The setup lives in the URL, so copy the link to share it.
+      </PageHead>
       <div className="toolbar">
         <span className="toolbar-summary">
           {build
@@ -255,7 +260,9 @@ function CalculatorPage() {
         <section className="calc-col">
           <h2>Build</h2>
 
-          <div className="calc-step">1 · Faction</div>
+          <div className="calc-step">
+            <b>1</b>Faction
+          </div>
           <div className="chip-row">
             {FACTION_ORDER.map((fc) => (
               <button
@@ -274,7 +281,9 @@ function CalculatorPage() {
             ))}
           </div>
 
-          <div className="calc-step">2 · What are you building?</div>
+          <div className="calc-step">
+            <b>2</b>What are you building?
+          </div>
           <button
             type="button"
             className="select-btn"
@@ -311,7 +320,9 @@ function CalculatorPage() {
             />
           )}
 
-          <div className="calc-step">3 · Who starts it?</div>
+          <div className="calc-step">
+            <b>3</b>Who starts it?
+          </div>
           {!target && <div className="col-empty">Pick a build target first.</div>}
           <div className="chip-row">
             {builders.map((u) => (
@@ -333,7 +344,7 @@ function CalculatorPage() {
           </div>
 
           <div className="calc-step">
-            4 · Assisted by <span className="opt">(optional)</span>
+            <b>4</b>Assisted by <span className="opt">(optional)</span>
           </div>
           {assists.length === 0 && <div className="col-empty">None — the builder works alone.</div>}
           <StepperList
