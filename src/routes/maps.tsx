@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
 import { copyText } from '../lib/clipboard';
 import { HeaderSearch } from '../components/HeaderSearch';
+import { HeadStat, PageHead } from '../components/PageHead';
 import { fetchDownloadCounts, fileSizeLabel, loadMaps, sizeLabel, type MapEntry } from '../lib/maps';
 
 // Where the game reads maps from. The install root moves with the branch and
@@ -147,6 +148,24 @@ function MapsPage() {
         onChange={(q) => patch({ q: q.trim() || undefined })}
         placeholder="Search maps by name or author…"
       />
+      <PageHead
+        eyebrow="Community"
+        title="Maps"
+        aside={
+          <>
+            <HeadStat value={data.maps.length} label="Maps" />
+            {counts.size > 0 && (
+              <HeadStat
+                value={data.maps.reduce((n, m) => n + (counts.get(m.tag) ?? 0), 0).toLocaleString()}
+                label="Downloads"
+              />
+            )}
+          </>
+        }
+      >
+        Community maps for Sanctuary, each one a single zip. Browse the previews, filter by player count or
+        size, and drop the folder into your game.
+      </PageHead>
 
       <div className="toolbar">
         <span className="toolbar-summary">
@@ -284,12 +303,16 @@ function MapCard({ map: m, downloads }: { map: MapEntry; downloads: number | und
   return (
     <article className="map-card">
       <Link to="/maps" search={{ m: m.slug }} className="map-card-main">
-        <img src={`/maps/${m.slug}/preview.png`} alt={`${m.name} preview`} loading="lazy" />
+        <span className="map-card-art">
+          <img src={`/maps/${m.slug}/preview.png`} alt={`${m.name} preview`} loading="lazy" />
+          <span className="map-badges">
+            <span className="map-badge">{m.players}P</span>
+            <span className="map-badge">{sizeLabel(m)}</span>
+          </span>
+        </span>
         <span className="map-card-body">
           <span className="map-card-name">{m.name}</span>
-          <small>
-            {m.players} players · {sizeLabel(m)}
-          </small>
+          {m.author && <small>{m.author}</small>}
         </span>
       </Link>
       <footer>
@@ -298,6 +321,14 @@ function MapCard({ map: m, downloads }: { map: MapEntry; downloads: number | und
           {downloads !== undefined ? ` · ${downloads} downloads` : ''}
         </span>
         <a className="dl-mini" href={m.download} title={`Download ${m.name}`}>
+          <svg viewBox="0 0 16 16" width={12} height={12} aria-hidden="true">
+            <path
+              d="M8 2v8m0 0L4.5 6.5M8 10l3.5-3.5M3 13h10"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.7}
+            />
+          </svg>
           Download
         </a>
       </footer>

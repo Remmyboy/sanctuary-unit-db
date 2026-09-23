@@ -36,7 +36,7 @@ export function AuthChip() {
   if (!me) {
     return (
       <a className="steam-signin" href={signInHref()}>
-        Sign in through Steam
+        Sign in<span className="signin-long"> through Steam</span>
       </a>
     );
   }

@@ -170,8 +170,17 @@ export function QueueCard({
 
   return (
     <div className="queue-widget queue-card" data-active={inQueue || undefined}>
-      <h2>Ranked {mode}</h2>
-      <p className="queue-count">{waiting === null ? '—' : waiting} in queue</p>
+      {/* The mode as a big display label, with the live queue beside it. */}
+      <div className="queue-card-head">
+        <h2>
+          <span className="queue-kicker">Ranked</span>
+          <span className="queue-mode">{mode}</span>
+        </h2>
+        <p className="queue-count">
+          <strong>{waiting === null ? '—' : waiting}</strong>
+          <span>in queue</span>
+        </p>
+      </div>
       {inQueue && status ? (
         <>
           <p className="queue-pulse">

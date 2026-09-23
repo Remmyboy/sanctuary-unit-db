@@ -1,10 +1,52 @@
-// Shared site chrome, rendered once by the root route: one dense 46px bar with
-// the brand, nav and a centred slot (the units page portals its search here).
+// Shared site chrome, rendered once by the root route: one 56px bar with the
+// brand, the nav in three groups and a centred slot (the units page portals
+// its search here).
 
 import { useEffect, useRef } from 'react';
 import { Link } from '@tanstack/react-router';
 import { SITE_REPO } from '../lib/mods';
 import { AuthChip } from './AuthChip';
+
+// The nav, grouped by what people come for: the game data, making mods, and
+// playing online. The groups sit apart visually so eight links scan as three.
+const NAV = [
+  {
+    label: 'Database',
+    links: [
+      ['/', 'Units'],
+      ['/calculator', 'Calculator'],
+      ['/maps', 'Maps'],
+    ],
+  },
+  {
+    label: 'Modding',
+    links: [
+      ['/mods', 'Mods'],
+      ['/modding', 'Modding'],
+    ],
+  },
+  {
+    label: 'Multiplayer',
+    links: [
+      ['/play', 'Play'],
+      ['/lobbies', 'Lobbies'],
+      ['/ladder', 'Ladder'],
+    ],
+  },
+] as const;
+
+// The logo: the octagon the site has always used, now holding a sun split
+// clean in two — Sanctuary's "shattered sun". The shards are two segments of
+// one circle either side of a diagonal gap; the lower one sits back a shade.
+function BrandMark({ size }: { size: number }) {
+  return (
+    <svg className="brand-mark" viewBox="0 0 64 64" width={size} height={size} aria-hidden="true">
+      <path d="M20 6H44L58 20V44L44 58H20L6 44V20Z" fill="none" stroke="var(--accent)" strokeWidth={4.5} />
+      <path d="M21.39 39.5A13 13 0 0 1 39.5 21.39Z" fill="var(--accent)" />
+      <path d="M42.61 24.5A13 13 0 0 1 24.5 42.61Z" fill="var(--accent)" opacity={0.5} />
+    </svg>
+  );
+}
 
 export function Header() {
   const ref = useRef<HTMLElement>(null);
@@ -31,80 +73,29 @@ export function Header() {
 
   return (
     <header className="topbar" ref={ref}>
-      <Link to="/" className="brand">
-        <svg viewBox="0 0 64 64" width={18} height={18} aria-hidden="true">
-          <path d="M20 8H44L56 20V44L44 56H20L8 44V20Z" fill="none" stroke="var(--accent)" strokeWidth={6} />
-        </svg>
+      <Link to="/" className="brand" aria-label="SanctuaryDB home">
+        <BrandMark size={26} />
         <span className="wordmark">
           Sanctuary<span>DB</span>
         </span>
       </Link>
       <span className="topbar-divider" aria-hidden="true" />
-      <nav className="nav">
-        <Link
-          to="/"
-          className="navlink"
-          activeOptions={{ exact: true, includeSearch: false }}
-          activeProps={{ className: 'navlink active' }}
-        >
-          Units
-        </Link>
-        <Link
-          to="/calculator"
-          className="navlink"
-          activeOptions={{ includeSearch: false }}
-          activeProps={{ className: 'navlink active' }}
-        >
-          Calculator
-        </Link>
-        <Link
-          to="/maps"
-          className="navlink"
-          activeOptions={{ includeSearch: false }}
-          activeProps={{ className: 'navlink active' }}
-        >
-          Maps
-        </Link>
-        <Link
-          to="/mods"
-          className="navlink"
-          activeOptions={{ includeSearch: false }}
-          activeProps={{ className: 'navlink active' }}
-        >
-          Mods
-        </Link>
-        <Link
-          to="/modding"
-          className="navlink"
-          activeOptions={{ includeSearch: false }}
-          activeProps={{ className: 'navlink active' }}
-        >
-          Modding
-        </Link>
-        <Link
-          to="/play"
-          className="navlink"
-          activeOptions={{ includeSearch: false }}
-          activeProps={{ className: 'navlink active' }}
-        >
-          Play
-        </Link>
-        <Link
-          to="/lobbies"
-          className="navlink"
-          activeOptions={{ includeSearch: false }}
-          activeProps={{ className: 'navlink active' }}
-        >
-          Lobbies
-        </Link>
-        <Link
-          to="/ladder"
-          className="navlink"
-          activeOptions={{ includeSearch: false }}
-          activeProps={{ className: 'navlink active' }}
-        >
-          Ladder
-        </Link>
+      <nav className="nav" aria-label="Site">
+        {NAV.map((group) => (
+          <div className="nav-group" key={group.label} role="group" aria-label={group.label}>
+            {group.links.map(([to, label]) => (
+              <Link
+                key={to}
+                to={to}
+                className="navlink"
+                activeOptions={{ exact: to === '/', includeSearch: false }}
+                activeProps={{ className: 'navlink active' }}
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
+        ))}
       </nav>
       <div className="header-slot" />
       {/* The site itself is open source; the icon says so without spending a

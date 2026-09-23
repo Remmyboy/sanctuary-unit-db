@@ -20,41 +20,42 @@ export function UnitCard({ unit: u, iconManifest, onOpen }: UnitCardProps) {
       style={{ '--fc': FACTION_COLOURS[u.faction] } as React.CSSProperties}
       onClick={() => onOpen(u.id)}
     >
-      <UnitIcon icon={u.icon} faction={u.faction} manifest={iconManifest} size={32} muted={muted} />
-      <span className="who">
-        <h4>
-          {u.name ?? shortName(u)}
-          {u.status === 'in-progress' && (
-            <span className="wip" title={u.statusReason ?? 'Not enabled'}>
-              WIP
-            </span>
-          )}
-        </h4>
-        <small>{u.displayName}</small>
-        <span className="stat-row">
-          <span className="alloy-val">
-            {fmt(u.cost.alloys)}
-            <i>a</i>
-          </span>
-          <span className="energy-val">
-            {fmt(u.cost.energy)}
-            <i>e</i>
-          </span>
-          <span className="dim">
-            {fmt(u.health)}
-            <i>hp</i>
-          </span>
-          {u.dps ? (
-            <span className="dim">
-              {fmt(u.dps)}
-              <i>dps</i>
-            </span>
-          ) : null}
+      <span className="card-top">
+        <span className="card-icon">
+          <UnitIcon icon={u.icon} faction={u.faction} manifest={iconManifest} size={32} muted={muted} />
         </span>
-        <RateLine unit={u} />
-        <WeaponLines unit={u} />
+        <span className="who">
+          <h4>
+            {u.name ?? shortName(u)}
+            {u.status === 'in-progress' && (
+              <span className="wip" title={u.statusReason ?? 'Not enabled'}>
+                WIP
+              </span>
+            )}
+          </h4>
+          <small>{u.displayName}</small>
+        </span>
       </span>
+      {/* Labelled readouts rather than a run of suffixed numbers, so the
+          four figures scan down a column of cards. */}
+      <span className="stat-row">
+        <Readout label="Alloy" value={fmt(u.cost.alloys)} cls="alloy-val" />
+        <Readout label="Energy" value={fmt(u.cost.energy)} cls="energy-val" />
+        <Readout label="HP" value={fmt(u.health)} />
+        {u.dps ? <Readout label="DPS" value={fmt(u.dps)} /> : null}
+      </span>
+      <RateLine unit={u} />
+      <WeaponLines unit={u} />
     </button>
+  );
+}
+
+function Readout({ label, value, cls }: { label: string; value: string; cls?: string }) {
+  return (
+    <span className="readout">
+      <i>{label}</i>
+      <b className={cls}>{value}</b>
+    </span>
   );
 }
 

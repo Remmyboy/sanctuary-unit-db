@@ -5,9 +5,10 @@
 
 import { useEffect, useState } from 'react';
 import { Link, createFileRoute } from '@tanstack/react-router';
-import { LADDER_MAPS, type LadderMap } from '../lib/ladder-maps';
+import { LADDER_MAPS, mapPreviewSrc, type LadderMap } from '../lib/ladder-maps';
 import { MODES, isLeaderboardMode, type LeaderboardMode, type Mode } from '../lib/ladder-modes';
 import { fetchQueueCounts } from '../lib/queue-counts';
+import { HeadStat, PageHead } from '../components/PageHead';
 import { leaderboard, mapPools } from '../server/queue-fns';
 import type { LeaderboardRow, QueueCounts } from '../lib/ladder-types';
 
@@ -67,6 +68,19 @@ function LadderPage() {
 
   return (
     <>
+      <PageHead
+        eyebrow="Multiplayer"
+        title="Ladder"
+        aside={
+          <>
+            <HeadStat value={counts ? counts.liveGames : '—'} label="Live games" colour="var(--good)" />
+            <HeadStat value={rows?.length ?? '—'} label="Ranked" />
+          </>
+        }
+      >
+        Ranked standings for every mode, with an overall board across all three. Ratings start at 1000 and
+        settle over your first ten games.
+      </PageHead>
       <div className="toolbar">
         <span className="toolbar-summary">
           Ladder{rows?.length ? ` · ${rows.length} ranked player${rows.length === 1 ? '' : 's'}` : ''}
@@ -98,7 +112,20 @@ function LadderPage() {
               <ul>
                 {pool.map((m) => (
                   <li key={m.name}>
-                    {m.name} <span className="dim">{m.size}</span>
+                    {/* The map's own render where the repo has it; a pool map
+                        added since has none, and the row reads fine without. */}
+                    <img
+                      src={mapPreviewSrc(m.name)}
+                      alt=""
+                      width={36}
+                      height={36}
+                      loading="lazy"
+                      onError={(e) => (e.currentTarget.style.visibility = 'hidden')}
+                    />
+                    <span className="map-pool-name" title={m.name}>
+                      {m.name}
+                    </span>
+                    <span className="dim">{m.size}</span>
                   </li>
                 ))}
               </ul>
@@ -140,8 +167,8 @@ function LadderPage() {
               </thead>
               <tbody>
                 {rows.map((r) => (
-                  <tr key={r.steamId}>
-                    <td className="dim">{r.rank}</td>
+                  <tr key={r.steamId} data-podium={r.rank <= 3 ? r.rank : undefined}>
+                    <td className="lb-rank">{r.rank}</td>
                     <td>
                       <Link
                         to="/ladder/player/$steamId"

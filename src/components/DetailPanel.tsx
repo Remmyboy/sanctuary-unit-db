@@ -19,13 +19,49 @@ export function DetailPanel({ unit: u, loaded, onOpen, onClose }: DetailPanelPro
 
   return (
     <>
-      <aside className="detail" aria-live="polite">
+      <aside
+        className="detail"
+        aria-live="polite"
+        style={{ '--fc': FACTION_COLOURS[u.faction] } as React.CSSProperties}
+      >
+        {/* A dossier header: the game's own render on a faction-lit stage, with
+            the faction's name set huge and faint behind it. The render is
+            upscaled from 64px — soft, but it's the only size shipped and it
+            reads far better than an icon at this size. Units without one get
+            their icon on the same stage. */}
+        <div className="detail-stage">
+          <span className="detail-stage-faction" aria-hidden="true">
+            {u.faction}
+          </span>
+          {previews.has(u.id) ? (
+            <img
+              className="detail-render"
+              src={`/previews/${u.id}.png`}
+              alt={u.name ?? u.displayName}
+              width={150}
+              height={150}
+              decoding="async"
+            />
+          ) : (
+            <UnitIcon
+              icon={u.icon}
+              faction={u.faction}
+              manifest={iconManifest}
+              size={88}
+              muted={u.status === 'no-model'}
+            />
+          )}
+          <button type="button" className="detail-close" aria-label="Close" onClick={onClose}>
+            ×
+          </button>
+        </div>
+
         <div className="detail-head">
           <UnitIcon
             icon={u.icon}
             faction={u.faction}
             manifest={iconManifest}
-            size={52}
+            size={40}
             muted={u.status === 'no-model'}
           />
           <div>
@@ -34,24 +70,7 @@ export function DetailPanel({ unit: u, loaded, onOpen, onClose }: DetailPanelPro
               {u.displayName} · <code>{u.id}</code>
             </div>
           </div>
-          <button type="button" className="detail-close" aria-label="Close" onClick={onClose}>
-            ×
-          </button>
         </div>
-
-        {/* The game's own render, upscaled from 64px — soft, but it's the only
-            size shipped and it reads far better than an icon at this size. */}
-        {previews.has(u.id) && (
-          <div className="preview" style={{ '--fc': FACTION_COLOURS[u.faction] } as React.CSSProperties}>
-            <img
-              src={`/previews/${u.id}.png`}
-              alt={u.name ?? u.displayName}
-              width={132}
-              height={132}
-              decoding="async"
-            />
-          </div>
-        )}
 
         <div className="badges">
           <span
