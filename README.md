@@ -721,7 +721,9 @@ src/                the site, TanStack Start + React + TypeScript
     calculator.tsx  calculator route: build/economy setup — all URL state
     mods.tsx        the mod catalogue, rendered from lib/mods.ts
     ladder*.tsx     ladder: leaderboard/queue, match room, player profiles
+    lobbies.tsx     open custom-game lobbies, read from Steam's server list
     api.auth.*.ts   server-only routes for Steam OpenID sign-in/out
+    api.lobbies.ts  CDN-cached lobby list (Steam Web API, needs STEAM_API_KEY)
   server/           server-function layer (service-role Supabase, sessions,
                     Steam OpenID, queue + match logic) — never in the client
   lib/

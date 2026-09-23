@@ -261,6 +261,16 @@ test('ladder and play pages render their shells with no database', async ({ page
   await expect(page.locator('.play-signin')).toContainText('Sign in through Steam');
 });
 
+test('lobbies page says Steam is unreachable rather than empty with no key', async ({ page }) => {
+  // No STEAM_API_KEY here, so the list can't be fetched — which must not read
+  // as "nobody is hosting", and must not error either.
+  const errors = collectErrors(page);
+  await page.goto('/lobbies');
+  await expect(page.locator('.navlink.active')).toHaveText('Lobbies');
+  await expect(page.locator('.lobbies .empty')).toContainText("can't be reached");
+  expect(errors).toEqual([]);
+});
+
 test('calculator restores a shared setup and computes the documented example', async ({ page }) => {
   const errors = collectErrors(page);
 
