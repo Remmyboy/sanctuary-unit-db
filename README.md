@@ -143,6 +143,7 @@ prerendered at build time and hydrates into an SPA.
 | Page          | Route file                  | What it does                              |
 | ------------- | --------------------------- | ----------------------------------------- |
 | `/`           | `src/routes/index.tsx`      | Unit database — the aligned faction board |
+| `/compare`    | `src/routes/compare.tsx`    | Units side by side, best value lit        |
 | `/calculator` | `src/routes/calculator.tsx` | Build time, drain and economy planning    |
 | `/maps`       | `src/routes/maps.tsx`       | Community maps, and each map's own page   |
 | `/mods`       | `src/routes/mods.tsx`       | The sanctuary-mods catalogue and installs |
@@ -386,6 +387,23 @@ Tiles show the game's 64px render (the size it was made for) with the
 strategic icon in the corner. The numbers move to a strip above the tiles that
 follows the pointer and keyboard focus; a click opens the usual detail panel.
 Reset clears the filters but keeps the view.
+
+### Comparing units
+
+**Compare** in the board's toolbar turns on compare mode: a click on a card or
+tile then picks it instead of opening it, and a tray along the bottom holds the
+picks (up to 6) with the way through to `/compare`. The detail panel's
+**+ Compare** button adds a unit without entering the mode. Escape leaves it.
+The picks live in the board's URL (`?compare=a,b`), so they survive switching
+view, filtering, and a round trip to the comparison.
+
+`/compare?units=a,b,c` puts them side by side: a column per unit and a row per
+stat, grouped as cost, durability, combat, economy and mobility, with each
+unit's weapons listed underneath. A row only appears if one of the units has a
+value for it, and the best value in each row is lit, lowest for costs and
+upkeep and highest for everything else. Nothing is lit on a tie or when only
+one unit has the stat. The rows and that rule are in `src/lib/compare.ts`. The
+link carries the picks, so a comparison can be shared.
 
 ## How derived values are calculated
 

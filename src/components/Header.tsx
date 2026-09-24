@@ -3,7 +3,7 @@
 // its search here).
 
 import { useEffect, useRef } from 'react';
-import { Link } from '@tanstack/react-router';
+import { Link, useRouterState } from '@tanstack/react-router';
 import { SITE_REPO } from '../lib/mods';
 import { AuthChip } from './AuthChip';
 
@@ -50,6 +50,9 @@ function BrandMark({ size }: { size: number }) {
 
 export function Header() {
   const ref = useRef<HTMLElement>(null);
+  // /compare is part of the Units section but not under its path, so the
+  // Units link has to be told to light up there.
+  const onCompare = useRouterState({ select: (s) => s.location.pathname === '/compare' });
 
   // Sticky sidebars and column headers sit below the bar, whose height depends
   // on the viewport (it wraps when narrow), so publish the measured height
@@ -87,7 +90,7 @@ export function Header() {
               <Link
                 key={to}
                 to={to}
-                className="navlink"
+                className={to === '/' && onCompare ? 'navlink active' : 'navlink'}
                 activeOptions={{ exact: to === '/', includeSearch: false }}
                 activeProps={{ className: 'navlink active' }}
               >

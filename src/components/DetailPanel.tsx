@@ -13,9 +13,11 @@ interface DetailPanelProps {
   loaded: LoadedData;
   onOpen: (id: string) => void;
   onClose: () => void;
+  /** Adds or drops this unit from the board's comparison picks. */
+  compare?: { picked: boolean; full: boolean; onToggle: () => void };
 }
 
-export function DetailPanel({ unit: u, loaded, onOpen, onClose }: DetailPanelProps) {
+export function DetailPanel({ unit: u, loaded, onOpen, onClose, compare }: DetailPanelProps) {
   const { byId, iconManifest, previews, renders } = loaded;
 
   return (
@@ -82,6 +84,18 @@ export function DetailPanel({ unit: u, loaded, onOpen, onClose }: DetailPanelPro
               {u.displayName} · <code>{u.id}</code>
             </div>
           </div>
+          {compare && (
+            <button
+              type="button"
+              className="detail-compare"
+              aria-pressed={compare.picked}
+              disabled={!compare.picked && compare.full}
+              title={!compare.picked && compare.full ? 'Comparison is full' : undefined}
+              onClick={compare.onToggle}
+            >
+              {compare.picked ? '✓ Comparing' : '+ Compare'}
+            </button>
+          )}
         </div>
 
         <div className="badges">
@@ -276,7 +290,7 @@ function WeaponsSection({ unit: u }: { unit: Unit }) {
   );
 }
 
-function WeaponBlock({ weapon: w }: { weapon: Weapon }) {
+export function WeaponBlock({ weapon: w }: { weapon: Weapon }) {
   // Facts are only listed when the weapon actually has them, so a beam doesn't
   // show an empty speed and a single-shot gun doesn't show a salvo of one.
   // A continuous beam ignores reload entirely — it damages every tick it holds

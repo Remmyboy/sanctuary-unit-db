@@ -79,6 +79,35 @@ test('compact view tiles the board, opens the detail, and survives a reset', asy
   expect(errors).toEqual([]);
 });
 
+test('compare mode picks units and the compare page lines them up', async ({ page }) => {
+  const errors = collectErrors(page);
+
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Compare', exact: true }).click();
+
+  // In compare mode a click picks rather than opening the detail.
+  for (const name of ['Puma', 'Gladius', 'Gimlet'])
+    await page.locator('.card', { hasText: name }).first().click();
+  await expect(page.locator('.detail')).toHaveCount(0);
+  await expect(page.locator('.card[aria-pressed="true"]')).toHaveCount(3);
+  expect(page.url()).toContain('compare=uel1001,ucl1001,ugl1001');
+
+  await page.getByRole('link', { name: 'Compare 3 →' }).click();
+  await expect(page).toHaveURL(/\/compare\?units=uel1001,ucl1001,ugl1001$/);
+  await expect(page.locator('.compare-head')).toHaveCount(3);
+  await expect(page.locator('.compare-table')).toContainText('Health');
+  expect(await page.locator('td.best').count()).toBeGreaterThan(0);
+
+  // Dropping a column rewrites the link; the way back keeps the picks.
+  await page.getByRole('button', { name: 'Remove Gimlet' }).click();
+  await expect(page.locator('.compare-head')).toHaveCount(2);
+  await page.getByRole('link', { name: '← Units' }).click();
+  await expect(page).toHaveURL(/\?compare=uel1001,ucl1001$/);
+  await expect(page.locator('.compare-tray')).toContainText('Gladius');
+
+  expect(errors).toEqual([]);
+});
+
 test('maps listing renders cards and opens a map page by slug', async ({ page }) => {
   const errors = collectErrors(page);
 

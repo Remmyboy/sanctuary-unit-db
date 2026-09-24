@@ -14,7 +14,9 @@ function stringifySearch(search: Record<string, unknown>): string {
   for (const [k, v] of Object.entries(search)) {
     if (v != null && v !== '') p.set(k, String(v));
   }
-  const s = p.toString();
+  // Commas are legal in a query string and parse the same either way, so the
+  // comma-joined lists read ?faction=EDA,Chosen rather than EDA%2CChosen.
+  const s = p.toString().replace(/%2C/gi, ',');
   return s ? `?${s}` : '';
 }
 
