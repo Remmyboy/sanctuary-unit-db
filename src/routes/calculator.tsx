@@ -17,6 +17,7 @@ import {
 import { copyText } from '../lib/clipboard';
 import type { Faction, ResourceRates, Unit } from '../lib/types';
 import { FACTION_COLOURS, FACTION_ORDER, UnitIcon } from '../components/UnitIcon';
+import { FactionEmblem } from '../components/FactionEmblem';
 import { GameVersion } from '../components/GameVersion';
 import { PageHead } from '../components/PageHead';
 
@@ -275,7 +276,7 @@ function CalculatorPage() {
                   patch({ f: faction === fc ? undefined : fc });
                 }}
               >
-                <span className="dot" style={{ background: FACTION_COLOURS[fc] ?? '#888' }} />
+                <FactionEmblem faction={fc} colour={FACTION_COLOURS[fc] ?? '#888'} />
                 {fc}
               </button>
             ))}

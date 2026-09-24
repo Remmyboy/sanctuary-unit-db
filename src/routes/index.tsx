@@ -261,7 +261,7 @@ function FilterSidebar({
                   onClick={() => onToggle(g.key, String(v))}
                 >
                   {'colour' in g && g.colour ? (
-                    <span className="dot" style={{ background: FACTION_COLOURS[String(v)] ?? '#888' }} />
+                    <FactionEmblem faction={String(v)} colour={FACTION_COLOURS[String(v)] ?? '#888'} />
                   ) : null}
                   {'label' in g && g.label ? g.label(String(v)) : String(v)}
                 </button>
