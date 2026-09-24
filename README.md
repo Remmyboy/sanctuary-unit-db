@@ -210,6 +210,33 @@ four extractors and two T1 generators.
 
 Setups are kept in the URL, so a build can be shared or bookmarked.
 
+### Build order
+
+The **Build order** mode plans a queue instead of a single build: pick a builder
+(the commander by default), queue structures in order, and it reports when the
+queue finishes, what it cost, and what it did to the stockpile. The economy
+changes as the queue runs, so this steps through time at 10 ticks a second
+instead of using one formula. `simulateQueue` in `src/lib/calc.ts` does the work:
+
+- The run starts from the faction's commander (+5 alloy/s, +50 energy/s,
+  500/5,000 storage) plus anything under "Already built". The stockpile starts
+  full unless you change it.
+- Each finished structure adds its production, upkeep and storage from that
+  moment on.
+- When the stockpile can't cover a tick's drain, progress slows to the fraction
+  it can pay for. Builds stall and slow down; they don't fail.
+- Walking between build sites and adjacency discounts are not modelled.
+
+The commander's 5 build power drains exactly its own income on any T1
+structure, so the classic opening (land factory, three generators, three
+extractors) takes **1m 30s**, costs 450 alloy / 4,500 energy, and never touches
+the stockpile. Add assisting engineers and the stockpile starts to drain.
+
+Build-order state uses its own params: `m=q`, the queue `q` (ordered `id:count`,
+repeats allowed), the builder `b`, and the starting stockpile
+`s=alloy:energy`. Assists (`a`) and economy (`e`) are shared with the
+single-build mode.
+
 ## Adjacency
 
 `host/systems/adjacencyBuffs.lua` defines bonuses structures pass to neighbours.

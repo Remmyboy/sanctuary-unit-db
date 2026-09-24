@@ -23,10 +23,14 @@ export const canAssist = (u: Unit) => u.canAssist && (u.buildPower ?? 0) > 0;
 
 // The economy picker's split: generators/extractors are what almost every
 // setup needs, while upkeep-only structures (shields, radar, factories idling)
-// are the secondary "energy users" pool.
+// are the secondary "energy users" pool. Storage-only structures (storages,
+// and factories, which carry an energy buffer) are a third pool: they don't
+// change income, but a build order's cap depends on them.
 export const isProducer = (u: Unit) => (u.production?.alloys ?? 0) > 0 || (u.production?.energy ?? 0) > 0;
 export const isConsumer = (u: Unit) =>
   !isProducer(u) && ((u.upkeep?.alloys ?? 0) > 0 || (u.upkeep?.energy ?? 0) > 0);
+export const isStorage = (u: Unit) =>
+  !isProducer(u) && !isConsumer(u) && ((u.storage?.alloys ?? 0) > 0 || (u.storage?.energy ?? 0) > 0);
 
 /* ---------------- maths ---------------- */
 
@@ -88,6 +92,165 @@ export function economyResult(economy: CountedRow[], byId: Map<string, Unit>): E
     t.energyStore += (u.storage?.energy ?? 0) * row.count;
   }
   return { ...t, alloysNet: t.alloysIn - t.alloysOut, energyNet: t.energyIn - t.energyOut };
+}
+
+/* ---------------- build order ---------------- */
+// A queue of builds worked one after another by the same builder (plus any
+// assists), starting from a stockpile. Unlike a single build, the economy
+// moves while it runs: every finished generator or extractor adds its income
+// from that moment on, and a finished factory or storage raises the cap. So
+// this steps through time rather than solving a formula.
+//
+// Stalling follows what the drain formula implies: each tick a build wants
+// cost / (buildTime / buildPower) of each resource, and when the stockpile
+// can't cover that, progress slows to the fraction it can. Walking between
+// build sites is not modelled.
+
+export const TICKS_PER_SEC = 10;
+// A queue that can't finish inside four hours of game time is treated as
+// never finishing — it's stuck, not slow.
+const MAX_TICKS = 4 * 3600 * TICKS_PER_SEC;
+
+export interface Stock {
+  alloys: number;
+  energy: number;
+}
+
+export interface QueueStep {
+  unit: Unit;
+  /** Game seconds from the start of the queue. */
+  start: number;
+  end: number;
+  /** How long it would take with resources to spare. */
+  ideal: number;
+  after: Stock;
+}
+
+export interface QueueResult {
+  steps: QueueStep[];
+  power: number;
+  /** Infinity when some build can never finish. */
+  finish: number;
+  ideal: number;
+  cost: Stock;
+  start: Stock;
+  end: Stock;
+  low: Stock;
+  /** Net income and storage once everything is built. */
+  income: Stock;
+  cap: Stock;
+  /** The build the queue got stuck on, when it never finishes. */
+  stuck: Unit | null;
+}
+
+// A game always starts with a commander: its income and storage are the base
+// every build order grows from.
+export const isCommander = (u: Unit) => /Commander$/.test(u.internalName ?? '');
+export const commanderOf = (units: Unit[], faction: string | undefined) =>
+  faction ? units.find((u) => u.faction === faction && isCommander(u)) : undefined;
+
+/** Expand "id:count" rows into the individual builds, in order. */
+export const expandQueue = (rows: CountedRow[], byId: Map<string, Unit>): Unit[] =>
+  rows.flatMap((r) => {
+    const u = byId.get(r.id);
+    return u ? Array.from({ length: r.count }, () => u) : [];
+  });
+
+export function simulateQueue(
+  queue: Unit[],
+  builder: Unit | undefined,
+  assists: CountedRow[],
+  startEconomy: CountedRow[],
+  startStock: Stock,
+  byId: Map<string, Unit>,
+): QueueResult | null {
+  if (!builder || !queue.length) return null;
+  const assistPower = assists.reduce((sum, row) => sum + (byId.get(row.id)?.buildPower ?? 0) * row.count, 0);
+  const power = (builder.buildPower ?? 0) + assistPower;
+  if (power <= 0) return null;
+
+  const econ = economyResult(startEconomy, byId);
+  const net = { alloys: econ.alloysNet, energy: econ.energyNet };
+  const cap = { alloys: econ.alloysStore, energy: econ.energyStore };
+  const start = {
+    alloys: Math.min(Math.max(0, startStock.alloys), cap.alloys),
+    energy: Math.min(Math.max(0, startStock.energy), cap.energy),
+  };
+  const stock = { ...start };
+  const low = { ...start };
+  const cost = { alloys: 0, energy: 0 };
+  const steps: QueueStep[] = [];
+  const workPerTick = power / TICKS_PER_SEC;
+  let tick = 0;
+  let ideal = 0;
+  let stuck: Unit | null = null;
+
+  for (const unit of queue) {
+    const seconds = unit.buildTime / power;
+    ideal += seconds;
+    cost.alloys += unit.cost.alloys;
+    cost.energy += unit.cost.energy;
+    // Resource wanted per unit of build work, so a throttled tick spends in
+    // exact proportion to the progress it makes.
+    const perWork = { alloys: unit.cost.alloys / unit.buildTime, energy: unit.cost.energy / unit.buildTime };
+    const begun = tick;
+    let remaining = unit.buildTime;
+
+    while (remaining > 1e-9) {
+      if (tick >= MAX_TICKS) {
+        stuck = unit;
+        break;
+      }
+      stock.alloys = Math.min(cap.alloys, Math.max(0, stock.alloys + net.alloys / TICKS_PER_SEC));
+      stock.energy = Math.min(cap.energy, Math.max(0, stock.energy + net.energy / TICKS_PER_SEC));
+
+      const work = Math.min(workPerTick, remaining);
+      const want = { alloys: perWork.alloys * work, energy: perWork.energy * work };
+      const f = Math.min(
+        1,
+        want.alloys > 0 ? stock.alloys / want.alloys : 1,
+        want.energy > 0 ? stock.energy / want.energy : 1,
+      );
+      // Nothing in the tank and nothing coming in: this build can't move.
+      if (f <= 0 && ((want.alloys > 0 && net.alloys <= 0) || (want.energy > 0 && net.energy <= 0))) {
+        stuck = unit;
+        break;
+      }
+      stock.alloys -= want.alloys * f;
+      stock.energy -= want.energy * f;
+      remaining -= work * f;
+      low.alloys = Math.min(low.alloys, stock.alloys);
+      low.energy = Math.min(low.energy, stock.energy);
+      tick++;
+    }
+    if (stuck) break;
+
+    steps.push({
+      unit,
+      start: begun / TICKS_PER_SEC,
+      end: tick / TICKS_PER_SEC,
+      ideal: seconds,
+      after: { ...stock },
+    });
+    net.alloys += (unit.production?.alloys ?? 0) - (unit.upkeep?.alloys ?? 0);
+    net.energy += (unit.production?.energy ?? 0) - (unit.upkeep?.energy ?? 0);
+    cap.alloys += unit.storage?.alloys ?? 0;
+    cap.energy += unit.storage?.energy ?? 0;
+  }
+
+  return {
+    steps,
+    power,
+    finish: stuck ? Infinity : tick / TICKS_PER_SEC,
+    ideal,
+    cost,
+    start,
+    end: { ...stock },
+    low,
+    income: net,
+    cap,
+    stuck,
+  };
 }
 
 /* ---------------- URL packing ---------------- */

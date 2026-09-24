@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { buildResult, economyResult, packRows, unpackRows } from './calc';
+import {
+  buildResult,
+  commanderOf,
+  economyResult,
+  expandQueue,
+  isStorage,
+  packRows,
+  simulateQueue,
+  unpackRows,
+} from './calc';
 import { duration } from './format';
 import type { UnitsData } from './types';
 
@@ -38,6 +47,91 @@ describe('economy maths', () => {
     const r = economyResult([{ id: extractor.id, count: 4 }], byId);
     expect(r.alloysIn).toBeCloseTo((extractor.production!.alloys ?? 0) * 4, 5);
     expect(r.alloysNet).toBeCloseTo(r.alloysIn - r.alloysOut, 5);
+  });
+});
+
+describe('build order', () => {
+  const cmd = byId.get('uel0000')!; // EDA Commander: 5 bp, +5 alloy/s +50 energy/s, 500/5,000 storage
+  const start = [{ id: cmd.id, count: 1 }];
+  const full = { alloys: 500, energy: 5000 };
+
+  it('finds each faction commander', () => {
+    expect(commanderOf(data.units, 'EDA')?.id).toBe('uel0000');
+    expect(commanderOf(data.units, 'Chosen')?.id).toBe('ucl0000');
+    expect(commanderOf(data.units, 'Guard')?.id).toBe('ugl0000');
+  });
+
+  // The opening from the feature request: land factory, 3 generators, 3
+  // extractors, all by the commander from a full 500/5,000 start. Every T1
+  // structure drains exactly 5 alloy/s + 50 energy/s at 5 bp — the
+  // commander's own income — so it never stalls and the stockpile holds.
+  it('works the factory + 3 generators + 3 extractors opening', () => {
+    const queue = expandQueue(
+      [
+        { id: 'ues1511', count: 1 },
+        { id: 'ues1611', count: 3 },
+        { id: 'ues1601', count: 3 },
+      ],
+      byId,
+    );
+    expect(queue).toHaveLength(7);
+    const r = simulateQueue(queue, cmd, [], start, full, byId)!;
+    expect(r.cost).toEqual({ alloys: 450, energy: 4500 });
+    expect(r.ideal).toBeCloseTo(90, 5);
+    expect(r.finish).toBeCloseTo(90, 5);
+    expect(r.steps.map((s) => s.end)).toEqual([30, 40, 50, 60, 70, 80, 90]);
+    expect(r.end.alloys).toBeGreaterThan(499); // within one tick's spend of full
+    // Energy fills the factory-raised 6,000 cap from the generators' output.
+    expect(r.cap).toEqual({ alloys: 500, energy: 6000 });
+    expect(r.end.energy).toBeGreaterThan(5990);
+    expect(r.income).toEqual({ alloys: 5 + 3, energy: 50 + 30 });
+  });
+
+  it('stalls once the stockpile runs dry and slows to income', () => {
+    // Four T1 engineers assisting: 25 bp drains 25 alloy/s against 5 coming in.
+    const gens = expandQueue([{ id: 'ues1611', count: 6 }], byId);
+    const r = simulateQueue(gens, cmd, [{ id: 'uel1501', count: 4 }], start, full, byId)!;
+    expect(r.power).toBe(25);
+    expect(r.ideal).toBeCloseTo(12, 5);
+    // 300 alloy needed, 500 in the tank: no stall.
+    expect(r.finish).toBeCloseTo(12, 5);
+
+    const more = expandQueue([{ id: 'ues1611', count: 20 }], byId);
+    const s = simulateQueue(more, cmd, [{ id: 'uel1501', count: 4 }], start, full, byId)!;
+    // 1,000 alloy needed, 500 banked, the rest arrives at 5 alloy/s: ~100s,
+    // against 40s with resources to spare.
+    expect(s.ideal).toBeCloseTo(40, 5);
+    expect(s.finish).toBeGreaterThan(90);
+    expect(s.finish).toBeLessThan(101);
+    expect(s.low.alloys).toBeCloseTo(0, 1);
+  });
+
+  it('counts already-built storage in the starting cap', () => {
+    // Storages and factories only hold resources, so they get their own pool.
+    const eStore = byId.get('ues1612')!; // EDA T1 Energy Storage, 10,000 energy
+    expect(isStorage(eStore)).toBe(true);
+    expect(isStorage(byId.get('ues1511')!)).toBe(true); // factory: 1,000 energy buffer
+    expect(isStorage(cmd)).toBe(false); // a producer, already in that pool
+    expect(isStorage(byId.get('ues1611')!)).toBe(false);
+
+    const withStore = [...start, { id: eStore.id, count: 1 }];
+    const r = simulateQueue(
+      [byId.get('ues1611')!],
+      cmd,
+      [],
+      withStore,
+      { alloys: 500, energy: 15000 },
+      byId,
+    )!;
+    expect(r.start).toEqual({ alloys: 500, energy: 15000 });
+    expect(r.cap).toEqual({ alloys: 500, energy: 15000 });
+  });
+
+  it('reports a build that can never finish', () => {
+    const r = simulateQueue([byId.get('ues1611')!], cmd, [], [], full, byId)!;
+    expect(r.start).toEqual({ alloys: 0, energy: 0 }); // no storage, nothing banked
+    expect(r.finish).toBe(Infinity);
+    expect(r.stuck?.id).toBe('ues1611');
   });
 });
 

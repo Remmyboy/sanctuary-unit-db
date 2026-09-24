@@ -1859,6 +1859,142 @@ img.unit-icon[data-muted='true'] {
   padding: 2px 0 4px;
 }
 
+/* Single build / Build order switch: a two-cell segmented control above the
+   build column, using the same pressed treatment as the chips. */
+.mode-row {
+  display: inline-flex;
+  margin-bottom: 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.mode-row button {
+  padding: 6px 14px;
+  background: color-mix(in srgb, var(--bg-sunken) 60%, transparent);
+  border: 0;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.mode-row button + button {
+  border-left: 1px solid var(--border-strong);
+}
+.mode-row button:hover {
+  color: var(--text);
+  background: var(--bg-hover);
+}
+.mode-row button[aria-pressed='true'] {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+/* Build-order pieces: queue position, the fixed commander row, the starting
+   stockpile inputs and the per-build timeline. */
+.stepper-pos {
+  flex: none;
+  min-width: 14px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-faint);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.stepper-controls button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.stepper-note {
+  flex: none;
+  font-size: 10.5px;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.stock-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.stock-inputs label {
+  display: grid;
+  grid-template-columns: 56px 110px auto;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+.stock-inputs label > span {
+  font-weight: 600;
+  text-transform: capitalize;
+}
+.stock-inputs input {
+  width: 100%;
+  padding: 5px 8px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+.stock-inputs input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.stock-inputs small {
+  color: var(--text-dim);
+  font-size: 11px;
+}
+.calc-col h2.section-gap {
+  margin-top: 26px;
+}
+.qtable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.qtable th {
+  text-align: right;
+  font-family: var(--font-display);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  padding: 0 6px 6px;
+  border-bottom: 1px solid var(--border-strong);
+}
+.qtable th:not(.alloy-val):not(.energy-val) {
+  color: var(--text-faint);
+}
+.qtable td {
+  text-align: right;
+  padding: 6px;
+  border-bottom: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.qtable th:nth-child(2),
+.qtable td:nth-child(2) {
+  text-align: left;
+  width: 100%;
+  white-space: normal;
+}
+.qtable td:first-child {
+  color: var(--text-faint);
+}
+.qtable small {
+  font-size: 10.5px;
+}
+.rsub {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
 /* The answer, led by one big figure, with a sustain bar per resource. Framed
    with targeting brackets: it is the one number the page exists for. */
 .verdict {

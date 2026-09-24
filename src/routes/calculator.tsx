@@ -1,18 +1,25 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { loadData } from '../lib/data';
-import { duration, fmt, resourceName, shortName } from '../lib/format';
+import { builderName, duration, fmt, resourceName, shortName } from '../lib/format';
 import {
   buildResult,
   buildable,
   canAssist,
+  commanderOf,
   economyResult,
+  expandQueue,
+  isCommander,
   isConsumer,
+  isStorage,
   isProducer,
   packRows,
   shown,
+  simulateQueue,
   unpackRows,
   type CountedRow,
+  type QueueResult,
+  type Stock,
 } from '../lib/calc';
 import { copyText } from '../lib/clipboard';
 import type { Faction, ResourceRates, Unit } from '../lib/types';
@@ -23,12 +30,19 @@ import { PageHead } from '../components/PageHead';
 // The whole setup lives in the URL — same params as the pre-framework site
 // (t / p / a / e, plus f for the faction lens), so a build can be shared or
 // bookmarked. Nothing is pre-chosen; an absent param just means "none yet".
+// The build-order mode adds m=q, its queue (q), its builder (b) and a
+// starting stockpile (s, "alloy:energy"; absent means full storage). It
+// shares the assists (a) and economy (e) with the single-build mode.
 interface CalcSearch {
   t?: string;
   p?: string;
   a?: string;
   e?: string;
   f?: string;
+  m?: string;
+  q?: string;
+  b?: string;
+  s?: string;
 }
 
 const str = (v: unknown): string | undefined => {
@@ -44,6 +58,10 @@ export const Route = createFileRoute('/calculator')({
     a: str(raw.a),
     e: str(raw.e),
     f: str(raw.f),
+    m: str(raw.m),
+    q: str(raw.q),
+    b: str(raw.b),
+    s: str(raw.s),
   }),
   head: () => ({
     meta: [
@@ -59,7 +77,8 @@ export const Route = createFileRoute('/calculator')({
   component: CalculatorPage,
 });
 
-type PanelKind = 'target' | 'assist' | 'econ' | 'drain';
+type PanelKind = 'target' | 'queue' | 'assist' | 'econ' | 'drain' | 'storage';
+type RowKey = 'a' | 'e' | 'q';
 
 /* ---------------- naming & detail lines ---------------- */
 
@@ -163,21 +182,27 @@ function CalculatorPage() {
 
   const assists = useMemo(() => unpackRows(search.a, byId), [search.a, byId]);
 
+  // Build-order mode's faction comes from the faction chip or, for a shared
+  // link without one, the linked builder's own faction.
+  const queueMode = search.m === 'q';
+  const queueFaction: Faction | undefined = faction ?? (search.b ? byId.get(search.b)?.faction : undefined);
+
   // Economy pools follow the target's faction (cross-faction economy is
-  // irrelevant), falling back to the faction chip.
-  const econFaction: Faction | undefined = target?.faction ?? faction;
+  // irrelevant), falling back to the faction chip; a build order uses its own.
+  const econFaction: Faction | undefined = queueMode ? queueFaction : (target?.faction ?? faction);
   const econBase = useMemo(
     () => (econFaction ? shownUnits.filter((u) => u.faction === econFaction) : pool),
     [shownUnits, econFaction, pool],
   );
   const producerPool = useMemo(() => econBase.filter(isProducer), [econBase]);
   const consumerPool = useMemo(() => econBase.filter(isConsumer), [econBase]);
+  const storagePool = useMemo(() => econBase.filter(isStorage), [econBase]);
 
   const economy = useMemo(() => unpackRows(search.e, byId), [search.e, byId]);
 
-  const writeRows = (key: 'a' | 'e', next: CountedRow[]) => patch({ [key]: packRows(next) });
+  const writeRows = (key: RowKey, next: CountedRow[]) => patch({ [key]: packRows(next) });
 
-  const addRow = (key: 'a' | 'e', rows: CountedRow[], id: string) => {
+  const addRow = (key: RowKey, rows: CountedRow[], id: string) => {
     const hit = rows.find((r) => r.id === id);
     const next = hit
       ? rows.map((r) => (r.id === id ? { ...r, count: r.count + 1 } : r))
@@ -186,13 +211,13 @@ function CalculatorPage() {
     setPanel(null);
   };
 
-  const bumpRow = (key: 'a' | 'e', rows: CountedRow[], i: number, delta: number) =>
+  const bumpRow = (key: RowKey, rows: CountedRow[], i: number, delta: number) =>
     writeRows(
       key,
       rows.map((r, j) => (j === i ? { ...r, count: r.count + delta } : r)).filter((r) => r.count >= 1),
     );
 
-  const dropRow = (key: 'a' | 'e', rows: CountedRow[], i: number) =>
+  const dropRow = (key: RowKey, rows: CountedRow[], i: number) =>
     writeRows(
       key,
       rows.filter((_, j) => j !== i),
@@ -200,6 +225,84 @@ function CalculatorPage() {
 
   const build = buildResult(target, primary, assists, byId);
   const econ = economyResult(economy, byId);
+
+  // Build-order mode. The queue is ordered and may repeat a unit (generator,
+  // extractor, generator…), so picking the unit that's already last bumps
+  // that row, anything else appends a new one.
+  const queueRows = useMemo(() => unpackRows(search.q, byId), [search.q, byId]);
+  const addToQueue = (id: string) => {
+    const last = queueRows[queueRows.length - 1];
+    writeRows(
+      'q',
+      last?.id === id
+        ? queueRows.map((r, i) => (i === queueRows.length - 1 ? { ...r, count: r.count + 1 } : r))
+        : [...queueRows, { id, count: 1 }],
+    );
+    setPanel(null);
+  };
+  const moveQueueRow = (i: number) =>
+    writeRows(
+      'q',
+      queueRows.map((r, j) => (j === i - 1 ? queueRows[i] : j === i ? queueRows[i - 1] : r)),
+    );
+
+  // Builders are the units that can put build power into a construction —
+  // commander, engineers, engineering stations — of the build order's faction.
+  const commander = commanderOf(shownUnits, queueFaction);
+  const queueBuilders = useMemo(
+    () =>
+      queueFaction
+        ? shownUnits
+            .filter((u) => u.faction === queueFaction && canAssist(u))
+            .sort((a, b) => (a.tier ?? 0) - (b.tier ?? 0) || (a.buildPower ?? 0) - (b.buildPower ?? 0))
+        : [],
+    [shownUnits, queueFaction],
+  );
+  const queueBuilder =
+    (search.b && queueBuilders.find((u) => u.id === search.b)) ||
+    queueBuilders.find((u) => u.id === commander?.id) ||
+    queueBuilders[0] ||
+    undefined;
+  const queuePool = useMemo(
+    () => (queueBuilder ? shownUnits.filter((u) => buildable(u) && u.builtBy.includes(queueBuilder.id)) : []),
+    [shownUnits, queueBuilder],
+  );
+
+  // Every game starts with a commander, so its income and storage are always
+  // in the starting economy; the economy column adds what's already built.
+  // A commander added there by hand would count twice, so it's left out.
+  const startRows = useMemo(() => economy.filter((r) => !isCommander(byId.get(r.id)!)), [economy, byId]);
+  const startEconomy = useMemo(
+    () => (commander ? [{ id: commander.id, count: 1 }, ...startRows] : startRows),
+    [commander, startRows],
+  );
+  const startEcon = economyResult(startEconomy, byId);
+  const startCap: Stock = { alloys: startEcon.alloysStore, energy: startEcon.energyStore };
+  const startStock: Stock = useMemo(() => {
+    const [a, e] = (search.s ?? '').split(':').map(Number);
+    return {
+      alloys: Number.isFinite(a) && search.s ? a : startCap.alloys,
+      energy: Number.isFinite(e) && search.s ? e : startCap.energy,
+    };
+  }, [search.s, startCap.alloys, startCap.energy]);
+  const setStartStock = (next: Stock) =>
+    patch({
+      s:
+        next.alloys === startCap.alloys && next.energy === startCap.energy
+          ? undefined
+          : `${next.alloys}:${next.energy}`,
+    });
+
+  // Rows the builder can't start (a shared link, or the builder changed
+  // since) are flagged in the list and left out rather than built anyway.
+  const queue = useMemo(
+    () => expandQueue(queueRows, byId).filter((u) => queueBuilder && u.builtBy.includes(queueBuilder.id)),
+    [queueRows, byId, queueBuilder],
+  );
+  const plan = useMemo(
+    () => simulateQueue(queue, queueBuilder, assists, startEconomy, startStock, byId),
+    [queue, queueBuilder, assists, startEconomy, startStock, byId],
+  );
 
   // Sharing: the auto-selected builder chip is the one piece of state derived
   // rather than picked, and it could drift after a game patch. Copy link pins
@@ -215,6 +318,10 @@ function CalculatorPage() {
         a: packRows(assists),
         e: packRows(economy),
         f: faction,
+        m: search.m,
+        q: packRows(queueRows),
+        b: queueMode ? queueBuilder?.id : search.b,
+        s: search.s,
       },
       replace: true,
     });
@@ -234,9 +341,15 @@ function CalculatorPage() {
       </PageHead>
       <div className="toolbar">
         <span className="toolbar-summary">
-          {build
-            ? `${label(build.target)} · ${fmt(build.power)} build power · ${duration(build.seconds)}`
-            : 'Build time, drain and economy planning'}
+          {queueMode
+            ? plan
+              ? `${queue.length} build${queue.length === 1 ? '' : 's'} · ${fmt(plan.power)} build power · ${
+                  Number.isFinite(plan.finish) ? duration(plan.finish) : 'never finishes'
+                }`
+              : 'Build order planning'
+            : build
+              ? `${label(build.target)} · ${fmt(build.power)} build power · ${duration(build.seconds)}`
+              : 'Build time, drain and economy planning'}
         </span>
         <span className="toolbar-controls">
           <GameVersion game={data.meta.game} generatedAt={data.meta.generatedAt} />
@@ -258,7 +371,30 @@ function CalculatorPage() {
 
       <main className="calc">
         <section className="calc-col">
-          <h2>Build</h2>
+          <div className="mode-row" role="group" aria-label="Calculator mode">
+            <button
+              type="button"
+              aria-pressed={!queueMode}
+              onClick={() => {
+                setPanel(null);
+                patch({ m: undefined });
+              }}
+            >
+              Single build
+            </button>
+            <button
+              type="button"
+              aria-pressed={queueMode}
+              onClick={() => {
+                setPanel(null);
+                patch({ m: 'q' });
+              }}
+            >
+              Build order
+            </button>
+          </div>
+
+          <h2>{queueMode ? 'Build order' : 'Build'}</h2>
 
           <div className="calc-step">
             <b>1</b>Faction
@@ -269,10 +405,13 @@ function CalculatorPage() {
                 type="button"
                 className="fac-chip"
                 key={fc}
-                aria-pressed={faction === fc}
+                aria-pressed={(queueMode ? queueFaction : faction) === fc}
+                // In build-order mode the builder decides the faction too, so
+                // it's cleared with the chip or the old faction would linger.
                 onClick={() => {
                   setPanel(null);
-                  patch({ f: faction === fc ? undefined : fc });
+                  if (queueMode) patch({ f: queueFaction === fc ? undefined : fc, b: undefined });
+                  else patch({ f: faction === fc ? undefined : fc });
                 }}
               >
                 <span className="dot" style={{ background: FACTION_COLOURS[fc] ?? '#888' }} />
@@ -281,67 +420,131 @@ function CalculatorPage() {
             ))}
           </div>
 
-          <div className="calc-step">
-            <b>2</b>What are you building?
-          </div>
-          <button
-            type="button"
-            className="select-btn"
-            aria-expanded={panel === 'target'}
-            onClick={() => togglePanel('target')}
-          >
-            {target ? (
-              <>
-                <UnitIcon icon={target.icon} faction={target.faction} manifest={iconManifest} size={36} />
-                <span className="select-who">
-                  <span className="select-name">{label(target)}</span>
-                  <small>{subLine(target)}</small>
-                </span>
-              </>
-            ) : (
-              <span className="select-empty">Pick a unit or structure…</span>
-            )}
-            <span className="caret">▾</span>
-          </button>
-          {panel === 'target' && (
-            <PickerPanel
-              units={targetPool}
-              subFor={subLine}
-              placeholder="Search buildable units…"
-              listMax={264}
-              iconManifest={iconManifest}
-              // A new target invalidates the builder choice — its builtBy list
-              // is a different set, so fall back to that list's first chip.
-              onPick={(u) => {
-                patch({ t: u.id, p: undefined });
-                setPanel(null);
-              }}
-              onClose={() => setPanel(null)}
-            />
-          )}
+          {queueMode ? (
+            <>
+              <div className="calc-step">
+                <b>2</b>Who builds it?
+              </div>
+              {!queueFaction && <div className="col-empty">Pick a faction first.</div>}
+              <div className="chip-row">
+                {queueBuilders.map((u) => (
+                  <button
+                    type="button"
+                    className="builder-chip"
+                    key={u.id}
+                    aria-pressed={u.id === queueBuilder?.id}
+                    onClick={() => patch({ b: u.id })}
+                  >
+                    {(u.tier && !isCommander(u) ? `T${u.tier} ` : '') + label(u)}{' '}
+                    <small>{fmt(u.buildPower)} bp</small>
+                  </button>
+                ))}
+              </div>
 
-          <div className="calc-step">
-            <b>3</b>Who starts it?
-          </div>
-          {!target && <div className="col-empty">Pick a build target first.</div>}
-          <div className="chip-row">
-            {builders.map((u) => (
+              <div className="calc-step">
+                <b>3</b>Queue, in order
+              </div>
+              {queueBuilder && queueRows.length === 0 && (
+                <div className="col-empty">Nothing queued — add the first build.</div>
+              )}
+              <StepperList
+                rows={queueRows}
+                byId={byId}
+                iconManifest={iconManifest}
+                numbered
+                detail={(u) =>
+                  queueBuilder && !u.builtBy.includes(queueBuilder.id)
+                    ? `${label(queueBuilder)} can't build this — skipped`
+                    : `${fmt(u.cost.alloys, 0)}a · ${fmt(u.cost.energy, 0)}e · ${fmt(u.buildTime, 0)} build time`
+                }
+                onBump={(i, d) => bumpRow('q', queueRows, i, d)}
+                onDrop={(i) => dropRow('q', queueRows, i)}
+                onMoveUp={moveQueueRow}
+              />
+              {queueBuilder && (
+                <button type="button" className="add-btn" onClick={() => togglePanel('queue')}>
+                  + Add to queue
+                </button>
+              )}
+              {panel === 'queue' && (
+                <PickerPanel
+                  units={queuePool}
+                  subFor={subLine}
+                  placeholder={`Search what ${queueBuilder ? label(queueBuilder) : 'it'} can build…`}
+                  listMax={264}
+                  iconManifest={iconManifest}
+                  onPick={(u) => addToQueue(u.id)}
+                  onClose={() => setPanel(null)}
+                />
+              )}
+            </>
+          ) : (
+            <>
+              <div className="calc-step">
+                <b>2</b>What are you building?
+              </div>
               <button
                 type="button"
-                className="builder-chip"
-                key={u.id}
-                aria-pressed={u.id === primary?.id}
-                title={u.upgradesTo === target?.id ? `Upgrades in place into ${label(target)}` : undefined}
-                onClick={() => patch({ p: u.id })}
+                className="select-btn"
+                aria-expanded={panel === 'target'}
+                onClick={() => togglePanel('target')}
               >
-                {(u.tier ? `T${u.tier} ` : '') + label(u)}{' '}
-                <small>
-                  {u.upgradesTo === target?.id ? 'upgrade · ' : ''}
-                  {fmt(u.buildPower)} bp
-                </small>
+                {target ? (
+                  <>
+                    <UnitIcon icon={target.icon} faction={target.faction} manifest={iconManifest} size={36} />
+                    <span className="select-who">
+                      <span className="select-name">{label(target)}</span>
+                      <small>{subLine(target)}</small>
+                    </span>
+                  </>
+                ) : (
+                  <span className="select-empty">Pick a unit or structure…</span>
+                )}
+                <span className="caret">▾</span>
               </button>
-            ))}
-          </div>
+              {panel === 'target' && (
+                <PickerPanel
+                  units={targetPool}
+                  subFor={subLine}
+                  placeholder="Search buildable units…"
+                  listMax={264}
+                  iconManifest={iconManifest}
+                  // A new target invalidates the builder choice — its builtBy list
+                  // is a different set, so fall back to that list's first chip.
+                  onPick={(u) => {
+                    patch({ t: u.id, p: undefined });
+                    setPanel(null);
+                  }}
+                  onClose={() => setPanel(null)}
+                />
+              )}
+
+              <div className="calc-step">
+                <b>3</b>Who starts it?
+              </div>
+              {!target && <div className="col-empty">Pick a build target first.</div>}
+              <div className="chip-row">
+                {builders.map((u) => (
+                  <button
+                    type="button"
+                    className="builder-chip"
+                    key={u.id}
+                    aria-pressed={u.id === primary?.id}
+                    title={
+                      u.upgradesTo === target?.id ? `Upgrades in place into ${label(target)}` : undefined
+                    }
+                    onClick={() => patch({ p: u.id })}
+                  >
+                    {(u.tier ? `T${u.tier} ` : '') + label(u)}{' '}
+                    <small>
+                      {u.upgradesTo === target?.id ? 'upgrade · ' : ''}
+                      {fmt(u.buildPower)} bp
+                    </small>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
 
           <div className="calc-step">
             <b>4</b>Assisted by <span className="opt">(optional)</span>
@@ -372,18 +575,55 @@ function CalculatorPage() {
         </section>
 
         <section className="calc-col">
-          <h2>Economy</h2>
-          {economy.length === 0 && (
-            <div className="col-empty">No structures — add your generators and extractors.</div>
+          <h2>{queueMode ? 'Starting economy' : 'Economy'}</h2>
+          {queueMode ? (
+            <>
+              {commander ? (
+                <div className="stepper-list">
+                  <div className="stepper">
+                    <UnitIcon
+                      icon={commander.icon}
+                      faction={commander.faction}
+                      manifest={iconManifest}
+                      size={24}
+                    />
+                    <span className="who">
+                      <span>{label(commander)}</span>
+                      <small>{econDetail(commander)}</small>
+                    </span>
+                    <span className="stepper-note">always there</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="col-empty">Pick a faction — every game starts from its commander.</div>
+              )}
+              <div className="calc-step">
+                Already built <span className="opt">(optional)</span>
+              </div>
+              <StepperList
+                rows={startRows}
+                byId={byId}
+                iconManifest={iconManifest}
+                detail={econDetail}
+                onBump={(i, d) => bumpRow('e', startRows, i, d)}
+                onDrop={(i) => dropRow('e', startRows, i)}
+              />
+            </>
+          ) : (
+            <>
+              {economy.length === 0 && (
+                <div className="col-empty">No structures — add your generators and extractors.</div>
+              )}
+              <StepperList
+                rows={economy}
+                byId={byId}
+                iconManifest={iconManifest}
+                detail={econDetail}
+                onBump={(i, d) => bumpRow('e', economy, i, d)}
+                onDrop={(i) => dropRow('e', economy, i)}
+              />
+            </>
           )}
-          <StepperList
-            rows={economy}
-            byId={byId}
-            iconManifest={iconManifest}
-            detail={econDetail}
-            onBump={(i, d) => bumpRow('e', economy, i, d)}
-            onDrop={(i) => dropRow('e', economy, i)}
-          />
           <div className="add-btns">
             <button type="button" className="add-btn" onClick={() => togglePanel('econ')}>
               + Add generator / extractor
@@ -391,15 +631,22 @@ function CalculatorPage() {
             <button type="button" className="add-btn secondary" onClick={() => togglePanel('drain')}>
               + Energy users…
             </button>
+            {/* Storage only matters where there's a stockpile to hold, so
+                the single-build mode doesn't offer it. */}
+            {queueMode && (
+              <button type="button" className="add-btn secondary" onClick={() => togglePanel('storage')}>
+                + Storage…
+              </button>
+            )}
           </div>
           {panel === 'econ' && (
             <PickerPanel
-              units={producerPool}
+              units={queueMode ? producerPool.filter((u) => !isCommander(u)) : producerPool}
               subFor={econSub}
               placeholder="Search economy structures…"
               listMax={264}
               iconManifest={iconManifest}
-              onPick={(u) => addRow('e', economy, u.id)}
+              onPick={(u) => addRow('e', queueMode ? startRows : economy, u.id)}
               onClose={() => setPanel(null)}
             />
           )}
@@ -411,75 +658,127 @@ function CalculatorPage() {
               explainer="Structures that consume alloy or energy — usually not needed, add only if they're part of your base."
               listMax={220}
               iconManifest={iconManifest}
-              onPick={(u) => addRow('e', economy, u.id)}
+              onPick={(u) => addRow('e', queueMode ? startRows : economy, u.id)}
               onClose={() => setPanel(null)}
             />
+          )}
+          {panel === 'storage' && (
+            <PickerPanel
+              units={storagePool}
+              subFor={econSub}
+              placeholder="Search storage and factories…"
+              explainer="Structures that raise your storage cap — storages, and factories, which each hold some energy."
+              listMax={220}
+              iconManifest={iconManifest}
+              onPick={(u) => addRow('e', startRows, u.id)}
+              onClose={() => setPanel(null)}
+            />
+          )}
+
+          {queueMode && commander && (
+            <>
+              <div className="calc-step">Starting stockpile</div>
+              <div className="stock-inputs">
+                {(['alloys', 'energy'] as const).map((k) => (
+                  <label key={k}>
+                    <span className={k === 'alloys' ? 'alloy-val' : 'energy-val'}>{resourceName(k)}</span>
+                    <input
+                      type="number"
+                      min={0}
+                      max={startCap[k]}
+                      step={k === 'alloys' ? 50 : 500}
+                      value={startStock[k]}
+                      onChange={(e) =>
+                        setStartStock({
+                          ...startStock,
+                          [k]: Math.max(0, Math.round(Number(e.target.value) || 0)),
+                        })
+                      }
+                    />
+                    <small>of {fmt(startCap[k], 0)} storage</small>
+                  </label>
+                ))}
+              </div>
+            </>
+          )}
+
+          {queueMode && plan && plan.steps.length > 0 && (
+            <>
+              <h2 className="section-gap">Timeline</h2>
+              <Timeline plan={plan} />
+            </>
           )}
         </section>
 
         <aside className="calc-rail">
           <div className="rail-inner">
-            <h2>Can I afford it?</h2>
-            <Verdict build={build} econ={econ} hasEconomy={economy.length > 0} />
-
-            {build && (
+            {queueMode ? (
+              <QueueReadout plan={plan} />
+            ) : (
               <>
-                <h2>Build readout</h2>
-                <div className="rgrid">
-                  <div>
-                    <div className="rk">Time</div>
-                    <div className="rv">{duration(build.seconds)}</div>
-                  </div>
-                  <div>
-                    <div className="rk">Build power</div>
-                    <div className="rv">
-                      {fmt(build.power)}
-                      {build.assistPower
-                        ? ` (${fmt(build.primary.buildPower)}+${fmt(build.assistPower)})`
-                        : ''}
+                <h2>Can I afford it?</h2>
+                <Verdict build={build} econ={econ} hasEconomy={economy.length > 0} />
+
+                {build && (
+                  <>
+                    <h2>Build readout</h2>
+                    <div className="rgrid">
+                      <div>
+                        <div className="rk">Time</div>
+                        <div className="rv">{duration(build.seconds)}</div>
+                      </div>
+                      <div>
+                        <div className="rk">Build power</div>
+                        <div className="rv">
+                          {fmt(build.power)}
+                          {build.assistPower
+                            ? ` (${fmt(build.primary.buildPower)}+${fmt(build.assistPower)})`
+                            : ''}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="rk">Alloy/s</div>
+                        <div className="rv alloy-val">{fmt(build.alloysPerSec)}</div>
+                      </div>
+                      <div>
+                        <div className="rk">Energy/s</div>
+                        <div className="rv energy-val">{fmt(build.energyPerSec)}</div>
+                      </div>
+                      <div>
+                        <div className="rk">Total alloy</div>
+                        <div className="rv alloy-val">{fmt(build.target.cost.alloys, 0)}</div>
+                      </div>
+                      <div>
+                        <div className="rk">Total energy</div>
+                        <div className="rv energy-val">{fmt(build.target.cost.energy, 0)}</div>
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <div className="rk">Alloy/s</div>
-                    <div className="rv alloy-val">{fmt(build.alloysPerSec)}</div>
-                  </div>
-                  <div>
-                    <div className="rk">Energy/s</div>
-                    <div className="rv energy-val">{fmt(build.energyPerSec)}</div>
-                  </div>
-                  <div>
-                    <div className="rk">Total alloy</div>
-                    <div className="rv alloy-val">{fmt(build.target.cost.alloys, 0)}</div>
-                  </div>
-                  <div>
-                    <div className="rk">Total energy</div>
-                    <div className="rv energy-val">{fmt(build.target.cost.energy, 0)}</div>
-                  </div>
-                </div>
-              </>
-            )}
+                  </>
+                )}
 
-            {economy.length > 0 && (
-              <>
-                <h2>Economy readout</h2>
-                <div className="rgrid tight">
-                  <div>
-                    <div className="rk">Net alloy/s</div>
-                    <Net v={econ.alloysNet} />
-                  </div>
-                  <div>
-                    <div className="rk">Net energy/s</div>
-                    <Net v={econ.energyNet} />
-                  </div>
-                </div>
-                <div className="rlines">
-                  <div>
-                    Gross {fmt(econ.alloysIn)} alloy/s · {fmt(econ.energyIn)} energy/s
-                  </div>
-                  <div>
-                    Upkeep {fmt(econ.alloysOut)} alloy/s · {fmt(econ.energyOut)} energy/s
-                  </div>
-                </div>
+                {economy.length > 0 && (
+                  <>
+                    <h2>Economy readout</h2>
+                    <div className="rgrid tight">
+                      <div>
+                        <div className="rk">Net alloy/s</div>
+                        <Net v={econ.alloysNet} />
+                      </div>
+                      <div>
+                        <div className="rk">Net energy/s</div>
+                        <Net v={econ.energyNet} />
+                      </div>
+                    </div>
+                    <div className="rlines">
+                      <div>
+                        Gross {fmt(econ.alloysIn)} alloy/s · {fmt(econ.energyIn)} energy/s
+                      </div>
+                      <div>
+                        Upkeep {fmt(econ.alloysOut)} alloy/s · {fmt(econ.energyOut)} energy/s
+                      </div>
+                    </div>
+                  </>
+                )}
               </>
             )}
           </div>
@@ -503,15 +802,20 @@ function StepperList({
   byId,
   iconManifest,
   detail,
+  numbered,
   onBump,
   onDrop,
+  onMoveUp,
 }: {
   rows: CountedRow[];
   byId: Map<string, Unit>;
   iconManifest: Set<string>;
   detail: (u: Unit) => string;
+  /** Ordered lists (the build queue) show position and tier, and can be reordered. */
+  numbered?: boolean;
   onBump: (i: number, delta: number) => void;
   onDrop: (i: number) => void;
+  onMoveUp?: (i: number) => void;
 }) {
   if (!rows.length) return null;
   return (
@@ -519,13 +823,28 @@ function StepperList({
       {rows.map((row, i) => {
         const u = byId.get(row.id)!;
         return (
-          <div className="stepper" key={row.id}>
+          // The queue can hold the same unit in several rows, so the id alone
+          // isn't a unique key there.
+          <div className="stepper" key={`${row.id}:${i}`}>
+            {numbered && <span className="stepper-pos">{i + 1}</span>}
             <UnitIcon icon={u.icon} faction={u.faction} manifest={iconManifest} size={24} />
             <span className="who">
-              <span>{label(u)}</span>
+              <span>{numbered ? builderName(u) : label(u)}</span>
               <small>{detail(u)}</small>
             </span>
             <span className="stepper-controls">
+              {onMoveUp && (
+                <button
+                  type="button"
+                  className="drop"
+                  aria-label="Move earlier"
+                  title="Move earlier"
+                  disabled={i === 0}
+                  onClick={() => onMoveUp(i)}
+                >
+                  ↑
+                </button>
+              )}
               <button type="button" aria-label="Fewer" onClick={() => onBump(i, -1)}>
                 −
               </button>
@@ -647,6 +966,134 @@ function PickerPanel({
         )}
       </div>
     </div>
+  );
+}
+
+// A build order's answer: when it's done, what it cost, and what it did to the
+// stockpile — the three things you'd ask of an opening.
+function QueueReadout({ plan }: { plan: QueueResult | null }) {
+  if (!plan)
+    return (
+      <>
+        <h2>When is it done?</h2>
+        <div className="verdict">
+          <span className="verdict-label">Build order</span>
+          <span className="verdict-big">—</span>
+          <p className="verdict-note">Pick a faction and builder, then queue what to build.</p>
+        </div>
+      </>
+    );
+
+  const done = Number.isFinite(plan.finish);
+  const stalled = done && plan.finish > plan.ideal + 0.05;
+  const res = [
+    ['alloys', 'alloy-val'],
+    ['energy', 'energy-val'],
+  ] as const;
+
+  return (
+    <>
+      <h2>When is it done?</h2>
+      <div className="verdict">
+        <span className="verdict-label">Build order done at</span>
+        <span className={`verdict-big ${!done || stalled ? 'bad' : 'good'}`}>
+          {done ? duration(plan.finish) : 'never'}
+        </span>
+        {stalled && <span className="verdict-vs">vs {duration(plan.ideal)} with resources to spare</span>}
+        <p className="verdict-note">
+          {!done
+            ? `Stuck on ${plan.stuck ? builderName(plan.stuck) : 'a build'} — the stockpile is empty and nothing is coming in.`
+            : stalled
+              ? 'The stockpile ran dry, so builds slowed to what income could pay for.'
+              : 'Never short — income and stockpile covered every build at full speed.'}
+        </p>
+      </div>
+
+      <h2>Total cost</h2>
+      <div className="rgrid">
+        {res.map(([k, cls]) => (
+          <div key={k}>
+            <div className="rk">{resourceName(k)}</div>
+            <div className={`rv ${cls}`}>{fmt(plan.cost[k], 0)}</div>
+          </div>
+        ))}
+      </div>
+
+      <h2>Stockpile</h2>
+      <div className="rgrid">
+        {res.map(([k, cls]) => (
+          <div key={k}>
+            <div className="rk">{resourceName(k)} at end</div>
+            <div className={`rv ${cls}`}>{fmt(plan.end[k], 0)}</div>
+            <div className="rsub">
+              from {fmt(plan.start[k], 0)} · lowest {fmt(plan.low[k], 0)}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <h2>Economy after</h2>
+      <div className="rgrid tight">
+        {res.map(([k]) => (
+          <div key={k}>
+            <div className="rk">Net {resourceName(k)}/s</div>
+            <Net v={plan.income[k]} />
+          </div>
+        ))}
+      </div>
+      <div className="rlines">
+        <div>
+          Storage {fmt(plan.cap.alloys, 0)} alloy · {fmt(plan.cap.energy, 0)} energy
+        </div>
+        <div>{fmt(plan.power)} build power · walking between builds not counted</div>
+      </div>
+    </>
+  );
+}
+
+// One row per build: when it finished, how much it was held up, and the
+// stockpile left behind — where an opening goes wrong is usually visible here.
+function Timeline({ plan }: { plan: QueueResult }) {
+  return (
+    <table className="qtable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Build</th>
+          <th>Done</th>
+          <th className="alloy-val">Alloy</th>
+          <th className="energy-val">Energy</th>
+        </tr>
+      </thead>
+      <tbody>
+        {plan.steps.map((s, i) => {
+          const lost = s.end - s.start - s.ideal;
+          return (
+            <tr key={i}>
+              <td>{i + 1}</td>
+              <td>
+                {builderName(s.unit)}
+                {lost > 0.05 && <small className="bad"> +{duration(lost)} stalled</small>}
+              </td>
+              <td>{duration(s.end)}</td>
+              <td>{fmt(s.after.alloys, 0)}</td>
+              <td>{fmt(s.after.energy, 0)}</td>
+            </tr>
+          );
+        })}
+        {plan.stuck && (
+          <tr>
+            <td>{plan.steps.length + 1}</td>
+            <td>
+              {builderName(plan.stuck)} <small className="bad">stuck</small>
+            </td>
+            <td>never</td>
+            <td>—</td>
+            <td>—</td>
+          </tr>
+        )}
+      </tbody>
+    </table>
   );
 }
 
