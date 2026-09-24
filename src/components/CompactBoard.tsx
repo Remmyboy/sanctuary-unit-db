@@ -19,6 +19,8 @@ interface CompactBoardProps {
   iconManifest: Set<string>;
   previews: Set<string>;
   selectedId?: string;
+  /** Set while picking units to compare; each tile then shows whether it's picked. */
+  picked?: Set<string>;
   onOpen: (id: string) => void;
 }
 
@@ -29,6 +31,7 @@ export function CompactBoard({
   iconManifest,
   previews,
   selectedId,
+  picked,
   onOpen,
 }: CompactBoardProps) {
   const [hovered, setHovered] = useState<Unit | null>(null);
@@ -61,6 +64,7 @@ export function CompactBoard({
                     iconManifest={iconManifest}
                     hasPreview={previews.has(u.id)}
                     selected={u.id === selectedId}
+                    picked={picked?.has(u.id)}
                     onOpen={onOpen}
                   />
                 )}
@@ -130,12 +134,14 @@ function Tile({
   iconManifest,
   hasPreview,
   selected,
+  picked,
   onOpen,
 }: {
   unit: Unit;
   iconManifest: Set<string>;
   hasPreview: boolean;
   selected: boolean;
+  picked?: boolean;
   onOpen: (id: string) => void;
 }) {
   const muted = u.status === 'no-model';
@@ -148,9 +154,11 @@ function Tile({
       data-status={u.status}
       aria-label={`${name}, ${u.faction} ${u.displayName}`}
       aria-current={selected || undefined}
+      aria-pressed={picked}
       style={{ '--fc': FACTION_COLOURS[u.faction] } as React.CSSProperties}
       onClick={() => onOpen(u.id)}
     >
+      {picked !== undefined && <span className="pick-mark" aria-hidden="true" />}
       {hasPreview ? (
         <>
           <img className="tile-render" src={`/previews/${u.id}.png`} alt="" loading="lazy" decoding="async" />
