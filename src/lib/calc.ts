@@ -23,10 +23,14 @@ export const canAssist = (u: Unit) => u.canAssist && (u.buildPower ?? 0) > 0;
 
 // The economy picker's split: generators/extractors are what almost every
 // setup needs, while upkeep-only structures (shields, radar, factories idling)
-// are the secondary "energy users" pool.
+// are the secondary "energy users" pool. Storage-only structures (storages,
+// and factories, which carry an energy buffer) are a third pool: they don't
+// change income, but a build order's cap depends on them.
 export const isProducer = (u: Unit) => (u.production?.alloys ?? 0) > 0 || (u.production?.energy ?? 0) > 0;
 export const isConsumer = (u: Unit) =>
   !isProducer(u) && ((u.upkeep?.alloys ?? 0) > 0 || (u.upkeep?.energy ?? 0) > 0);
+export const isStorage = (u: Unit) =>
+  !isProducer(u) && !isConsumer(u) && ((u.storage?.alloys ?? 0) > 0 || (u.storage?.energy ?? 0) > 0);
 
 /* ---------------- maths ---------------- */
 

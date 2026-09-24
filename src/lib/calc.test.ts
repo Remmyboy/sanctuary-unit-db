@@ -5,6 +5,7 @@ import {
   commanderOf,
   economyResult,
   expandQueue,
+  isStorage,
   packRows,
   simulateQueue,
   unpackRows,
@@ -103,6 +104,27 @@ describe('build order', () => {
     expect(s.finish).toBeGreaterThan(90);
     expect(s.finish).toBeLessThan(101);
     expect(s.low.alloys).toBeCloseTo(0, 1);
+  });
+
+  it('counts already-built storage in the starting cap', () => {
+    // Storages and factories only hold resources, so they get their own pool.
+    const eStore = byId.get('ues1612')!; // EDA T1 Energy Storage, 10,000 energy
+    expect(isStorage(eStore)).toBe(true);
+    expect(isStorage(byId.get('ues1511')!)).toBe(true); // factory: 1,000 energy buffer
+    expect(isStorage(cmd)).toBe(false); // a producer, already in that pool
+    expect(isStorage(byId.get('ues1611')!)).toBe(false);
+
+    const withStore = [...start, { id: eStore.id, count: 1 }];
+    const r = simulateQueue(
+      [byId.get('ues1611')!],
+      cmd,
+      [],
+      withStore,
+      { alloys: 500, energy: 15000 },
+      byId,
+    )!;
+    expect(r.start).toEqual({ alloys: 500, energy: 15000 });
+    expect(r.cap).toEqual({ alloys: 500, energy: 15000 });
   });
 
   it('reports a build that can never finish', () => {

@@ -11,6 +11,7 @@ import {
   expandQueue,
   isCommander,
   isConsumer,
+  isStorage,
   isProducer,
   packRows,
   shown,
@@ -76,7 +77,7 @@ export const Route = createFileRoute('/calculator')({
   component: CalculatorPage,
 });
 
-type PanelKind = 'target' | 'queue' | 'assist' | 'econ' | 'drain';
+type PanelKind = 'target' | 'queue' | 'assist' | 'econ' | 'drain' | 'storage';
 type RowKey = 'a' | 'e' | 'q';
 
 /* ---------------- naming & detail lines ---------------- */
@@ -181,15 +182,21 @@ function CalculatorPage() {
 
   const assists = useMemo(() => unpackRows(search.a, byId), [search.a, byId]);
 
+  // Build-order mode's faction comes from the faction chip or, for a shared
+  // link without one, the linked builder's own faction.
+  const queueMode = search.m === 'q';
+  const queueFaction: Faction | undefined = faction ?? (search.b ? byId.get(search.b)?.faction : undefined);
+
   // Economy pools follow the target's faction (cross-faction economy is
-  // irrelevant), falling back to the faction chip.
-  const econFaction: Faction | undefined = target?.faction ?? faction;
+  // irrelevant), falling back to the faction chip; a build order uses its own.
+  const econFaction: Faction | undefined = queueMode ? queueFaction : (target?.faction ?? faction);
   const econBase = useMemo(
     () => (econFaction ? shownUnits.filter((u) => u.faction === econFaction) : pool),
     [shownUnits, econFaction, pool],
   );
   const producerPool = useMemo(() => econBase.filter(isProducer), [econBase]);
   const consumerPool = useMemo(() => econBase.filter(isConsumer), [econBase]);
+  const storagePool = useMemo(() => econBase.filter(isStorage), [econBase]);
 
   const economy = useMemo(() => unpackRows(search.e, byId), [search.e, byId]);
 
@@ -222,7 +229,6 @@ function CalculatorPage() {
   // Build-order mode. The queue is ordered and may repeat a unit (generator,
   // extractor, generator…), so picking the unit that's already last bumps
   // that row, anything else appends a new one.
-  const queueMode = search.m === 'q';
   const queueRows = useMemo(() => unpackRows(search.q, byId), [search.q, byId]);
   const addToQueue = (id: string) => {
     const last = queueRows[queueRows.length - 1];
@@ -241,9 +247,7 @@ function CalculatorPage() {
     );
 
   // Builders are the units that can put build power into a construction —
-  // commander, engineers, engineering stations — from the faction chip or,
-  // for a shared link without one, the linked builder's own faction.
-  const queueFaction: Faction | undefined = faction ?? (search.b ? byId.get(search.b)?.faction : undefined);
+  // commander, engineers, engineering stations — of the build order's faction.
   const commander = commanderOf(shownUnits, queueFaction);
   const queueBuilders = useMemo(
     () =>
@@ -627,6 +631,13 @@ function CalculatorPage() {
             <button type="button" className="add-btn secondary" onClick={() => togglePanel('drain')}>
               + Energy users…
             </button>
+            {/* Storage only matters where there's a stockpile to hold, so
+                the single-build mode doesn't offer it. */}
+            {queueMode && (
+              <button type="button" className="add-btn secondary" onClick={() => togglePanel('storage')}>
+                + Storage…
+              </button>
+            )}
           </div>
           {panel === 'econ' && (
             <PickerPanel
@@ -648,6 +659,18 @@ function CalculatorPage() {
               listMax={220}
               iconManifest={iconManifest}
               onPick={(u) => addRow('e', queueMode ? startRows : economy, u.id)}
+              onClose={() => setPanel(null)}
+            />
+          )}
+          {panel === 'storage' && (
+            <PickerPanel
+              units={storagePool}
+              subFor={econSub}
+              placeholder="Search storage and factories…"
+              explainer="Structures that raise your storage cap — storages, and factories, which each hold some energy."
+              listMax={220}
+              iconManifest={iconManifest}
+              onPick={(u) => addRow('e', startRows, u.id)}
               onClose={() => setPanel(null)}
             />
           )}
