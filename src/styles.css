@@ -5224,3 +5224,371 @@ html.modding-route {
     justify-self: end;
   }
 }
+
+/* ---------- compare ---------- */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The toolbar's Compare button: the view toggle's look, as a single toggle. */
+.compare-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--bg-sunken);
+  color: var(--text-dim);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.compare-toggle:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+.compare-toggle[aria-pressed='true'] {
+  color: var(--accent-ink);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.compare-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.compare-toggle svg {
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
+}
+
+/* While picking, every card and tile carries a tick box in its top-right
+   corner; picked ones fill it and take an accent edge. */
+.pick-mark {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 2;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--bg) 80%, transparent);
+  pointer-events: none;
+}
+[aria-pressed='true'] > .pick-mark {
+  border-color: var(--accent);
+  background: var(--accent)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='%2306121a' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center / 12px no-repeat;
+}
+.card[aria-pressed='true'] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.tile > .pick-mark {
+  top: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  background-size: 9px;
+}
+.tile[aria-pressed='true'] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+/* The picks tray, pinned to the bottom of the Units page. */
+.layout.has-tray {
+  padding-bottom: 64px;
+}
+.compare-tray {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 56px;
+  padding: 8px 18px;
+  border-top: 1px solid var(--accent);
+  background: color-mix(in srgb, var(--bg-raised) 96%, transparent);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 -8px 24px -12px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.compare-tray-picks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.compare-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px 2px 6px;
+  border: 1px solid color-mix(in srgb, var(--fc) 45%, var(--border));
+  border-left: 2px solid var(--fc);
+  border-radius: 4px;
+  background: var(--bg-sunken);
+  font-size: 12.5px;
+}
+.compare-pick button {
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--text-faint);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+.compare-pick button:hover {
+  color: var(--bad);
+}
+.compare-tray-hint {
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+.compare-tray-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 14px;
+}
+.compare-tray .btn.primary {
+  text-decoration: none;
+  white-space: nowrap;
+}
+.compare-tray .btn.primary[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.detail-compare {
+  flex: none;
+  margin-left: auto;
+  padding: 5px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--bg-sunken);
+  color: var(--text-dim);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.detail-compare:hover:not(:disabled) {
+  color: var(--text);
+  border-color: var(--accent);
+}
+.detail-compare[aria-pressed='true'] {
+  color: var(--accent-strong);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.detail-compare:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* The comparison: a label column, then a column per unit. Column heads stick
+   under the toolbar; the best value in a row is lit in the accent. */
+.compare-page {
+  padding: 14px 18px 60px;
+}
+.compare-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  font-variant-numeric: tabular-nums;
+}
+.compare-table th,
+.compare-table td {
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: right;
+  vertical-align: top;
+}
+.compare-table th:first-child {
+  width: 170px;
+  text-align: left;
+}
+.compare-table thead th {
+  position: sticky;
+  top: calc(var(--header-h) + 36px);
+  z-index: 5;
+  background: color-mix(in srgb, var(--bg) 94%, transparent);
+  backdrop-filter: blur(12px);
+}
+.compare-table .compare-head {
+  text-align: center;
+  vertical-align: bottom;
+  border-bottom: 2px solid var(--fc);
+  background:
+    radial-gradient(
+      ellipse 70% 60% at 50% 45%,
+      color-mix(in srgb, var(--fc) 18%, transparent),
+      transparent 75%
+    ),
+    color-mix(in srgb, var(--bg) 94%, transparent);
+}
+.compare-render {
+  display: grid;
+  place-items: center;
+  height: 88px;
+  margin-bottom: 4px;
+}
+.compare-render img {
+  width: 88px;
+  height: 88px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.55));
+}
+.compare-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+.compare-name:hover {
+  color: var(--accent-strong);
+}
+.compare-name .faction-emblem {
+  width: 13px;
+  height: 13px;
+}
+.compare-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-dim);
+}
+.compare-remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--bg-sunken);
+  color: var(--text-faint);
+  line-height: 1;
+  cursor: pointer;
+}
+.compare-remove:hover {
+  color: var(--bad);
+  border-color: var(--bad);
+}
+.compare-table .compare-section th {
+  padding: 18px 12px 6px;
+  border-bottom: 1px solid var(--border-strong);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-align: left;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.compare-table tbody th[scope='row'] {
+  font-weight: 500;
+  color: var(--text-dim);
+}
+.compare-table tbody tr:not(.compare-section):hover > * {
+  background: var(--bg-hover);
+}
+.compare-table td.best {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+.compare-table td.best > span {
+  font-weight: 700;
+}
+.compare-table td.best > span::before {
+  content: '◆ ';
+  font-size: 9px;
+  color: var(--accent);
+  vertical-align: 1px;
+}
+.compare-none {
+  color: var(--text-faint);
+}
+.compare-table .compare-weapons td {
+  text-align: left;
+}
+.compare-weapons .weapon + .weapon {
+  margin-top: 8px;
+}
+
+/* On a phone the table scrolls sideways with the stat names pinned; the
+   sticky column heads give way, since a sideways scroller can't also stick
+   to the page. */
+@media (max-width: 760px) {
+  .compare-toggle span {
+    display: none;
+  }
+  .compare-toggle {
+    padding: 3px 6px;
+  }
+  .compare-tray {
+    flex-wrap: wrap;
+    padding: 8px 12px;
+  }
+  .compare-tray-actions {
+    margin-left: auto;
+  }
+  .compare-page {
+    padding: 10px 0 60px;
+  }
+  .compare-wrap {
+    overflow-x: auto;
+  }
+  .compare-table {
+    width: auto;
+    min-width: 100%;
+  }
+  .compare-table th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    width: 118px;
+    min-width: 118px;
+    background: var(--bg);
+  }
+  .compare-table td,
+  .compare-table .compare-head {
+    min-width: 132px;
+  }
+  .compare-table thead th {
+    position: static;
+  }
+  .compare-table thead th:first-child {
+    position: sticky;
+  }
+}

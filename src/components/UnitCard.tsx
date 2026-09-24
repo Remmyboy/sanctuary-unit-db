@@ -6,10 +6,12 @@ import { FACTION_COLOURS, UnitIcon } from './UnitIcon';
 interface UnitCardProps {
   unit: Unit;
   iconManifest: Set<string>;
+  /** Defined only while picking units to compare: the card becomes a toggle. */
+  picked?: boolean;
   onOpen: (id: string) => void;
 }
 
-export function UnitCard({ unit: u, iconManifest, onOpen }: UnitCardProps) {
+export function UnitCard({ unit: u, iconManifest, picked, onOpen }: UnitCardProps) {
   // Only no-model units get dimmed — an in-progress unit has real art and real
   // numbers, it just isn't switched on, so it keeps its colour and says why.
   const muted = u.status === 'no-model';
@@ -17,9 +19,11 @@ export function UnitCard({ unit: u, iconManifest, onOpen }: UnitCardProps) {
     <button
       type="button"
       className={`card ${muted ? 'unplayable' : ''}`}
+      aria-pressed={picked}
       style={{ '--fc': FACTION_COLOURS[u.faction] } as React.CSSProperties}
       onClick={() => onOpen(u.id)}
     >
+      {picked !== undefined && <span className="pick-mark" aria-hidden="true" />}
       <span className="card-top">
         <span className="card-icon">
           <UnitIcon icon={u.icon} faction={u.faction} manifest={iconManifest} size={32} muted={muted} />

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { loadData } from '../lib/data';
 import {
@@ -17,15 +17,17 @@ import type { Faction, Unit } from '../lib/types';
 import { FACTION_COLOURS } from '../components/UnitIcon';
 import { FactionEmblem } from '../components/FactionEmblem';
 import { CompactBoard } from '../components/CompactBoard';
+import { CompareTray } from '../components/CompareTray';
+import { COMPARE_MAX, parseCompare, togglePick } from '../lib/compare';
 import { UnitCard } from '../components/UnitCard';
 import { DetailPanel } from '../components/DetailPanel';
 import { HeaderSearch } from '../components/HeaderSearch';
 import { GameVersion } from '../components/GameVersion';
 import { HeadStat, PageHead } from '../components/PageHead';
 
-// Filters, sort, search, the open unit and the view all live in the URL — same
-// param names and comma-joined encoding as the pre-framework site, so shared
-// links and bookmarks keep working.
+// Filters, sort, search, the open unit, the view and the units picked for
+// comparison all live in the URL — same param names and comma-joined encoding
+// as the pre-framework site, so shared links and bookmarks keep working.
 interface BoardSearch {
   q?: string;
   faction?: string;
@@ -37,6 +39,8 @@ interface BoardSearch {
   unit?: string;
   /** Absent means the card board; the only other view is compact tiles. */
   view?: 'compact';
+  /** Units picked for comparison, comma-joined ids. */
+  compare?: string;
 }
 
 const str = (v: unknown): string | undefined => {
@@ -59,6 +63,7 @@ export const Route = createFileRoute('/')({
     sort: METRICS[String(raw.sort)] ? (String(raw.sort) as SortKey) : undefined,
     unit: str(raw.unit),
     view: raw.view === 'compact' ? 'compact' : undefined,
+    compare: str(raw.compare),
   }),
   head: () => ({
     meta: [
@@ -117,9 +122,21 @@ function BoardPage() {
   const closeDetail = () => patch({ unit: undefined });
   const selected = search.unit ? loaded.byId.get(search.unit) : undefined;
 
+  // Compare mode turns a click on a card or tile from "open it" into "pick it".
+  // The mode is this visit's state; the picks are in the URL.
+  const [picking, setPicking] = useState(false);
+  const picks = parseCompare(search.compare, (id) => loaded.byId.has(id));
+  const pickedUnits = picks.map((id) => loaded.byId.get(id)!);
+  const setPicks = (ids: string[]) => patch({ compare: ids.length ? ids.join(',') : undefined });
+  const togglePicked = (id: string) => setPicks(togglePick(picks, id));
+  const onUnitClick = picking ? togglePicked : openDetail;
+  const pickedSet = picking ? new Set(picks) : undefined;
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && search.unit) closeDetail();
+      if (e.key !== 'Escape') return;
+      if (search.unit) closeDetail();
+      else if (picking) setPicking(false);
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
@@ -140,8 +157,8 @@ function BoardPage() {
     }
   };
 
-  // Reset clears the filters, not the view — that's a display preference.
-  const reset = () => navigate({ search: { view: search.view }, replace: true });
+  // Reset clears the filters, not the view (a display preference) or the picks.
+  const reset = () => navigate({ search: { view: search.view, compare: search.compare }, replace: true });
 
   return (
     <>
@@ -172,6 +189,19 @@ function BoardPage() {
             compact={search.view === 'compact'}
             onChange={(c) => patch({ view: c ? 'compact' : undefined })}
           />
+          <button
+            type="button"
+            className="compare-toggle"
+            aria-pressed={picking}
+            onClick={() => setPicking(!picking)}
+            title="Pick units to compare side by side"
+          >
+            <svg viewBox="0 0 14 14" aria-hidden="true">
+              <rect x="1" y="2" width="5" height="10" rx="1" />
+              <rect x="8" y="2" width="5" height="10" rx="1" />
+            </svg>
+            <span>Compare</span>
+          </button>
           <label className="sortctl">
             Order
             <select
@@ -194,7 +224,7 @@ function BoardPage() {
         </div>
       </div>
 
-      <main className="layout">
+      <main className={`layout${picking || picks.length ? ' has-tray' : ''}`}>
         <FilterSidebar units={loaded.data.units} filters={filters} onToggle={toggle} onReset={reset} />
 
         <section className="results">
@@ -208,7 +238,8 @@ function BoardPage() {
               iconManifest={loaded.iconManifest}
               previews={loaded.previews}
               selectedId={search.unit}
-              onOpen={openDetail}
+              picked={pickedSet}
+              onOpen={onUnitClick}
             />
           ) : (
             <Board
@@ -216,13 +247,36 @@ function BoardPage() {
               factions={factions}
               sort={sort}
               iconManifest={loaded.iconManifest}
-              onOpen={openDetail}
+              picked={pickedSet}
+              onOpen={onUnitClick}
             />
           )}
         </section>
       </main>
 
-      {selected && <DetailPanel unit={selected} loaded={loaded} onOpen={openDetail} onClose={closeDetail} />}
+      {(picking || picks.length > 0) && (
+        <CompareTray
+          units={pickedUnits}
+          picking={picking}
+          iconManifest={loaded.iconManifest}
+          onRemove={togglePicked}
+          onClear={() => setPicks([])}
+        />
+      )}
+
+      {selected && (
+        <DetailPanel
+          unit={selected}
+          loaded={loaded}
+          onOpen={openDetail}
+          onClose={closeDetail}
+          compare={{
+            picked: picks.includes(selected.id),
+            full: picks.length >= COMPARE_MAX,
+            onToggle: () => togglePicked(selected.id),
+          }}
+        />
+      )}
     </>
   );
 }
@@ -323,12 +377,15 @@ function Board({
   factions,
   sort,
   iconManifest,
+  picked,
   onOpen,
 }: {
   groups: Group[];
   factions: Faction[];
   sort: SortKey;
   iconManifest: Set<string>;
+  /** Set while picking units to compare; each card then shows whether it's picked. */
+  picked?: Set<string>;
   onOpen: (id: string) => void;
 }) {
   const cols = { '--cols': factions.length } as React.CSSProperties;
@@ -369,7 +426,13 @@ function Board({
                   return units.length ? (
                     <div className="cell" key={f}>
                       {units.map((u) => (
-                        <UnitCard unit={u} key={u.id} iconManifest={iconManifest} onOpen={onOpen} />
+                        <UnitCard
+                          unit={u}
+                          key={u.id}
+                          iconManifest={iconManifest}
+                          picked={picked?.has(u.id)}
+                          onOpen={onOpen}
+                        />
                       ))}
                     </div>
                   ) : (

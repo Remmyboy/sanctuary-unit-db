@@ -73,6 +73,11 @@ only downloads the Latin subset unless a page needs another.
   on a faction-tinted well, the strategic icon in the corner, lit in `--fc` on
   hover/focus and in the accent when it's the open unit. `.creadout` is the
   sticky strip above the tiles that shows the hovered unit's numbers.
+- Compare: `.compare-toggle` (toolbar), `.pick-mark` (the tick box on a card
+  or tile while picking; picked ones take an accent edge), `.compare-tray`
+  (fixed to the bottom of the Units page, above content, below the detail
+  panel), and `.compare-table`: sticky faction-lit column heads, section rows,
+  and `td.best` lit in the accent with a ◆.
 - `.empty` — centred empty/unreachable state with a slowly turning octagon.
 
 ## Motion
