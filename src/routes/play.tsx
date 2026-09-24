@@ -155,6 +155,7 @@ function PlayPage() {
   return (
     <>
       <PageHead
+        art="play"
         eyebrow="Multiplayer"
         title="Play Ranked"
         aside={liveGames !== null && <HeadStat value={liveGames} label="Games live" colour="var(--good)" />}

@@ -5,6 +5,7 @@ import { STATUS_LABELS } from '../lib/board';
 import { builderName, duration, fmt, resourceName, shortName, splitCamel } from '../lib/format';
 import { consumes, economyRole, produces, upgradeChain, type UpgradeStep } from '../lib/economy';
 import { FACTION_COLOURS, UnitIcon } from './UnitIcon';
+import { FactionEmblem } from './FactionEmblem';
 import { beamLabel } from './UnitCard';
 
 interface DetailPanelProps {
@@ -15,7 +16,7 @@ interface DetailPanelProps {
 }
 
 export function DetailPanel({ unit: u, loaded, onOpen, onClose }: DetailPanelProps) {
-  const { byId, iconManifest, previews } = loaded;
+  const { byId, iconManifest, previews, renders } = loaded;
 
   return (
     <>
@@ -24,16 +25,27 @@ export function DetailPanel({ unit: u, loaded, onOpen, onClose }: DetailPanelPro
         aria-live="polite"
         style={{ '--fc': FACTION_COLOURS[u.faction] } as React.CSSProperties}
       >
-        {/* A dossier header: the game's own render on a faction-lit stage, with
-            the faction's name set huge and faint behind it. The render is
-            upscaled from 64px — soft, but it's the only size shipped and it
-            reads far better than an icon at this size. Units without one get
-            their icon on the same stage. */}
+        {/* A dossier header: the unit's render on a faction-lit stage, over the
+            faction's emblem, with its name set huge and faint behind. Most
+            units have a 384px render from the developers; the rest fall back
+            to the game's 64px thumbnail, upscaled and shown a little smaller
+            so the softness shows less. Units with neither get their icon on
+            the same stage. */}
         <div className="detail-stage">
+          <FactionEmblem faction={u.faction} className="detail-stage-emblem" />
           <span className="detail-stage-faction" aria-hidden="true">
             {u.faction}
           </span>
-          {previews.has(u.id) ? (
+          {renders.has(u.id) ? (
+            <img
+              className="detail-render hd"
+              src={`/renders/${u.id}.webp`}
+              alt={u.name ?? u.displayName}
+              width={170}
+              height={170}
+              decoding="async"
+            />
+          ) : previews.has(u.id) ? (
             <img
               className="detail-render"
               src={`/previews/${u.id}.png`}

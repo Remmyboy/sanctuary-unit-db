@@ -258,9 +258,13 @@ a {
 
 /* Opens every top-level page. Scrolls away under the sticky toolbar. The big
    octagon on the right is decoration only — the logo's outline, drawn huge and
-   faint, so each page carries the brand without an image. */
+   faint. Behind it all sits a presskit screenshot (.page-head-art), dimmed and
+   scrimmed so the text side is near-solid page colour and the art only really
+   shows on the right. Layers, bottom up: art, scrim (::after), octagon
+   (::before), text. */
 .page-head {
   position: relative;
+  isolation: isolate;
   overflow: hidden;
   border-bottom: 1px solid var(--border);
   background: linear-gradient(100deg, color-mix(in srgb, var(--bg-raised) 90%, transparent), transparent 70%);
@@ -277,9 +281,39 @@ a {
     center / contain no-repeat;
   opacity: 0.22;
   pointer-events: none;
+  z-index: 1;
+}
+/* The filter lives on the art alone: on a shared parent it would also darken
+   the scrim, and the scrim has to land exactly on --bg to blend into the page. */
+.page-head-art {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-size: cover;
+  background-position: center 45%;
+  background-repeat: no-repeat;
+  filter: saturate(0.75) brightness(0.85);
+  pointer-events: none;
+}
+.page-head:has(.page-head-art)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--bg) 96%, transparent) 0%,
+      color-mix(in srgb, var(--bg) 90%, transparent) 30%,
+      color-mix(in srgb, var(--bg) 55%, transparent) 62%,
+      color-mix(in srgb, var(--bg) 32%, transparent) 100%
+    ),
+    linear-gradient(transparent 50%, color-mix(in srgb, var(--bg) 70%, transparent));
+  pointer-events: none;
 }
 .page-head-inner {
   position: relative;
+  z-index: 2;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
@@ -378,6 +412,17 @@ a {
     width: 180px;
     height: 180px;
     right: -60px;
+  }
+  /* Text runs the full width here, so the scrim is even rather than a sweep,
+     and the art is framed on its subject rather than the band's centre. */
+  .page-head-art {
+    background-position: var(--art-focus, center);
+  }
+  .page-head:has(.page-head-art)::after {
+    background: linear-gradient(
+      color-mix(in srgb, var(--bg) 70%, transparent),
+      color-mix(in srgb, var(--bg) 88%, transparent)
+    );
   }
 }
 
@@ -650,13 +695,31 @@ img.unit-icon[data-muted='true'] {
   gap: 8px;
   padding: 4px 0 7px;
 }
-.col-head::before {
+/* FactionEmblem: the shape is a mask on ::before, so a filter on the span
+   (a glow) isn't clipped away by it. Size it with width/height. */
+.faction-emblem {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  width: 1em;
+  height: 1em;
+}
+.faction-emblem::before {
   content: '';
-  width: 9px;
-  height: 9px;
+  position: absolute;
+  inset: 0;
   background: var(--fc);
+  mask: var(--emblem) center / contain no-repeat;
+}
+.faction-emblem.fallback::before {
+  inset: 22%;
+  mask: none;
   transform: rotate(45deg);
-  box-shadow: 0 0 10px var(--fc);
+}
+.col-head .faction-emblem {
+  width: 16px;
+  height: 16px;
+  filter: drop-shadow(0 0 5px var(--fc));
 }
 .col-head::after {
   content: '';
@@ -1035,6 +1098,21 @@ img.unit-icon[data-muted='true'] {
   height: 150px;
   object-fit: contain;
   filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.6));
+}
+.detail-render.hd {
+  width: 170px;
+  height: 170px;
+}
+/* The faction's emblem, large and faint, standing behind the render. */
+.detail-stage-emblem {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 160px;
+  height: 160px;
+  transform: translate(-50%, -50%);
+  opacity: 0.16;
+  pointer-events: none;
 }
 .detail-stage > .unit-icon {
   position: relative;

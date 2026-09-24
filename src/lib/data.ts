@@ -10,6 +10,8 @@ export interface LoadedData {
   iconManifest: Set<string>;
   /** Unit ids with an extracted 64px render in /previews/. */
   previews: Set<string>;
+  /** Unit ids with a 384px render from the developers in /renders/. */
+  renders: Set<string>;
 }
 
 let cache: Promise<LoadedData> | null = null;
@@ -20,12 +22,13 @@ export function loadData(): Promise<LoadedData> {
 }
 
 async function load(): Promise<LoadedData> {
-  const [data, iconManifest, previews] = await Promise.all([
+  const [data, iconManifest, previews, renders] = await Promise.all([
     fetchJson<UnitsData>('/data/units.json'),
-    // Both manifests are optional: without them icons fall back to generated
-    // SVG and the preview panel is simply omitted.
+    // The manifests are optional: without them icons fall back to generated
+    // SVG, the detail panel uses the 64px render, or omits it.
     fetchJson<string[]>('/icons/manifest.json').catch(() => []),
     fetchJson<string[]>('/previews/manifest.json').catch(() => []),
+    fetchJson<string[]>('/renders/manifest.json').catch(() => []),
   ]);
 
   return {
@@ -33,6 +36,7 @@ async function load(): Promise<LoadedData> {
     byId: new Map(data.units.map((u) => [u.id, u])),
     iconManifest: new Set(iconManifest),
     previews: new Set(previews),
+    renders: new Set(renders),
   };
 }
 

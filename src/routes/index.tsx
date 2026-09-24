@@ -15,6 +15,7 @@ import {
 } from '../lib/board';
 import type { Faction, Unit } from '../lib/types';
 import { FACTION_COLOURS } from '../components/UnitIcon';
+import { FactionEmblem } from '../components/FactionEmblem';
 import { UnitCard } from '../components/UnitCard';
 import { DetailPanel } from '../components/DetailPanel';
 import { HeaderSearch } from '../components/HeaderSearch';
@@ -145,6 +146,7 @@ function BoardPage() {
         placeholder="Search name, id, role or tag…"
       />
       <PageHead
+        art="units"
         eyebrow="Database"
         title="Unit Database"
         aside={factions.map((f) => (
@@ -303,6 +305,7 @@ function Board({
       <div className="col-heads" style={cols}>
         {factions.map((f) => (
           <div className="col-head" key={f} style={{ '--fc': FACTION_COLOURS[f] } as React.CSSProperties}>
+            <FactionEmblem faction={f} />
             {f}
           </div>
         ))}

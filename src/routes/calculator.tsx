@@ -228,7 +228,7 @@ function CalculatorPage() {
 
   return (
     <>
-      <PageHead eyebrow="Database" title="Build Calculator">
+      <PageHead eyebrow="Database" title="Build Calculator" art="calculator">
         How long a build takes, what it drains, and whether your economy keeps up — worked from the game's own
         formulas. The setup lives in the URL, so copy the link to share it.
       </PageHead>

@@ -149,6 +149,7 @@ function MapsPage() {
         placeholder="Search maps by name or author…"
       />
       <PageHead
+        art="maps"
         eyebrow="Community"
         title="Maps"
         aside={

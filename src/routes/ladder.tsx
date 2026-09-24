@@ -69,6 +69,7 @@ function LadderPage() {
   return (
     <>
       <PageHead
+        art="ladder"
         eyebrow="Multiplayer"
         title="Ladder"
         aside={
