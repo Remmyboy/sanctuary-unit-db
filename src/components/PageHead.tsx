@@ -7,7 +7,7 @@
 // decoration only: dimmed, and scrimmed dark under the text.
 
 import type { ReactNode } from 'react';
-import { MASTHEAD_ART, mastheadSrc, type MastheadArt } from '../lib/art';
+import { MASTHEAD_ART, MASTHEAD_SIZE, mastheadSrc, type MastheadArt } from '../lib/art';
 
 interface PageHeadProps {
   eyebrow: string;
@@ -28,6 +28,7 @@ export function PageHead({ eyebrow, title, children, aside, art }: PageHeadProps
             {
               backgroundImage: `url(${mastheadSrc(art)})`,
               '--art-focus': MASTHEAD_ART[art].focus,
+              '--art-ratio': `${MASTHEAD_SIZE[0]} / ${MASTHEAD_SIZE[1]}`,
             } as React.CSSProperties
           }
         />
