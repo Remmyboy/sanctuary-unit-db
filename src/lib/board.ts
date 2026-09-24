@@ -175,6 +175,54 @@ export function visibleGroups(groups: Group[], filters: BoardFilters, sort: Sort
   return kept.sort((a, b) => scoreOf(b) - scoreOf(a) || byTechTree(a, b));
 }
 
+/* ---------------- compact view ---------------- */
+
+// The compact board is the same aligned rows turned sideways: each faction is
+// a row of tiles and each slot a column, so equivalents still stack. A single
+// grid that wide would scroll forever, so it's cut into blocks that wrap —
+// one per domain and tier in tech-tree order; in a metric sort, where tiers
+// interleave, runs of COMPACT_CHUNK slots in rank order.
+export const COMPACT_CHUNK = 12;
+
+export interface CompactBlock {
+  key: string;
+  domain: string | null;
+  tier: number | null;
+  /** The block's pill: its tier, or the rank range in a metric sort. */
+  label: string | null;
+  groups: Group[];
+}
+
+export function compactBlocks(groups: Group[], sort: SortKey): CompactBlock[] {
+  if (sort !== 'default') {
+    const blocks: CompactBlock[] = [];
+    for (let i = 0; i < groups.length; i += COMPACT_CHUNK) {
+      const run = groups.slice(i, i + COMPACT_CHUNK);
+      const label = run.length > 1 ? `#${i + 1}–${i + run.length}` : `#${i + 1}`;
+      blocks.push({ key: `rank-${i}`, domain: null, tier: null, label, groups: run });
+    }
+    return blocks;
+  }
+  const blocks: CompactBlock[] = [];
+  for (const group of groups) {
+    const last = blocks.at(-1);
+    if (last && last.domain === group.domain && last.tier === group.tier) last.groups.push(group);
+    else
+      blocks.push({
+        key: `${group.domain}-${group.tier}`,
+        domain: group.domain,
+        tier: group.tier,
+        label: group.tier ? `T${group.tier}` : null,
+        groups: [group],
+      });
+  }
+  return blocks;
+}
+
+/** Columns a slot needs: the most units any one shown faction has in it. */
+export const slotSpan = (group: Group, factions: readonly string[]): number =>
+  Math.max(1, ...factions.map((f) => group.byFaction[f]?.length ?? 0));
+
 function groupByFaction(units: Unit[]): Partial<Record<string, Unit[]>> {
   const out: Partial<Record<string, Unit[]>> = {};
   for (const u of units) (out[u.faction] ??= []).push(u);

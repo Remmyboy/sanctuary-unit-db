@@ -67,6 +67,12 @@ only downloads the Latin subset unless a page needs another.
   actions. Use `ghost` when a list has many and only one should stand out.
 - `.btn` (outlined) / `.btn.primary` (solid chamfer).
 - `.chip[aria-pressed]`, `.mode-tabs` (segmented control), `.badge`.
+- `.view-toggle` — a small segmented control that fits the 36px toolbar
+  (Cards | Compact); labels drop to icons on phones.
+- `.tile` — the compact board's 44px unit tile (40px on phones): the render
+  on a faction-tinted well, the strategic icon in the corner, lit in `--fc` on
+  hover/focus and in the accent when it's the open unit. `.creadout` is the
+  sticky strip above the tiles that shows the hovered unit's numbers.
 - `.empty` — centred empty/unreachable state with a slowly turning octagon.
 
 ## Motion

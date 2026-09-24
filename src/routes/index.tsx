@@ -16,15 +16,16 @@ import {
 import type { Faction, Unit } from '../lib/types';
 import { FACTION_COLOURS } from '../components/UnitIcon';
 import { FactionEmblem } from '../components/FactionEmblem';
+import { CompactBoard } from '../components/CompactBoard';
 import { UnitCard } from '../components/UnitCard';
 import { DetailPanel } from '../components/DetailPanel';
 import { HeaderSearch } from '../components/HeaderSearch';
 import { GameVersion } from '../components/GameVersion';
 import { HeadStat, PageHead } from '../components/PageHead';
 
-// Filters, sort, search and the open unit all live in the URL — same param
-// names and comma-joined encoding as the pre-framework site, so shared links
-// and bookmarks keep working.
+// Filters, sort, search, the open unit and the view all live in the URL — same
+// param names and comma-joined encoding as the pre-framework site, so shared
+// links and bookmarks keep working.
 interface BoardSearch {
   q?: string;
   faction?: string;
@@ -34,6 +35,8 @@ interface BoardSearch {
   status?: string;
   sort?: SortKey;
   unit?: string;
+  /** Absent means the card board; the only other view is compact tiles. */
+  view?: 'compact';
 }
 
 const str = (v: unknown): string | undefined => {
@@ -55,6 +58,7 @@ export const Route = createFileRoute('/')({
     status: str(raw.status),
     sort: METRICS[String(raw.sort)] ? (String(raw.sort) as SortKey) : undefined,
     unit: str(raw.unit),
+    view: raw.view === 'compact' ? 'compact' : undefined,
   }),
   head: () => ({
     meta: [
@@ -136,7 +140,8 @@ function BoardPage() {
     }
   };
 
-  const reset = () => navigate({ search: {}, replace: true });
+  // Reset clears the filters, not the view — that's a display preference.
+  const reset = () => navigate({ search: { view: search.view }, replace: true });
 
   return (
     <>
@@ -163,6 +168,10 @@ function BoardPage() {
         </span>
         <div className="toolbar-controls">
           <GameVersion game={loaded.data.meta.game} generatedAt={loaded.data.meta.generatedAt} />
+          <ViewToggle
+            compact={search.view === 'compact'}
+            onChange={(c) => patch({ view: c ? 'compact' : undefined })}
+          />
           <label className="sortctl">
             Order
             <select
@@ -191,6 +200,16 @@ function BoardPage() {
         <section className="results">
           {visible.length === 0 ? (
             <p className="empty">No units match those filters.</p>
+          ) : search.view === 'compact' ? (
+            <CompactBoard
+              groups={visible}
+              factions={factions}
+              sort={sort}
+              iconManifest={loaded.iconManifest}
+              previews={loaded.previews}
+              selectedId={search.unit}
+              onOpen={openDetail}
+            />
           ) : (
             <Board
               groups={visible}
@@ -205,6 +224,29 @@ function BoardPage() {
 
       {selected && <DetailPanel unit={selected} loaded={loaded} onOpen={openDetail} onClose={closeDetail} />}
     </>
+  );
+}
+
+// Cards | Compact, in the toolbar. Labels drop to icons on a phone.
+function ViewToggle({ compact, onChange }: { compact: boolean; onChange: (compact: boolean) => void }) {
+  return (
+    <div className="view-toggle" role="group" aria-label="View">
+      <button type="button" aria-pressed={!compact} onClick={() => onChange(false)} title="Cards">
+        <svg viewBox="0 0 14 14" aria-hidden="true">
+          <rect x="1" y="1" width="12" height="5" rx="1" />
+          <rect x="1" y="8" width="12" height="5" rx="1" />
+        </svg>
+        <span>Cards</span>
+      </button>
+      <button type="button" aria-pressed={compact} onClick={() => onChange(true)} title="Compact">
+        <svg viewBox="0 0 14 14" aria-hidden="true">
+          {[1, 5.5, 10].flatMap((y) =>
+            [1, 5.5, 10].map((x) => <rect key={`${x}-${y}`} x={x} y={y} width="3" height="3" rx=".5" />),
+          )}
+        </svg>
+        <span>Compact</span>
+      </button>
+    </div>
   );
 }
 

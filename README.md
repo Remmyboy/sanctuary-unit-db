@@ -370,6 +370,23 @@ each card keeps its own name, so the divergence shows rather than hiding.
 Sorting by a metric reorders whole rows — ranked by their most extreme member —
 so the alignment survives sorting.
 
+### Compact view
+
+**Cards | Compact** in the toolbar (`?view=compact`) swaps the cards for small
+tiles, in the spirit of the FAF unit database, so the whole roster fits on one
+screen. It's the same aligned rows turned sideways: each faction is a row and
+each slot a column, so equivalents stack vertically. The board is cut into
+blocks that wrap, one per domain and tier (`compactBlocks` in
+`src/lib/board.ts`); in a metric sort, where tiers interleave, it's runs of 12
+slots labelled by rank instead. A slot where one faction has two units spans
+two columns for everyone, and missing units leave a dashed hole, as on the
+cards.
+
+Tiles show the game's 64px render (the size it was made for) with the
+strategic icon in the corner. The numbers move to a strip above the tiles that
+follows the pointer and keyboard focus; a click opens the usual detail panel.
+Reset clears the filters but keeps the view.
+
 ## How derived values are calculated
 
 Most fields are copied straight across. Several are computed, and the assumptions
