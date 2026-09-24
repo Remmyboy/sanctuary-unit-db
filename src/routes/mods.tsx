@@ -42,7 +42,12 @@ const ADD_ONS = MODS.filter((m) => m !== MANAGER);
 function ModsPage() {
   return (
     <>
-      <PageHead eyebrow="Modding" title="Mods" aside={<HeadStat value={MODS.length} label="Free mods" />}>
+      <PageHead
+        eyebrow="Modding"
+        title="Mods"
+        art="mods"
+        aside={<HeadStat value={MODS.length} label="Free mods" />}
+      >
         A mini-map, a proper economy readout, one-key building, idle alerts, fog-free replays and more &mdash;
         free and open source. None of them change the game&rsquo;s rules, so you can still play online with
         anyone, modded or not.

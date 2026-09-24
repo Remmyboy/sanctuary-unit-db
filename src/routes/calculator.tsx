@@ -24,6 +24,7 @@ import {
 import { copyText } from '../lib/clipboard';
 import type { Faction, ResourceRates, Unit } from '../lib/types';
 import { FACTION_COLOURS, FACTION_ORDER, UnitIcon } from '../components/UnitIcon';
+import { FactionEmblem } from '../components/FactionEmblem';
 import { GameVersion } from '../components/GameVersion';
 import { PageHead } from '../components/PageHead';
 
@@ -335,7 +336,7 @@ function CalculatorPage() {
 
   return (
     <>
-      <PageHead eyebrow="Database" title="Build Calculator">
+      <PageHead eyebrow="Database" title="Build Calculator" art="calculator">
         How long a build takes, what it drains, and whether your economy keeps up — worked from the game's own
         formulas. The setup lives in the URL, so copy the link to share it.
       </PageHead>
@@ -414,7 +415,7 @@ function CalculatorPage() {
                   else patch({ f: faction === fc ? undefined : fc });
                 }}
               >
-                <span className="dot" style={{ background: FACTION_COLOURS[fc] ?? '#888' }} />
+                <FactionEmblem faction={fc} colour={FACTION_COLOURS[fc] ?? '#888'} />
                 {fc}
               </button>
             ))}

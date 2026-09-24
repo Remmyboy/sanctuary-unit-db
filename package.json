@@ -13,6 +13,7 @@
     "addmap": "node scripts/add-map.js",
     "mappreviews": "node scripts/ladder-previews.js",
     "icons": "node scripts/build-icons.js",
+    "art": "node scripts/build-art.js",
     "refresh": "npm run extract && npm run icons && npm run diff",
     "verify": "node scripts/verify.js",
     "db:migrate": "node scripts/db-migrate.js",

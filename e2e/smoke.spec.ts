@@ -50,6 +50,35 @@ test('unit board renders, filters via URL, and opens the detail panel', async ({
   expect(errors).toEqual([]);
 });
 
+test('compact view tiles the board, opens the detail, and survives a reset', async ({ page }) => {
+  const errors = collectErrors(page);
+
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Compact' }).click();
+  expect(page.url()).toContain('view=compact');
+  expect(await page.locator('.tile').count()).toBeGreaterThan(50);
+  await expect(page.locator('.card')).toHaveCount(0);
+
+  // The readout follows focus as well as the pointer.
+  await page.locator('.tile').first().focus();
+  await expect(page.locator('.creadout strong')).not.toBeEmpty();
+
+  await page.locator('.tile').first().click();
+  await expect(page.locator('.detail h2')).not.toBeEmpty();
+  expect(page.url()).toContain('unit=');
+  await page.keyboard.press('Escape');
+
+  // Reset clears filters but keeps the view.
+  await page.goto('/?view=compact&faction=Guard');
+  await page.getByRole('button', { name: 'Reset' }).click();
+  await expect(page).toHaveURL(/\?view=compact$/);
+
+  await page.getByRole('button', { name: 'Cards' }).click();
+  expect(await page.locator('.card').count()).toBeGreaterThan(50);
+
+  expect(errors).toEqual([]);
+});
+
 test('maps listing renders cards and opens a map page by slug', async ({ page }) => {
   const errors = collectErrors(page);
 

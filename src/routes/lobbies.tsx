@@ -65,6 +65,7 @@ function LobbiesPage() {
   return (
     <>
       <PageHead
+        art="lobbies"
         eyebrow="Multiplayer"
         title="Open Lobbies"
         aside={reachable && <HeadStat value={open} label="Open now" colour="var(--good)" />}

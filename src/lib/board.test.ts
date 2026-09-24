@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { buildGroups, matches, visibleGroups, DEFAULT_STATUS, type BoardFilters } from './board';
+import {
+  buildGroups,
+  compactBlocks,
+  matches,
+  slotSpan,
+  visibleGroups,
+  COMPACT_CHUNK,
+  DEFAULT_STATUS,
+  type BoardFilters,
+} from './board';
 import type { UnitsData } from './types';
 
 // Tests run against the committed units.json — the same file the site serves —
@@ -101,5 +110,43 @@ describe('extracted data invariants (pinned from the game formulas)', () => {
   it('the OR grammar in canBuild resolves builders — the T3 Land Factory has them', () => {
     const lf3 = byId.get('ues3511')!;
     expect(lf3.builtBy.length).toBeGreaterThan(0);
+  });
+});
+
+describe('compact view', () => {
+  const defaultStatus = { ...noFilters, status: new Set([DEFAULT_STATUS]) };
+  const factions = ['EDA', 'Chosen', 'Guard'];
+
+  it('keeps every visible slot, in order, one block per domain and tier', () => {
+    const groups = visibleGroups(buildGroups(data.units), defaultStatus, 'default');
+    const blocks = compactBlocks(groups, 'default');
+    expect(blocks.flatMap((b) => b.groups)).toEqual(groups);
+    for (const b of blocks) for (const g of b.groups) expect([g.domain, g.tier]).toEqual([b.domain, b.tier]);
+    // Tech-tree order visits each domain/tier once, so no block repeats.
+    expect(new Set(blocks.map((b) => b.key)).size).toBe(blocks.length);
+  });
+
+  it('chunks a metric sort in rank order instead of by tier', () => {
+    const groups = visibleGroups(buildGroups(data.units), defaultStatus, 'dps');
+    const blocks = compactBlocks(groups, 'dps');
+    expect(blocks.flatMap((b) => b.groups)).toEqual(groups);
+    expect(blocks.every((b) => b.groups.length <= COMPACT_CHUNK && b.tier === null)).toBe(true);
+    expect(blocks[0].label).toBe(`#1–${Math.min(COMPACT_CHUNK, groups.length)}`);
+  });
+
+  it('widens a slot to the most units any shown faction has in it', () => {
+    const groups = buildGroups(data.units);
+    const wide = groups.find((g) => Object.values(g.byFaction).some((us) => (us?.length ?? 0) > 1));
+    expect(wide).toBeDefined();
+    const most = Math.max(...Object.values(wide!.byFaction).map((us) => us?.length ?? 0));
+    expect(slotSpan(wide!, factions)).toBe(most);
+    // A faction filtered out doesn't widen the column.
+    const widest = factions.find((f) => wide!.byFaction[f]?.length === most)!;
+    const others = factions.filter((f) => f !== widest);
+    expect(slotSpan(wide!, others)).toBe(Math.max(1, ...others.map((f) => wide!.byFaction[f]?.length ?? 0)));
+    // One unit per faction, and nothing shown at all, are both one column.
+    const t1Tanks = groups.find((g) => g.units.some((u) => u.id === 'uel1001'))!;
+    expect(slotSpan(t1Tanks, factions)).toBe(1);
+    expect(slotSpan(t1Tanks, [])).toBe(1);
   });
 });

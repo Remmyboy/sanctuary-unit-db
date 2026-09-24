@@ -9,6 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { LADDER_MAPS, mapPreviewSlug } from '../src/lib/ladder-maps.ts';
+import { FACTION_EMBLEMS, MASTHEAD_ART, mastheadSrc } from '../src/lib/art.ts';
 
 const PUBLIC = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'public');
 
@@ -39,6 +40,7 @@ function main() {
 
   checkIcons(units);
   checkPreviews(units);
+  checkArt(units);
   checkLadderPreviews();
   report();
 }
@@ -106,6 +108,34 @@ function checkPreviews(units) {
     `status split: ${statuses['in-game'] ?? 0} in game, ` +
       `${statuses['in-progress'] ?? 0} in progress, ${statuses['no-model'] ?? 0} no model`,
   );
+}
+
+// The developers' artwork (scripts/build-art.js). Masthead and emblem files
+// are required — a missing one is a blank masthead or an invisible emblem.
+// Renders are optional per unit (the panel falls back to /previews/), but a
+// listed one must exist.
+function checkArt(units) {
+  for (const page of Object.keys(MASTHEAD_ART)) {
+    if (!exists(mastheadSrc(page).slice(1)))
+      fail(`missing masthead art public${mastheadSrc(page)} — run npm run art`);
+  }
+  for (const url of Object.values(FACTION_EMBLEMS)) {
+    if (!exists(url.slice(1))) fail(`missing faction emblem public${url} — run npm run art`);
+  }
+
+  if (!exists('renders/manifest.json')) {
+    fail('missing renders/manifest.json — run npm run art');
+    return;
+  }
+  const manifest = read('renders/manifest.json');
+  const absent = manifest.filter((id) => !exists(`renders/${id}.webp`));
+  for (const id of absent.slice(0, 5)) fail(`renders/${id}.webp listed in manifest but absent`);
+  if (absent.length > 5) fail(`…and ${absent.length - 5} more missing render files`);
+
+  const previews = new Set(exists('previews/manifest.json') ? read('previews/manifest.json') : []);
+  const known = new Set(units.map((u) => u.id));
+  const hd = manifest.filter((id) => known.has(id)).length;
+  notes.push(`${hd}/${previews.size} unit renders are the developers' 384px, rest the game's 64px`);
 }
 
 // The ranked pools shipped in src/lib/ladder-maps.ts against the art in

@@ -2,19 +2,37 @@
 // section, the page title in the display face, one line of what the page is
 // for, and an optional aside on the right for live figures or the page's main
 // action. It scrolls away; the sticky toolbar under it is what stays.
+//
+// `art` names the presskit screenshot behind it (src/lib/art.ts). It's
+// decoration only: dimmed, and scrimmed dark under the text.
 
 import type { ReactNode } from 'react';
+import { MASTHEAD_ART, MASTHEAD_SIZE, mastheadSrc, type MastheadArt } from '../lib/art';
 
 interface PageHeadProps {
   eyebrow: string;
   title: ReactNode;
   children?: ReactNode;
   aside?: ReactNode;
+  art?: MastheadArt;
 }
 
-export function PageHead({ eyebrow, title, children, aside }: PageHeadProps) {
+export function PageHead({ eyebrow, title, children, aside, art }: PageHeadProps) {
   return (
     <header className="page-head">
+      {art && (
+        <div
+          className="page-head-art"
+          aria-hidden="true"
+          style={
+            {
+              backgroundImage: `url(${mastheadSrc(art)})`,
+              '--art-focus': MASTHEAD_ART[art].focus,
+              '--art-ratio': `${MASTHEAD_SIZE[0]} / ${MASTHEAD_SIZE[1]}`,
+            } as React.CSSProperties
+          }
+        />
+      )}
       <div className="page-head-inner">
         <div className="page-head-text">
           <p className="page-eyebrow">{eyebrow}</p>

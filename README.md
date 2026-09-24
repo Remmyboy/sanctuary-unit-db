@@ -397,6 +397,23 @@ each card keeps its own name, so the divergence shows rather than hiding.
 Sorting by a metric reorders whole rows — ranked by their most extreme member —
 so the alignment survives sorting.
 
+### Compact view
+
+**Cards | Compact** in the toolbar (`?view=compact`) swaps the cards for small
+tiles, in the spirit of the FAF unit database, so the whole roster fits on one
+screen. It's the same aligned rows turned sideways: each faction is a row and
+each slot a column, so equivalents stack vertically. The board is cut into
+blocks that wrap, one per domain and tier (`compactBlocks` in
+`src/lib/board.ts`); in a metric sort, where tiers interleave, it's runs of 12
+slots labelled by rank instead. A slot where one faction has two units spans
+two columns for everyone, and missing units leave a dashed hole, as on the
+cards.
+
+Tiles show the game's 64px render (the size it was made for) with the
+strategic icon in the corner. The numbers move to a strip above the tiles that
+follows the pointer and keyboard focus; a click opens the usual detail panel.
+Reset clears the filters but keeps the view.
+
 ## How derived values are calculated
 
 Most fields are copied straight across. Several are computed, and the assumptions
@@ -658,9 +675,12 @@ units whose preview is a fully transparent placeholder. `npm run icons` detects
 those and leaves them out of the manifest, so the panel is omitted rather than
 showing an empty frame.
 
-They're **64×64, and that's the only size that exists** (checked across scene
-files). The UI upscales to 132px with smooth filtering on a faction-tinted
-backdrop, which hides the softness reasonably well. Don't go much larger.
+They're **64×64, and that's the only size the game ships** (checked across
+scene files). The UI upscales to 150px with smooth filtering on a
+faction-tinted backdrop, which hides the softness reasonably well. Don't go
+much larger. Most units now show a sharp 384px render from the developers
+instead (see [Artwork from the developers](#artwork-from-the-developers)); this
+64px one is the fallback.
 
 Unlike the strategic icons these need no processing — colours are already baked
 in — so they live in `public/previews/` directly. `npm run icons` just indexes
@@ -684,6 +704,45 @@ give you meshes. The problem is that Unity materials and shaders don't map onto
 glTF, so you get untextured geometry unless you rebuild materials per unit, and
 then you still need a conversion pipeline, a viewer, mesh compression and a few
 hundred MB of hosting. One model is an afternoon; 283 is a separate project.
+
+## Artwork from the developers
+
+**Art © Enhearten Media, used with permission.** The masthead screenshots,
+faction emblems and high-resolution unit renders come from the developers of
+_Sanctuary: Shattered Sun_, who shared their presskit, faction icon pack and
+unit renders (via Google Drive) for use on this site.
+
+About 490 MB of originals, none committed. `npm run art` cuts them down to the
+~3 MB the site serves:
+
+| Output                              | From                                      | Used by                                                        |
+| ----------------------------------- | ----------------------------------------- | -------------------------------------------------------------- |
+| `public/art/mastheads/<page>.webp`  | a band of one presskit screenshot, 1600px | `PageHead` on the seven top-level pages, dimmed behind a scrim |
+| `public/art/factions/<faction>.png` | the white 500px emblems, at 384px         | `FactionEmblem`: Units column heads, detail-panel stage        |
+| `public/renders/<id>.webp`          | the 2048px unit renders, at 384px         | the detail panel's render (falls back to `public/previews/`)   |
+
+Which screenshot heads which page, and its crop, lives in `src/lib/art.ts`. The
+emblems are CSS masks filled with the faction colour, so they always match
+`FACTION_COLOURS`. Unzip the three Drive folders side by side and run:
+
+```bash
+npm run art -- "<folder holding Sanctuary Presskit, Faction Icons Pack, Unit Icons>"
+```
+
+It needs `ffmpeg` on PATH. `npm run verify` fails if a masthead or emblem is
+missing.
+
+The unit renders are dated September 2023, so newer units aren't in the pack.
+157 units get one; the other 65 with a render keep the game's 64px thumbnail.
+Five renders in the pack no longer match the unit in game and are skipped on
+purpose (`STALE_RENDERS` in `scripts/build-art.js`): ucl4003 is a different
+model, ugl1501/2501/3501 are all one identical buggy, and ucs3401's silhouette
+has changed. They were found by downscaling every render to 64px and comparing
+it against the game's own thumbnail, which is worth repeating whenever a new
+pack arrives.
+
+Not used: both key art images (marketing text is baked in), the faction banner,
+the glow/Discord/superseded icon variants, and the black emblems.
 
 ## Caveats
 
@@ -741,6 +800,7 @@ scripts/            local-only data pipeline, plain Node
   extract.js        templates -> public/data/units.json
   build-icons.js    icons-src/ -> per-faction PNGs (zero-dep PNG codec)
   ladder-previews.js  ranked pool art -> public/ladder-maps/
+  build-art.js      the developers' artwork -> public/art/, public/renders/
   verify.js         checks public/ data + art consistency (no game needed)
 supabase/
   migrations/       ladder database schema + SQL functions (pairing, Elo)
@@ -770,6 +830,7 @@ src/                the site, TanStack Start + React + TypeScript
     matchmaking.ts  queue radius/pairing rules (mirrored likewise)
     ladder-maps.ts  the ranked map pools, and where each map’s preview lives
     ladder-spawns.ts  cached fetch of the pool maps' start positions
+    art.ts          masthead screenshot per page + faction emblem paths
     *.test.ts       vitest suites, run against the committed units.json
   components/       Header, HeaderSearch, UnitIcon (art + SVG fallback),
                     UnitCard, DetailPanel
@@ -782,6 +843,8 @@ public/             static assets copied verbatim into the build
                     spawns.json — each map's starts in image coordinates
   icons/            generated: <faction>/*.png plus manifest.json
   previews/         extracted unit renders plus manifest.json
+  renders/          generated by art: the developers' 384px renders + manifest
+  art/              generated by art: masthead bands, faction emblems
 ```
 
 `public/data/units.json`, `public/icons/` and `public/previews/` are all
