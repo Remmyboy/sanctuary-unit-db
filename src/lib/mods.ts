@@ -58,7 +58,7 @@ export const MODS: Mod[] = [
   {
     id: 'ModManager',
     name: 'Mod Manager',
-    version: '0.5.1',
+    version: '0.6.0',
     tagline: 'A Mods page in the game menu, for switching mods on and off and changing their settings.',
     features: [
       {
@@ -83,7 +83,7 @@ export const MODS: Mod[] = [
   {
     id: 'SanctuaryHud',
     name: 'SanctuaryDB HUD',
-    version: '0.12.2',
+    version: '0.13.0',
     tagline: 'A mini-map, a proper economy readout, reclaim values, build timers and alerts.',
     features: [
       {
@@ -120,7 +120,7 @@ export const MODS: Mod[] = [
   {
     id: 'EcoManager',
     name: 'Eco Manager',
-    version: '0.7.1',
+    version: '0.7.2',
     tagline: 'See what’s eating your economy, and upgrade extractors without babysitting them.',
     features: [
       {
@@ -144,7 +144,7 @@ export const MODS: Mod[] = [
   {
     id: 'IdleEngineers',
     name: 'Idle Engineers',
-    version: '0.5.1',
+    version: '0.5.2',
     tagline: 'Never lose track of an engineer or factory with nothing to do.',
     features: [
       {
@@ -164,7 +164,7 @@ export const MODS: Mod[] = [
   {
     id: 'BuildHotkeys',
     name: 'Build Hotkeys',
-    version: '0.3.1',
+    version: '0.3.2',
     tagline: 'One key per kind of unit, the same on every faction.',
     features: [
       {
@@ -197,7 +197,7 @@ export const MODS: Mod[] = [
   {
     id: 'LadderReporter',
     name: 'Ladder Reporter',
-    version: '0.3.2',
+    version: '0.3.3',
     tagline: 'Queue for a ranked 1v1 on the site, and the ladder does the rest.',
     features: [
       {
@@ -217,7 +217,7 @@ export const MODS: Mod[] = [
   {
     id: 'ReplayManager',
     name: 'Replay Manager',
-    version: '0.4.1',
+    version: '0.4.2',
     tagline: 'Watch replays properly: any player’s view, no fog, every economy.',
     features: [
       {
