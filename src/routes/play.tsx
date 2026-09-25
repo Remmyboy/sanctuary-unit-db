@@ -210,7 +210,6 @@ function PlayPage() {
               busy={busy === mode}
               factions={factions}
               bridge={bridge}
-              serverMod={status?.mod ?? null}
               onFactions={(f) => {
                 setFactions(f);
                 saveFactions(f);

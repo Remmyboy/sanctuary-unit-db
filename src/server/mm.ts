@@ -1,10 +1,9 @@
 // Server side of the mod-facing matchmaking API (src/routes/api.mm.*):
-// bearer sessions minted from Steam tickets, the presence table the
-// heartbeat writes, the lazy sweep, and the match object the mod polls for.
-// Server only — touches the database and node:crypto.
+// bearer sessions minted from Steam tickets, the lazy sweep, and the match
+// object the mod acts on. Server only — touches the database and node:crypto.
 //
-// The heartbeat runs every 5 s per player, so this module is written for
-// round trips: the match object is one query, the sweep is one statement.
+// Written for round trips: the match object is one query, the sweep is one
+// statement.
 
 import { createHash, randomBytes } from 'node:crypto';
 import { sql } from './db';
@@ -32,7 +31,7 @@ export interface ModPlayer {
 }
 
 // Verifies the ticket with Steam, makes sure the player exists (a mod user
-// may heartbeat before ever signing in on the site) and mints a token.
+// may play a match before ever signing in on the site) and mints a token.
 export async function mintSession(
   ticket: string,
 ): Promise<{ token: string; player: ModPlayer; expiresAt: Date } | null> {
@@ -130,23 +129,6 @@ const MATCH_SELECT = `
 
 export async function loadModMatch(matchId: string, mySteamId: string): Promise<ModMatch | null> {
   const [m] = await sql().unsafe<ModMatchRow[]>(`${MATCH_SELECT} where m.id = $1`, [matchId]);
-  return m ? toModMatch(m, m.players ?? [], mySteamId) : null;
-}
-
-// The 1v1 match the mod should be acting on: an open one, or an auto one
-// that ended recently (so a cancel or failure reaches a mod mid-launch — an
-// open-only lookup would just go quiet on it).
-export async function currentModMatch(playerId: string, mySteamId: string): Promise<ModMatch | null> {
-  const [m] = await sql().unsafe<ModMatchRow[]>(
-    `${MATCH_SELECT}
-     join match_participants mine on mine.match_id = m.id and mine.player_id = $1
-     where m.mode = '1v1'
-       and (m.status in ('in_progress', 'reported', 'disputed')
-            or (m.mm_mode = 'auto' and m.created_at > now() - interval '10 minutes'))
-     order by (m.status in ('in_progress', 'reported', 'disputed')) desc, m.created_at desc
-     limit 1`,
-    [playerId],
-  );
   return m ? toModMatch(m, m.players ?? [], mySteamId) : null;
 }
 

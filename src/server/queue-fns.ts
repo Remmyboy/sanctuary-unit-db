@@ -23,16 +23,8 @@ import {
   type Mode,
 } from '../lib/ladder-modes';
 import { searchRadius } from '../lib/matchmaking';
-import {
-  FACTIONS,
-  isFaction,
-  isLaunchable,
-  parseModSignal,
-  type Faction,
-  type ModSignal,
-  type ModState,
-} from '../lib/mm';
-import type { LeaderboardRow, ModPresence, PlayStatus, QueueModeStatus } from '../lib/ladder-types';
+import { FACTIONS, isFaction, parseModSignal, type Faction, type ModSignal } from '../lib/mm';
+import type { LeaderboardRow, PlayStatus, QueueModeStatus } from '../lib/ladder-types';
 
 // A player's unfinished matches, in one pass. Two different things live in
 // here: the game they are in *right now*, which is the only thing that stops
@@ -112,12 +104,9 @@ interface StatusRow {
   mine: { mode: Mode; joined_ms: number; factions: Faction[] }[] | null;
   waiting: Partial<Record<Mode, number>> | null;
   live_games: number;
-  mod: { state: ModState; seen_ms: number; mod_version: string | null } | null;
 }
 
-// Everything the Play page needs, in one query. The mod's last word counts
-// for a minute: long enough to show "mod seen, but in a lobby", not so long
-// it's stale.
+// Everything the Play page needs, in one query.
 async function playStatus(playerId: string): Promise<PlayStatus> {
   const [row] = await sql().unsafe<StatusRow[]>(
     `select
@@ -126,26 +115,12 @@ async function playStatus(playerId: string): Promise<PlayStatus> {
           'mode', mode, 'joined_ms', floor(extract(epoch from joined_at) * 1000), 'factions', factions))
         from queue_entries where player_id = $1) as mine,
        (${WAITING_SQL}) as waiting,
-       (${LIVE_GAMES_SQL}) as live_games,
-       (select json_build_object('state', state, 'seen_ms', floor(extract(epoch from seen_at) * 1000),
-                                 'mod_version', mod_version)
-        from mod_presence
-        where player_id = $1 and seen_at > now() - interval '60 seconds') as mod`,
+       (${LIVE_GAMES_SQL}) as live_games`,
     [playerId],
   );
   const counts = toCounts(row?.waiting ?? null, row?.live_games ?? 0);
   const mine = row?.mine ?? [];
   const now = Date.now();
-
-  let mod: ModPresence | null = null;
-  if (row?.mod) {
-    mod = {
-      state: row.mod.state,
-      seenAt: new Date(row.mod.seen_ms).toISOString(),
-      launchable: isLaunchable(row.mod.seen_ms, row.mod.state, now),
-      modVersion: row.mod.mod_version,
-    };
-  }
 
   const queues = {} as Record<Mode, QueueModeStatus>;
   for (const mode of MODES) {
@@ -163,7 +138,6 @@ async function playStatus(playerId: string): Promise<PlayStatus> {
     ...splitUnfinished(row?.unfinished ?? null),
     queues,
     liveGames: counts.liveGames,
-    mod,
     factions: mine.find((m) => m.mode === '1v1')?.factions ?? [...FACTIONS],
   };
 }

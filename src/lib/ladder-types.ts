@@ -2,7 +2,7 @@
 // the ladder UI. Plain JSON shapes — dates travel as ISO strings.
 
 import type { Mode } from './ladder-modes';
-import type { Faction, MmEventType, MmMode, MmStatus, ModMatch, ModState } from './mm';
+import type { Faction, MmEventType, MmMode, MmStatus, ModMatch } from './mm';
 
 export interface Me {
   playerId: string;
@@ -21,15 +21,6 @@ export interface QueueModeStatus {
   needed: number;
 }
 
-// What the in-game mod last said, if it's running. `launchable` is the only
-// thing that matters for pairing: fresh heartbeat, sitting in the menu.
-export interface ModPresence {
-  state: ModState;
-  seenAt: string;
-  launchable: boolean;
-  modVersion: string | null; // as the mod reported it, so the page can say "update"
-}
-
 // One poll answers for every queue at once.
 export interface PlayStatus {
   matchId: string | null; // a game in progress: go there instead of queueing
@@ -38,7 +29,6 @@ export interface PlayStatus {
   settlingMatchId: string | null;
   queues: Record<Mode, QueueModeStatus>;
   liveGames: number; // matches in progress right now, all modes
-  mod: ModPresence | null; // null when the mod hasn't heartbeated recently
   factions: Faction[]; // what the player queues 1v1 as (from their queue entry, else all)
 }
 
@@ -61,7 +51,7 @@ export interface MatchParticipant {
   outcome: 'win' | 'loss' | null;
   faction: Faction | null; // assigned on auto matches only
   slot: number | null; // army slot, auto matches only
-  launchable: boolean; // mod heartbeating from the menu right now
+  launchable: boolean; // mod seen in the menu, a lobby or a replay right now
 }
 
 export interface MmEventView {
