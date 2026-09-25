@@ -1,7 +1,6 @@
 // The mod's sign-in: one Steam web-API ticket (verified with Steam exactly as
-// /api/report does) exchanged for a short-lived bearer token, so the 5 s
-// heartbeat doesn't cost a Steam round-trip each time. The mod re-mints on
-// any 401.
+// /api/report does) exchanged for a short-lived bearer token, so the launch
+// posts don't each cost a Steam round-trip. The mod re-mints on any 401.
 //
 //   POST /api/mm/session  { ticket, identity? }
 //   → { token, steamId, name, expiresAt }

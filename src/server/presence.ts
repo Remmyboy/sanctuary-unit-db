@@ -1,9 +1,8 @@
 // The mod_presence row: what a player's game is doing and when it last said
-// so. Two writers during the transition to the local bridge
-// (docs/local-bridge.md): the mod's own heartbeat, and the browser relaying
-// what it sees on 127.0.0.1 inside the polls it already makes. Both land
-// here so the SQL that reads presence (is_launchable and friends) needs no
-// idea which one spoke.
+// so, as the browser relays it from the local mod on 127.0.0.1 inside the
+// polls it already makes (docs/local-bridge.md). The queue and match-room
+// polls both land here, so the SQL that reads presence (is_launchable and
+// friends) has one row per player.
 
 import { sql } from './db';
 import type { ModSignal } from '../lib/mm';

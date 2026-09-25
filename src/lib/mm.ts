@@ -43,7 +43,7 @@ export interface ModSignal {
 const shortString = (v: unknown, max: number): string | null =>
   typeof v === 'string' ? v.slice(0, max) : null;
 
-// Validates a `mod` field from the client or the heartbeat body. Anything
+// Validates the `mod` field a poll carries. Anything
 // that is not a well-formed signal is null, never an error: a broken mod is
 // the same as no mod.
 export function parseModSignal(v: unknown): ModSignal | null {
@@ -77,27 +77,20 @@ export type MmStatus = 'countdown' | 'launch' | 'cancelled' | 'failed' | 'done' 
 // TicketIdentity); the session endpoint accepts exactly this.
 export const TICKET_IDENTITY = 'sanctuarydb-ladder';
 
-export const LAUNCHABLE_WINDOW_S = 15; // a heartbeat older than this means the game is gone
+export const LAUNCHABLE_WINDOW_S = 15; // presence older than this means the game is gone
 export const COUNTDOWN_S = 10;
 // The gate at the end of the countdown is stricter than LAUNCHABLE_WINDOW_S
-// and has no constant of its own: it wants a heartbeat since the match was
-// made (see not_startable_reason in 0012). Ten seconds of countdown is one to
-// two heartbeats, and 15 s of tolerance would pass a game closed the moment
-// the match formed.
+// and has no constant of its own: it wants presence written since the match
+// was made (see not_startable_reason in 0012). Ten seconds of countdown is
+// two match-room polls, and 15 s of tolerance would pass a game closed the
+// moment the match formed.
 export const SESSION_TTL_H = 6;
 export const TIMEOUT_SESSION_S = 20; // host must post the lobby's session id
 export const TIMEOUT_JOIN_S = 30; // joiner must report `joined` after the session id
 export const TIMEOUT_START_S = 60; // both must report `started` after launch
 
-// A player is launchable while their last heartbeat is fresh and the game
-// is somewhere the mod can launch from.
-export function isLaunchable(seenAtMs: number | null, state: ModState | null, nowMs: number): boolean {
-  if (seenAtMs === null || !isLaunchableState(state)) return false;
-  return nowMs - seenAtMs < LAUNCHABLE_WINDOW_S * 1000;
-}
-
-// The match object the mod acts on — the shape /api/mm/heartbeat returns
-// and the page pushes over the local bridge (docs/matchmaking-api.md, "The
+// The match object the mod acts on — the shape the page pushes over the
+// local bridge and the mod's posts get back (docs/matchmaking-api.md, "The
 // match object"). Client-safe: the match room carries one per 1v1.
 export interface ModMatch {
   id: string;

@@ -1,6 +1,7 @@
 // Session handoff: once the host's mod has created the lobby it posts the
-// game-server id here; the joiner's mod sees it on its next heartbeat and
-// joins. Host only, and only while the match is in `launch`.
+// game-server id here; the joiner's page picks it up on its next poll and
+// pushes it to the mod, which joins. Host only, and only while the match is
+// in `launch`.
 //
 //   POST /api/mm/match/{id}/session  { sessionId }  → the match object
 

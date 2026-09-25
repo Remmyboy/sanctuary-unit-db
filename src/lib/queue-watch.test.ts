@@ -24,7 +24,6 @@ const answer = (matchId: string | null): PlayStatus => ({
   settlingMatchId: null,
   queues: Object.fromEntries(MODES.map((m) => [m, idle])) as PlayStatus['queues'],
   liveGames: 0,
-  mod: null,
   factions: [],
 });
 

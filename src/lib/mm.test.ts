@@ -3,29 +3,21 @@ import {
   COUNTDOWN_S,
   LAUNCHABLE_WINDOW_S,
   deriveMmStatus,
-  isLaunchable,
+  isLaunchableState,
   launchProgress,
   parseModSignal,
 } from './mm';
 
-describe('isLaunchable', () => {
-  const now = 1_000_000;
-  it('needs a fresh heartbeat in the menu', () => {
-    expect(isLaunchable(now - 5_000, 'menu', now)).toBe(true);
-    expect(isLaunchable(now - (LAUNCHABLE_WINDOW_S * 1000 - 1), 'menu', now)).toBe(true);
-  });
-  it('is false once the heartbeat goes stale', () => {
-    expect(isLaunchable(now - LAUNCHABLE_WINDOW_S * 1000, 'menu', now)).toBe(false);
-    expect(isLaunchable(null, 'menu', now)).toBe(false);
-  });
+describe('isLaunchableState', () => {
   it('is true wherever the mod can launch from: menu, lobby, replay', () => {
-    expect(isLaunchable(now, 'lobby', now)).toBe(true);
-    expect(isLaunchable(now, 'replay', now)).toBe(true);
+    expect(isLaunchableState('menu')).toBe(true);
+    expect(isLaunchableState('lobby')).toBe(true);
+    expect(isLaunchableState('replay')).toBe(true);
   });
-  it('is false while a game is loading or being played', () => {
-    expect(isLaunchable(now, 'loading', now)).toBe(false);
-    expect(isLaunchable(now, 'ingame', now)).toBe(false);
-    expect(isLaunchable(now, null, now)).toBe(false);
+  it('is false while a game is loading or being played, or nothing was seen', () => {
+    expect(isLaunchableState('loading')).toBe(false);
+    expect(isLaunchableState('ingame')).toBe(false);
+    expect(isLaunchableState(null)).toBe(false);
   });
 });
 

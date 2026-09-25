@@ -10,7 +10,7 @@ import { disableBridge, enableBridge, retryBridge, type BridgeState } from '../l
 import { mod } from '../lib/mods';
 import { useNow } from '../lib/use-now';
 import { isOlderVersion } from '../lib/version';
-import type { ModPresence, QueueModeStatus } from '../lib/ladder-types';
+import type { QueueModeStatus } from '../lib/ladder-types';
 
 // The release the card below offers, so a player running an older one is told.
 const REPORTER_VERSION = mod('LadderReporter').version;
@@ -23,22 +23,13 @@ const BLURB: Record<Mode, string> = {
   '3v3': 'Solo queue — six players, split into the most even teams by rating.',
 };
 
-// What follows "Auto-launch ready", per launchable state. The mod (0.3+)
-// leaves a lobby or closes a replay itself when the match launches.
-const READY_NOTE: Record<ModState, string> = {
+// What the line says about the game, per state. The launchable ones follow
+// "Auto-launch ready" — the mod (0.3+) leaves a lobby or closes a replay
+// itself when the match launches; the rest say why not.
+const STATE_NOTE: Record<ModState, string> = {
   menu: "if your opponent's is too, the game starts itself.",
   lobby: "game seen in a lobby — you'll be taken out of it for the match.",
   replay: "game seen in a replay — it'll be closed for the match.",
-  loading: '',
-  ingame: '',
-};
-
-// Why not, when the game was seen but can't be launched: busy, or (the
-// server's word about an older mod) not heard from for a bit.
-const NOT_READY_NOTE: Record<ModState, string> = {
-  menu: 'Game was seen in the menu, but not for a while — is it still open?',
-  lobby: 'Game was seen in a lobby, but not for a while — is it still open?',
-  replay: 'Game was seen in a replay, but not for a while — is it still open?',
   loading: 'Game seen loading a game — back to the main menu to auto-launch.',
   ingame: 'Game seen in a game — back to the main menu to auto-launch.',
 };
@@ -49,39 +40,28 @@ const NOT_READY_NOTE: Record<ModState, string> = {
 // request to 127.0.0.1 is what makes Chrome ask whether this site may reach
 // devices on the local network, so the button says what that prompt is for
 // before it appears, and players without the mod never see it.
-//
-// Until every player has the bridged mod, the server's last word — an older
-// mod's heartbeat, as the status poll reports it — stands in whenever the
-// page itself sees nothing.
-function LaunchState({ bridge, serverMod }: { bridge: BridgeState; serverMod: ModPresence | null }) {
-  const seen = bridge.status
-    ? {
-        state: bridge.status.state,
-        ready: isLaunchableState(bridge.status.state),
-        version: bridge.status.modVersion,
-      }
-    : serverMod
-      ? { state: serverMod.state, ready: serverMod.launchable, version: serverMod.modVersion }
-      : null;
+function LaunchState({ bridge }: { bridge: BridgeState }) {
+  const seen = bridge.status;
 
   if (seen) {
-    // The mod says which version it is, whichever way it was seen; a player
-    // behind the release on the card below gets told, with the link.
-    const behind = isOlderVersion(seen.version, REPORTER_VERSION);
+    const ready = isLaunchableState(seen.state);
+    // The mod says which version it is; a player behind the release on the
+    // card below gets told, with the link.
+    const behind = isOlderVersion(seen.modVersion, REPORTER_VERSION);
     return (
-      <p className="launch-state" data-ready={seen.ready || undefined}>
-        {seen.ready ? (
+      <p className="launch-state" data-ready={ready || undefined}>
+        {ready ? (
           <>
-            <strong>Auto-launch ready</strong> — {READY_NOTE[seen.state]}
+            <strong>Auto-launch ready</strong> — {STATE_NOTE[seen.state]}
           </>
         ) : (
-          NOT_READY_NOTE[seen.state]
+          STATE_NOTE[seen.state]
         )}
         {behind && (
           <>
             {' '}
             <span className="mod-update">
-              Your LadderReporter is {seen.version} — <a href="#reporter">update to {REPORTER_VERSION}</a>.
+              Your LadderReporter is {seen.modVersion} — <a href="#reporter">update to {REPORTER_VERSION}</a>.
             </span>
           </>
         )}
@@ -139,7 +119,6 @@ export function QueueCard({
   busy,
   factions,
   bridge,
-  serverMod,
   onFactions,
   onJoin,
   onLeave,
@@ -153,7 +132,6 @@ export function QueueCard({
   busy: boolean;
   factions: Faction[]; // 1v1 only: what an auto match may launch you as
   bridge: BridgeState; // 1v1 only: the local mod, as the page sees it
-  serverMod: ModPresence | null; // 1v1 only: the mod as the last status poll reported it
   onFactions: (f: Faction[]) => void;
   onJoin: () => void;
   onLeave: () => void;
@@ -231,7 +209,7 @@ export function QueueCard({
           )}
         </>
       )}
-      {auto && <LaunchState bridge={bridge} serverMod={serverMod} />}
+      {auto && <LaunchState bridge={bridge} />}
     </div>
   );
 }

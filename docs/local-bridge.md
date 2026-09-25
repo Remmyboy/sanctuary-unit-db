@@ -5,7 +5,7 @@ connection from the SanctuaryDB page to the mod. Covers both repos: the site
 (this one) and `sanctuary-hud/LadderReporter`. Status: both halves are
 implemented — the site (`src/lib/mod-bridge.ts`, the `mod` field on the
 polls, the match room hand-off, the admin test bench) and LadderReporter
-0.3. The heartbeat route stays until players have updated.
+0.3. The heartbeat route has since been removed (issue #20).
 
 ## Why
 
@@ -223,9 +223,9 @@ On the Play page, on the 1v1 card, one block driven by the bridge:
   the site may open Steam), the mod loads with it, and the probe picks it up
   once the menu is in. Without Steam the link does nothing.
 
-While players are still on the heartbeat mod, the server's last word about
-their mod (from the status poll) stands in for the "seen" lines, so nobody
-who will get the auto flow is told otherwise.
+Until the heartbeat route was removed, the server's last word about a 0.2.x
+mod (from the status poll) stood in for the "seen" lines. They now come from
+the bridge alone.
 
 The site never gates queueing on any of this.
 
@@ -263,9 +263,10 @@ is.
 4. **Cadence changes** in `queue-watch.ts` and the match room, and the
    cached counts endpoint.
 5. **Bump `REPORTER_VERSION`** in `ReporterCard.tsx` when the mod ships.
-6. **After the mod release has settled:** delete `/api/mm/heartbeat`, the
-   heartbeat section of `docs/matchmaking-api.md`, and `HeartbeatSeconds`
-   from the mod. `mod_presence` stays; only its writer changed.
+6. **Done (issue #20).** After the mod release had settled: delete
+   `/api/mm/heartbeat`, the heartbeat section of `docs/matchmaking-api.md`,
+   and `HeartbeatSeconds` from the mod. `mod_presence` stays; only its writer
+   changed.
 
 Nothing in SQL changes for the bridge itself. `pair_queue`, `sweep_all`,
 `sweep_mm_matches` and the launch timeouts read `mod_presence` exactly as

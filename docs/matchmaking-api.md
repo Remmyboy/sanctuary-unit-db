@@ -1,19 +1,16 @@
 # Matchmaking API (for the in-game mod)
 
 The server half of "queue on the site, get launched into the game". The mod
-authenticates once with a Steam web-API ticket and then polls with a bearer
-token. Nobody needs the mod to queue: it only decides whether a 1v1 pair gets
-the `auto` flow (both games launch themselves) or today's `manual` flow.
+authenticates once with a Steam web-API ticket and then posts with a bearer
+token. It never polls: what the game is doing, and the match it should act
+on, travel over the local bridge (`docs/local-bridge.md`) — the page reads
+the mod on `127.0.0.1`, relays its state inside the site's own polls, and
+hands it the match object. Nobody needs the mod to queue: it only decides
+whether a 1v1 pair gets the `auto` flow (both games launch themselves) or
+today's `manual` flow.
 
 All bodies and responses are JSON. Errors are `{ "error": "…" }` with a 4xx
 status; a `401` means the token is gone and the mod should mint a new one.
-
-> **In transition.** The heartbeat below is being replaced by the local
-> bridge (`docs/local-bridge.md`): the page reads the mod on `127.0.0.1` and
-> relays its state inside the site's own polls, and hands the match object to
-> the mod directly. The session, `match/{id}/session`, `match/{id}/event` and
-> `report` endpoints are unchanged by that. The heartbeat keeps working until
-> every player has the bridged mod.
 
 ## `POST /api/mm/session`
 
@@ -29,22 +26,26 @@ player row is created here if needed.
 
 Every endpoint below takes `Authorization: Bearer <token>`.
 
-## `POST /api/mm/heartbeat` — every 5 s while the game runs
+## Presence
+
+Not an endpoint. The page sends the mod's `GET /status` answer as `mod` on
+`queueStatus` and `matchGet`, and the server writes it to `mod_presence`
+(`src/server/presence.ts`):
 
 ```json
 { "state": "menu | lobby | loading | ingame | replay", "gameVersion": "…", "modVersion": "…" }
 ```
 
-→ `{ queued, match }`. `queued` says whether the player is in any site queue;
-`match` is `null` or the match object below.
-
-A player is **launchable** while their last heartbeat is under 15 s old and
-its state is `menu`, `lobby` or `replay` — the mod leaves a lobby or closes
-a replay itself before launching. `loading` and `ingame` are not launchable.
+A player is **launchable** while their presence is under 15 s old and its
+state is `menu`, `lobby` or `replay` — the mod leaves a lobby or closes a
+replay itself before launching. `loading` and `ingame` are not launchable.
 The site shows this next to the queue ("Auto-launch ready") but never gates
 queueing on it.
 
 ## The match object
+
+What the page pushes to the mod (`POST /match` on the local bridge), and what
+the endpoints below return.
 
 ```json
 {
@@ -77,13 +78,14 @@ queueing on it.
   site). At zero, if both players are still startable the status becomes
   `launch`; otherwise the match **falls back to `mode: manual`** with `reason`
   saying who dropped ("Skoub closed the game, so host manually").
-- **Startable** is stricter than launchable: the mod has to have heartbeated
-  _since the match was made_, not merely in the last 15 s. Ten seconds of
-  countdown is one to two heartbeats, so a running game has always checked in
-  — and a game closed the moment the match formed, whose last heartbeat is
-  still under 15 s old at zero, is caught rather than launched into nothing.
-- The heartbeat keeps returning an ended auto match (`cancelled`/`failed`) for
-  ten minutes after it was created, so a mod mid-launch learns to stop.
+- **Startable** is stricter than launchable: presence has to have been
+  written _since the match was made_, not merely in the last 15 s. The match
+  room polls every 5 s through the countdown, so a running game has always
+  been relayed — and a game closed the moment the match formed, whose last
+  presence is still under 15 s old at zero, is caught rather than launched
+  into nothing.
+- The match room pushes ended matches too (`done`, `cancelled`, `failed`), so
+  a mod mid-launch learns to stop.
 - Match ids are the ladder's UUIDs.
 
 ## `POST /api/mm/match/{id}/session` — host only
@@ -93,8 +95,9 @@ queueing on it.
 ```
 
 The host's Steam game-server id, as digits (a JSON number is accepted too).
-Only while the match is in `launch` (`409` otherwise). The joiner sees it in
-`sessionId` on its next heartbeat and joins. Returns the match object.
+Only while the match is in `launch` (`409` otherwise). The joiner's page picks
+it up in `sessionId` on its next poll and pushes it to the mod, which joins.
+Returns the match object.
 
 ## `POST /api/mm/match/{id}/event`
 
@@ -109,7 +112,7 @@ Returns the match object. Two events change the match:
   other `failed` → `status: failed` with the detail in `reason`.
 - `left` before both sides have `started` → `status: failed`.
 
-Timeouts after `launch`, enforced lazily by every poll (site or mod):
+Timeouts after `launch`, enforced lazily by every poll and post:
 
 | Waiting for      | Limit                  | On expiry (`status: failed`)            |
 | ---------------- | ---------------------- | --------------------------------------- |
@@ -117,7 +120,7 @@ Timeouts after `launch`, enforced lazily by every poll (site or mod):
 | joiner `joined`  | 30 s after `sessionId` | "Skoub didn't join the lobby"           |
 | both `started`   | 60 s after `launch`    | "The game didn't start"                 |
 
-Unless a mod has gone quiet (no heartbeat for 15 s), in which case the match
+Unless a mod has gone quiet (no presence for 15 s), in which case the match
 **falls back to `mode: manual`** instead of failing — someone closed their
 game rather than the launch breaking, and the pair still have a match they
 can host by hand.
@@ -135,10 +138,11 @@ ignored and the newest open match between them is used as before.
 
 Every 1v1 match that could have been auto but wasn't carries the reason in
 `reason` (and on the match page), recorded at pairing time, as long as at
-least one player's mod had heartbeated in the last minute:
+least one player's mod had been seen in the last minute:
 
 - `Skoub isn't running the mod`
-- `Skoub's last heartbeat was 22 s old` (the mod was there but the poll stalled or stopped)
+- `Skoub's last heartbeat was 22 s old` (the mod was there but the relay
+  stalled or stopped; the wording is the database's, from before the bridge)
 - `Skoub is loading a game` / `is in a game` (a lobby or a replay is no
   longer a reason: the mod leaves it)
 - `no map in the 1v1 pool has a path set`
