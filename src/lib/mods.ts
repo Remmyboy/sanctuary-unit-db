@@ -217,7 +217,7 @@ export const MODS: Mod[] = [
   {
     id: 'ReplayManager',
     name: 'Replay Manager',
-    version: '0.4.2',
+    version: '0.4.3',
     tagline: 'Watch replays properly: any player’s view, no fog, every economy.',
     features: [
       {
