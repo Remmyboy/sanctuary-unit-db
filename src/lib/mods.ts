@@ -83,8 +83,9 @@ export const MODS: Mod[] = [
   {
     id: 'SanctuaryHud',
     name: 'SanctuaryDB HUD',
-    version: '0.13.1',
-    tagline: 'A mini-map, a proper economy readout, reclaim values, build timers and alerts.',
+    version: '0.14.0',
+    tagline:
+      'A mini-map, a proper economy readout, reclaim values, build timers, alerts and post-match stats.',
     features: [
       {
         title: 'A mini-map',
@@ -114,8 +115,16 @@ export const MODS: Mod[] = [
         title: 'Find your commander',
         text: 'One click on the top-right button selects your commander and snaps the camera to it.',
       },
+      {
+        title: 'The whole match, afterwards',
+        text: 'When the game ends, a stats window for every army: score, resources gathered, spent and wasted, units built, lost and killed, with charts over time.',
+      },
+      {
+        title: 'Optional extras',
+        text: 'Switch on the ones you want: cursors that show what a right-click will do, waypoints and rally points you can drag, a build queue you reorder by dragging, Ctrl-A for every unit of the selected types, and a match clock.',
+      },
     ],
-    keys: 'F10 shows and hides it · F2 the mini-map',
+    keys: 'F10 shows and hides it · F2 the mini-map · F3 the match stats',
   },
   {
     id: 'EcoManager',
@@ -164,8 +173,9 @@ export const MODS: Mod[] = [
   {
     id: 'BuildHotkeys',
     name: 'Build Hotkeys',
-    version: '0.3.3',
-    tagline: 'One key per kind of unit, the same on every faction.',
+    version: '0.4.0',
+    tagline:
+      'One key per kind of unit, the same on every faction, and the game’s own keys wherever you want them.',
     features: [
       {
         title: 'Same keys, every faction',
@@ -185,7 +195,11 @@ export const MODS: Mod[] = [
       },
       {
         title: 'Order keys',
-        text: 'X pauses and Z repeat-builds your selection, and Escape stops your factories, as in FAF. The pause menu can move to a key you won’t hit by accident.',
+        text: 'Pause and repeat-build your selection, and Escape stops your factories, as in FAF. The pause menu can move to a key you won’t hit by accident.',
+      },
+      {
+        title: 'Move any of the game’s keys',
+        text: 'Every game action — orders, control groups, camera, chat, game speed — listed with its key. Type a new one, swap two, or unbind it. Take the mod out and the game’s own keys come back exactly.',
       },
       {
         title: 'Extractors snap at any zoom',
