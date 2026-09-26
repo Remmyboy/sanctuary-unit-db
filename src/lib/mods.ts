@@ -84,7 +84,8 @@ export const MODS: Mod[] = [
     id: 'SanctuaryHud',
     name: 'SanctuaryDB HUD',
     version: '0.14.0',
-    tagline: 'A mini-map, a proper economy readout, reclaim values, build timers, alerts and post-match stats.',
+    tagline:
+      'A mini-map, a proper economy readout, reclaim values, build timers, alerts and post-match stats.',
     features: [
       {
         title: 'A mini-map',
@@ -173,7 +174,8 @@ export const MODS: Mod[] = [
     id: 'BuildHotkeys',
     name: 'Build Hotkeys',
     version: '0.4.0',
-    tagline: 'One key per kind of unit, the same on every faction, and the game’s own keys wherever you want them.',
+    tagline:
+      'One key per kind of unit, the same on every faction, and the game’s own keys wherever you want them.',
     features: [
       {
         title: 'Same keys, every faction',
