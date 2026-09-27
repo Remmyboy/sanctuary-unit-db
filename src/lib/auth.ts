@@ -1,9 +1,9 @@
 // Client-side "who am I" cache, same module-level promise pattern as data.ts
-// and maps.ts. The readable sdb_signed_in cookie (set alongside the httpOnly
-// session by src/server/session.ts) short-circuits the whole thing: with no
-// hint there is no session, so the static site and anonymous visitors make
-// zero requests — which also keeps the backend-less e2e build free of failed
-// -request console noise.
+// and ladder-spawns.ts. The readable sdb_signed_in cookie (set alongside the
+// httpOnly session by src/server/session.ts) short-circuits the whole thing:
+// with no hint there is no session, so the static site and anonymous visitors
+// make zero requests — which also keeps the backend-less e2e build free of
+// failed-request console noise.
 
 import { getMe } from '../server/auth-fns';
 import type { Me } from './ladder-types';

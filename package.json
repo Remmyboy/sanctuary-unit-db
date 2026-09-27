@@ -10,7 +10,6 @@
     "build": "vite build",
     "typecheck": "tsc --noEmit",
     "extract": "node scripts/extract.js",
-    "addmap": "node scripts/add-map.js",
     "mappreviews": "node scripts/ladder-previews.js",
     "icons": "node scripts/build-icons.js",
     "art": "node scripts/build-art.js",

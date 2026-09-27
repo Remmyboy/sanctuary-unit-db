@@ -108,25 +108,6 @@ test('compare mode picks units and the compare page lines them up', async ({ pag
   expect(errors).toEqual([]);
 });
 
-test('maps listing renders cards and opens a map page by slug', async ({ page }) => {
-  const errors = collectErrors(page);
-
-  await page.goto('/maps');
-  // The listing loads its manifest client-side, so wait for the first card
-  // before counting — count() does not retry.
-  await expect(page.locator('.map-card').first()).toBeVisible();
-  expect(await page.locator('.map-card').count()).toBeGreaterThan(10);
-  await expect(page.locator('.install-path code')).toContainText('Sanctuary_Data\\Maps');
-
-  // Each map has a shareable ?m=<slug> address with its own stats and zip.
-  await page.goto('/maps?m=seton-s-clutch');
-  await expect(page.locator('.map-detail h1')).toHaveText("Seton's Clutch");
-  await expect(page.locator('.map-detail')).toContainText('8');
-  await expect(page.locator('.dl-btn')).toHaveAttribute('href', /releases\/download\/map-seton-s-clutch\//);
-
-  expect(errors).toEqual([]);
-});
-
 test('mods page lists every mod with live download links', async ({ page, request }) => {
   const errors = collectErrors(page);
 
