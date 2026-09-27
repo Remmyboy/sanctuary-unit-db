@@ -1,10 +1,9 @@
-// A minimal 8-bit PNG reader/writer, used by add-map.js on map previews.
+// A minimal 8-bit PNG reader/writer, used by build-art.js and ladder-previews.js.
 //
-// The converter writes previews barely compressed — 769 KB of stored scanlines
-// for a 512px image. Decoding and re-encoding them with a proper filter and
-// deflate is pixel-for-pixel lossless and cuts them by about 80%, worth doing
-// to 51 files that live in the repo. Deliberately no tone adjustment: these
-// are true-colour terrain renders and the colours are the point.
+// Map previews and ffmpeg frames come out barely compressed. Decoding and
+// re-encoding them with a proper filter and deflate is pixel-for-pixel lossless
+// and cuts them by about 80%. Deliberately no tone adjustment: these are
+// true-colour renders and the colours are the point.
 
 import zlib from 'node:zlib';
 

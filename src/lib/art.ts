@@ -14,7 +14,6 @@
 export const MASTHEAD_ART = {
   units: { screenshot: 13, crop: [0, 120, 1920], focus: '50% 50%' },
   calculator: { screenshot: 4, crop: [300, 390, 1100], focus: '70% 50%' },
-  maps: { screenshot: 2, crop: [0, 280, 1920], focus: '30% 50%' },
   mods: { screenshot: 10, crop: [500, 480, 1420], focus: '45% 50%' },
   play: { screenshot: 8, crop: [0, 400, 1920], focus: '40% 50%' },
   lobbies: { screenshot: 5, crop: [100, 280, 1100], focus: '65% 50%' },

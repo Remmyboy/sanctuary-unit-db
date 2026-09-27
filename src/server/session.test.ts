@@ -6,13 +6,13 @@ const requestWith = (cookie: string) =>
 
 describe('return-to cookie', () => {
   it('round-trips a path with a query string', () => {
-    const [pair] = returnToCookie('/maps?m=x&q=y').split(';');
-    expect(readReturnToCookie(requestWith(`other=1; ${pair}; sdb_signed_in=1`))).toBe('/maps?m=x&q=y');
+    const [pair] = returnToCookie('/ladder?m=x&q=y').split(';');
+    expect(readReturnToCookie(requestWith(`other=1; ${pair}; sdb_signed_in=1`))).toBe('/ladder?m=x&q=y');
   });
 
   it('is scoped to the auth routes and short-lived', () => {
-    expect(returnToCookie('/maps')).toMatch(/Path=\/api\/auth\/steam;/);
-    expect(returnToCookie('/maps')).toMatch(/Max-Age=600;/);
+    expect(returnToCookie('/ladder')).toMatch(/Path=\/api\/auth\/steam;/);
+    expect(returnToCookie('/ladder')).toMatch(/Max-Age=600;/);
     expect(clearReturnToCookie()).toMatch(/Max-Age=0;/);
   });
 
