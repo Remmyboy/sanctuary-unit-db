@@ -164,7 +164,9 @@ function BoardPage() {
     <>
       <HeaderSearch
         value={search.q ?? ''}
-        onChange={(q) => patch({ q: q.trim() || undefined })}
+        // Keep the raw text: trimming here would eat the space before the next
+        // word is typed. The match itself trims (see matches in lib/board).
+        onChange={(q) => patch({ q: q || undefined })}
         placeholder="Search name, id, role or tag…"
       />
       <PageHead
