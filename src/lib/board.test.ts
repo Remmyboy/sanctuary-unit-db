@@ -72,6 +72,12 @@ describe('filtering', () => {
     expect(matches(kodiak, { ...noFilters, search: 'zzz-no-such-unit' })).toBe(false);
   });
 
+  it('search ignores surrounding whitespace, which the field keeps mid-typing', () => {
+    const kodiak = data.units.find((u) => u.name === 'Kodiak')!;
+    expect(matches(kodiak, { ...noFilters, search: 'kodiak ' })).toBe(true);
+    expect(matches(kodiak, { ...noFilters, search: '   ' })).toBe(true);
+  });
+
   it('metric sort ranks rows by their strongest member and keeps rows whole', () => {
     const groups = visibleGroups(buildGroups(data.units), noFilters, 'dps');
     const score = (g: (typeof groups)[number]) => Math.max(...g.units.map((u) => u.dps ?? 0));

@@ -57,8 +57,8 @@ export function matches(unit: Unit, f: BoardFilters): boolean {
   if (f.role.size && !f.role.has(unit.role ?? '')) return false;
   if (f.status.size && !f.status.has(STATUS_LABELS[unit.status])) return false;
 
-  if (f.search) {
-    const q = f.search.toLowerCase();
+  const q = f.search.trim().toLowerCase();
+  if (q) {
     const haystack = [
       unit.id,
       unit.name,
