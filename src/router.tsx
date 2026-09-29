@@ -1,4 +1,5 @@
 import { createRouter } from '@tanstack/react-router';
+import { NotFound } from './components/NotFound';
 import { routeTree } from './routeTree.gen';
 
 // Every search param on this site is a plain string (comma-joined lists,
@@ -29,5 +30,6 @@ export function getRouter() {
     defaultPreload: 'intent',
     parseSearch,
     stringifySearch,
+    defaultNotFoundComponent: NotFound,
   });
 }
