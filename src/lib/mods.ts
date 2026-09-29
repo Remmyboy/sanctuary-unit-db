@@ -15,13 +15,6 @@
 export const MODS_REPO = 'https://github.com/Remmyboy/sanctuary-mods';
 export const SITE_REPO = 'https://github.com/Remmyboy/sanctuary-unit-db';
 
-// The loader on its own: BepInEx, the loader and an empty SanctuaryMods
-// folder. Not a mod anyone picks, so it has no card — it's the base the
-// everything zip is built on. Each Standalone zip carries whichever loader
-// was current when it was packed, so bump this when the loader gets a release
-// of its own and the everything zip always has the newest.
-export const LOADER_VERSION = '1.3.1';
-
 /** Every mod in one zip, built by the site's own build from the releases
  *  named in this file (src/lib/mod-bundle.ts) and served as a static file,
  *  so it always holds exactly the versions the page shows. */
@@ -58,8 +51,9 @@ export const MODS: Mod[] = [
   {
     id: 'ModManager',
     name: 'Mod Manager',
-    version: '0.6.1',
-    tagline: 'A Mods page in the game menu, for switching mods on and off and changing their settings.',
+    version: '0.7.0',
+    tagline:
+      'A Mods page in the game menu for switching mods on and off, and a Mods panel in the lobby for the host’s gameplay mods.',
     features: [
       {
         title: 'A switch for every mod',
@@ -74,8 +68,12 @@ export const MODS: Mod[] = [
         text: 'It brings the loader the rest run on, so each mod after this is a small zip you extract and you’re done.',
       },
       {
-        title: 'Lua mods too',
-        text: 'Switch Lua mods on and off, with the lobby hash on show so you can check you match your friends.',
+        title: 'Gameplay mods, picked by the host',
+        text: 'The host switches on the mods for the match in the lobby’s Mods panel, and Start waits until everyone has the same copies. Every lobby starts vanilla, so you can still join anyone.',
+      },
+      {
+        title: 'Spots a bad install',
+        text: 'A zip nobody extracted, or a mod one folder too deep, shows up on the Mods page with what’s wrong.',
       },
     ],
     keys: 'F8 opens it, in the menu or mid-match',
@@ -83,7 +81,7 @@ export const MODS: Mod[] = [
   {
     id: 'SanctuaryHud',
     name: 'SanctuaryDB HUD',
-    version: '0.14.0',
+    version: '0.14.1',
     tagline:
       'A mini-map, a proper economy readout, reclaim values, build timers, alerts and post-match stats.',
     features: [
@@ -293,19 +291,19 @@ export const releaseNotes = (m: Mod): string => `${MODS_REPO}/releases/tag/${rel
 
 export const sourceHref = (m: Mod): string => `${MODS_REPO}/tree/main/${m.id}`;
 
-/** Self-contained: the mod plus BepInEx and the loader it runs on. For the
- *  Mod Manager this is the install everything else goes on top of; for any
- *  other mod it's the way to run that one without the manager. */
+/** Self-contained: the mod plus BepInEx and the loader it runs on. Only the
+ *  Mod Manager's is offered — it's the one base install, and the loader has
+ *  no release of its own any more; it ships inside this zip. Other mods
+ *  stopped shipping a Standalone with Mod Manager 0.7.0, and their older ones
+ *  each carry a copy of the loader that would downgrade it if extracted
+ *  after the manager. */
 export const standaloneHref = (m: Mod): string =>
   `${MODS_REPO}/releases/download/${releaseTag(m)}/${releaseTag(m)}-Standalone.zip`;
 
 /** Just the mod itself, for an install that already has the Mod Manager —
  *  zipped as a folder so it drops into the same place as everything else.
- *  The Mod Manager has one too (the manager alone, for an install that has
- *  the loader), but nothing here offers it: the manager is what you start
- *  from, so its link is always the Standalone. */
+ *  The Mod Manager has one too (the manager and the loader, without
+ *  BepInEx), but nothing here offers it: the manager is what you start from,
+ *  so its link is always the Standalone. */
 export const managerHref = (m: Mod): string =>
   `${MODS_REPO}/releases/download/${releaseTag(m)}/${releaseTag(m)}-ModManager.zip`;
-
-export const loaderHref = (): string =>
-  `${MODS_REPO}/releases/download/ModLoader-${LOADER_VERSION}/ModLoader-${LOADER_VERSION}.zip`;

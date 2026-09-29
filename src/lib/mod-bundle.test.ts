@@ -1,19 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
 import { bundleParts, bundleReadme, mergeZips } from './mod-bundle';
-import { LOADER_VERSION, MODS } from './mods';
+import { MODS, mod } from './mods';
 
 const zip = (files: Record<string, string>) =>
   zipSync(Object.fromEntries(Object.entries(files).map(([path, text]) => [path, strToU8(text)])));
 
 describe('bundleParts', () => {
-  it('is the loader, then every mod’s drop-in zip', () => {
+  it('is the Mod Manager’s Standalone, then every other mod’s drop-in zip', () => {
     const parts = bundleParts();
-    expect(parts[0].url).toMatch(
-      new RegExp(`/ModLoader-${LOADER_VERSION}/ModLoader-${LOADER_VERSION}\\.zip$`),
-    );
+    const manager = mod('ModManager');
+    expect(parts[0].url).toMatch(new RegExp(`/ModManager-${manager.version}-Standalone\\.zip$`));
     expect(parts.slice(1).map((p) => p.url)).toEqual(
-      MODS.map((m) => expect.stringMatching(new RegExp(`/${m.id}-${m.version}-ModManager\\.zip$`))),
+      MODS.filter((m) => m !== manager).map((m) =>
+        expect.stringMatching(new RegExp(`/${m.id}-${m.version}-ModManager\\.zip$`)),
+      ),
     );
   });
 });

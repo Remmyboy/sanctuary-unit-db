@@ -6,22 +6,23 @@
 // release zips named in src/lib/mods.ts and merges them into one static file,
 // so it always holds exactly the versions the page shows.
 //
-// What goes in is what you'd get extracting the zips by hand: the Mod Loader
-// zip (BepInEx, the newest loader, an empty SanctuaryMods folder), then every
-// mod's drop-in zip, the Mod Manager's included. Each of those carries its
-// release notes as a README.txt at the root, so they are dropped for one
-// README of our own that lists what's inside.
+// What goes in is what you'd get extracting the zips by hand: the Mod
+// Manager's Standalone zip (BepInEx, the loader and mod framework it ships
+// with, and the manager), then every other mod's drop-in zip. Each of those
+// carries its release notes as a README.txt at the root, so they are dropped
+// for one README of our own that lists what's inside.
 
 import { strToU8, unzipSync, zipSync } from 'fflate';
 import type { Plugin } from 'vite';
 import {
   ENGINE_PATH,
   EVERYTHING_HREF,
-  LOADER_VERSION,
   MODS,
   MODS_REPO,
-  loaderHref,
   managerHref,
+  mod,
+  standaloneHref,
+  type Mod,
 } from './mods.ts';
 
 export interface BundlePart {
@@ -30,9 +31,11 @@ export interface BundlePart {
 }
 
 export function bundleParts(): BundlePart[] {
+  const manager = mod('ModManager');
+  const label = (m: Mod) => `${m.name} ${m.version}`;
   return [
-    { label: `Mod Loader ${LOADER_VERSION}`, url: loaderHref() },
-    ...MODS.map((m) => ({ label: `${m.name} ${m.version}`, url: managerHref(m) })),
+    { label: label(manager), url: standaloneHref(manager) },
+    ...MODS.filter((m) => m !== manager).map((m) => ({ label: label(m), url: managerHref(m) })),
   ];
 }
 
@@ -80,15 +83,16 @@ INSTALL
    settings, open Mods from the menu's sidebar (the cube icon), or press
    F8 - in the menu or mid-match.
 
-Already have some of these? Extract over the top. You get the versions
-above, and your mod settings are kept.
+Already have some of these? Close the game and extract over the top. You
+get the versions above, and your mod settings are kept.
 
 What each mod does, and newer versions: ${site}/mods
 Source and release notes: ${MODS_REPO}/releases
 
 ALREADY RUNNING BEPINEX?
-Copy BepInEx\\plugins\\ModLoader.dll and the SanctuaryMods folder from this
-zip into your engine folder - AND make sure BepInEx\\config\\BepInEx.cfg has
+Copy BepInEx\\plugins\\ModLoader.dll, BepInEx\\plugins\\Sanctuary.ModApi.dll
+and the SanctuaryMods folder from this zip into your engine folder - AND
+make sure BepInEx\\config\\BepInEx.cfg has
     HideManagerGameObject = true
 under [Chainloader]. Sanctuary destroys BepInEx's manager object after
 start-up otherwise, and every plugin on it stops running right after it
