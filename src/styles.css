@@ -1628,6 +1628,43 @@ img.unit-icon[data-muted='true'] {
     border-right: 0;
     border-bottom: 1px solid var(--border);
   }
+  .col-heads {
+    top: 0;
+  }
+}
+
+/* The header's single bar needs about 1,080px with the short sign-in (eight
+   nav links), so the sign-in shortens first and the bar wraps below that. */
+@media (max-width: 1240px) {
+  .signin-long {
+    display: none;
+  }
+}
+
+/* A page with a search in the bar (the units page) would squeeze it to
+   nothing well before the nav runs out of room, so the search takes its own
+   row under the bar first, and the nav stays on one line beside the brand. */
+@media (min-width: 1101px) and (max-width: 1400px) {
+  .topbar:has(.header-slot:not(:empty)) {
+    flex-wrap: wrap;
+    height: auto;
+  }
+  .topbar:has(.header-slot:not(:empty)) .nav {
+    height: 56px;
+  }
+  .header-slot:not(:empty) {
+    order: 10;
+    flex: none;
+    width: 100%;
+    padding-bottom: 10px;
+  }
+  /* The slot no longer pushes the GitHub icon and sign-in to the right. */
+  .header-slot:not(:empty) + .ghlink {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 1100px) {
   /* The single bar wraps: the nav takes its own full-width row under the
      brand, and search drops to a row below that. */
   .topbar {
@@ -1675,17 +1712,11 @@ img.unit-icon[data-muted='true'] {
   .search {
     max-width: none;
   }
-  .col-heads {
-    top: 0;
-  }
 }
 
-/* Phones: the header's sign-in shortens to "Sign in", and the toolbar drops
-   the build readout, which is hover detail and costs the summary its room. */
+/* Phones: the toolbar drops the build readout, which is hover detail and
+   costs the summary its room. */
 @media (max-width: 600px) {
-  .signin-long {
-    display: none;
-  }
   .toolbar {
     padding: 0 14px;
   }
