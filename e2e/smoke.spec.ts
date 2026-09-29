@@ -115,24 +115,28 @@ test('mods page lists every mod with live download links', async ({ page, reques
   // a shell. Its downloads are release assets whose URL is derived from the
   // version in src/lib/mods.ts, which is the thing that goes stale.
   await page.goto('/mods');
-  expect(await page.locator('.mod-entry').count()).toBe(8);
+  // Eight mods in the two steps, and Zone Control under game modes.
+  expect(await page.locator('.mod-entry').count()).toBe(9);
   await expect(page.locator('.install-path code')).toContainText('Playtest\\engine');
 
   // Step 1 is the Mod Manager's Standalone zip; every other mod's button is
-  // its drop-in zip, with the Standalone as a footer link.
+  // its drop-in zip. Only the manager has a Standalone any more.
   await expect(page.locator('#ModManager .dl-btn')).toHaveAttribute(
     'href',
     /sanctuary-mods\/releases\/download\/ModManager-[\d.]+\/ModManager-[\d.]+-Standalone\.zip/,
   );
-  await expect(page.locator('#ModManager .mod-links a', { hasText: 'Standalone' })).toHaveCount(0);
   await expect(page.locator('#LadderReporter .dl-btn')).toHaveAttribute(
     'href',
     /sanctuary-mods\/releases\/download\/LadderReporter-[\d.]+\/LadderReporter-[\d.]+-ModManager\.zip/,
   );
-  await expect(page.locator('#LadderReporter .mod-links a', { hasText: 'Standalone' })).toHaveAttribute(
+  await expect(page.locator('.mod-links a', { hasText: 'Standalone' })).toHaveCount(0);
+
+  // Zone Control's button is the mod and its map together; its page explains it.
+  await expect(page.locator('#ZoneControl .dl-btn')).toHaveAttribute(
     'href',
-    /LadderReporter-[\d.]+-Standalone\.zip$/,
+    /sanctuary-mods\/releases\/download\/ZoneControl-[\d.]+\/ZoneControl-[\d.]+-WithMap\.zip/,
   );
+  await expect(page.locator('#ZoneControl .mod-links a[href="/zone-control"]')).toHaveCount(1);
 
   // The everything zip is built into the site at build time: a real zip, not
   // the page shell or a prerendered copy mangled into text.
@@ -146,6 +150,37 @@ test('mods page lists every mod with live download links', async ({ page, reques
 
   // The header's repo link, on every page.
   await expect(page.locator('.ghlink')).toHaveAttribute('href', /github\.com\/.+\/sanctuary-unit-db/);
+
+  expect(errors).toEqual([]);
+});
+
+test('zone control page walks the setup and shows the map', async ({ page, request }) => {
+  const errors = collectErrors(page);
+
+  await page.goto('/zone-control');
+  await expect(page.getByRole('heading', { name: 'Zone Control', level: 1 })).toBeVisible();
+
+  // The three steps: the Mod Manager, the mod + map zip, then the lobby.
+  await expect(page.locator('.mods-step h2')).toHaveCount(3);
+  await expect(page.locator('.zc-step-actions .dl-btn').first()).toHaveAttribute(
+    'href',
+    /ModManager-[\d.]+\/ModManager-[\d.]+-Standalone\.zip$/,
+  );
+  await expect(page.locator('.mods-everything .dl-btn')).toHaveAttribute(
+    'href',
+    /ZoneControl-[\d.]+-WithMap\.zip$/,
+  );
+
+  // The preview is served, not a dead image.
+  const map = await request.get('/zone-control/map.png');
+  expect(map.status()).toBe(200);
+  expect(map.headers()['content-type']).toBe('image/png');
+  await expect(page.locator('.zc-map img')).toHaveJSProperty('complete', true);
+  expect(await page.locator('.zc-map img').evaluate((img: HTMLImageElement) => img.naturalWidth)).toBe(512);
+
+  // The original's makers are credited.
+  await expect(page.locator('.zc-credits')).toContainText('johnie102');
+  await expect(page.locator('.zc-credits')).toContainText('AngryZealot');
 
   expect(errors).toEqual([]);
 });

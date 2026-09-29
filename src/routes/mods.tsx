@@ -5,13 +5,12 @@
 // Standalone zips each carried an old copy of the loader, so they were
 // dropped (see standaloneHref). The catalogue lives in src/lib/mods.ts,
 // shared with the Play page's download card, so a version bump moves both.
+// Game modes (Zone Control) sit under the steps, pointing to their own pages.
 
-import { useState, type ReactNode } from 'react';
-import { createFileRoute } from '@tanstack/react-router';
-import { copyText } from '../lib/clipboard';
+import { Link, createFileRoute } from '@tanstack/react-router';
+import { CopyPath, StepHead } from '../components/ModInstall';
 import { HeadStat, PageHead } from '../components/PageHead';
 import {
-  ENGINE_PATH,
   EVERYTHING_HREF,
   MODS,
   MODS_REPO,
@@ -20,6 +19,8 @@ import {
   releaseNotes,
   sourceHref,
   standaloneHref,
+  ZONE_CONTROL,
+  zoneControlHref,
   type Mod,
 } from '../lib/mods';
 
@@ -51,7 +52,8 @@ function ModsPage() {
       >
         A mini-map, a proper economy readout, one-key building, idle alerts, fog-free replays and more &mdash;
         free and open source. None of them change the game&rsquo;s rules, so you can still play online with
-        anyone, modded or not.
+        anyone, modded or not &mdash; and when you want something different, there&rsquo;s{' '}
+        <Link to="/zone-control">Zone Control</Link>.
       </PageHead>
       <div className="toolbar">
         <span className="toolbar-summary">
@@ -122,42 +124,32 @@ function ModsPage() {
               ))}
             </div>
           </section>
+
+          {/* Not a third step: a game mode changes the match, so it's the
+              host's pick in the lobby rather than something you just switch
+              on. Its own page carries the setup and the rules. */}
+          <section className="mods-modes" aria-labelledby="mods-modes">
+            <h2 id="mods-modes" className="mods-or">
+              game modes
+            </h2>
+            <p className="mods-step-text">
+              A game mode changes the match itself, so the lobby&rsquo;s host switches it on in the
+              lobby&rsquo;s <strong>Mods</strong> panel, and everyone playing needs the same copy. It needs
+              the Mod Manager above.
+            </p>
+            <div className="mod-list">
+              <ModCard
+                mod={ZONE_CONTROL}
+                href={zoneControlHref()}
+                label="Download mod + map"
+                addOn
+                page="/zone-control"
+              />
+            </div>
+          </section>
         </div>
       </main>
     </>
-  );
-}
-
-function StepHead({ n, id, children }: { n: number; id: string; children: ReactNode }) {
-  return (
-    <div className="mods-step-head">
-      <span className="mods-step-num" aria-hidden="true">
-        {n}
-      </span>
-      <h2 id={id}>{children}</h2>
-    </div>
-  );
-}
-
-function CopyPath() {
-  const [copied, setCopied] = useState(false);
-
-  return (
-    <div className="install-path">
-      <code>{ENGINE_PATH}</code>
-      <button
-        type="button"
-        className="linkish"
-        onClick={async () => {
-          if (await copyText(ENGINE_PATH)) {
-            setCopied(true);
-            setTimeout(() => setCopied(false), 1500);
-          }
-        }}
-      >
-        {copied ? 'Copied ✓' : 'Copy'}
-      </button>
-    </div>
   );
 }
 
@@ -166,6 +158,7 @@ function ModCard({
   href,
   label,
   addOn = false,
+  page,
 }: {
   mod: Mod;
   href: string;
@@ -173,6 +166,8 @@ function ModCard({
   /** One of the mods that go on top of the Mod Manager: a quieter download
    *  button, so the manager's stays the one that reads as step one. */
   addOn?: boolean;
+  /** A page of its own on this site, for a mod with more to explain. */
+  page?: '/zone-control';
 }) {
   return (
     <article className="mod-entry" id={mod.id}>
@@ -203,6 +198,7 @@ function ModCard({
       <footer className="mod-entry-foot">
         {mod.keys && <span className="mod-keys">{mod.keys}</span>}
         <span className="mod-links">
+          {page && <Link to={page}>How it plays and how to set it up</Link>}
           <a href={sourceHref(mod)} target="_blank" rel="noreferrer">
             Source
           </a>
