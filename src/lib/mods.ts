@@ -51,7 +51,7 @@ export const MODS: Mod[] = [
   {
     id: 'ModManager',
     name: 'Mod Manager',
-    version: '0.7.0',
+    version: '0.8.0',
     tagline:
       'A Mods page in the game menu for switching mods on and off, and a Mods panel in the lobby for the host’s gameplay mods.',
     features: [
@@ -307,3 +307,33 @@ export const standaloneHref = (m: Mod): string =>
  *  so its link is always the Standalone. */
 export const managerHref = (m: Mod): string =>
   `${MODS_REPO}/releases/download/${releaseTag(m)}/${releaseTag(m)}-ModManager.zip`;
+
+/** Zone Control is a game mode, not an add-on: a gameplay mod the lobby host
+ *  switches on, played on its own map. So it stays out of MODS (and so out of
+ *  the everything zip, where a 15 MB map nobody asked for would ride along)
+ *  and gets its own page, /zone-control, with a card on /mods pointing there. */
+export const ZONE_CONTROL: Mod = {
+  id: 'ZoneControl',
+  name: 'Zone Control',
+  version: '0.5.0',
+  tagline:
+    'Forged Alliance’s Zone Control: no commanders, no building — every zone you hold sends you units.',
+  features: [
+    {
+      title: 'Take the map zone by zone',
+      text: 'Destroy a zone’s turret, then hold it with more units than anyone else. Lose every zone and you’re out.',
+    },
+    {
+      title: 'Kills buy power',
+      text: 'Levels bring better units, T4 heroes and artillery in your base; money buys upgrades and kamikazes.',
+    },
+  ],
+};
+
+export const ZONE_CONTROL_MAP = 'Zone Control for FAF 8P V2';
+
+/** The mod and its map in one zip, laid out to extract straight into
+ *  `engine`. The release's -ModManager.zip is the mod alone, for someone who
+ *  already has the map. */
+export const zoneControlHref = (): string =>
+  `${MODS_REPO}/releases/download/${releaseTag(ZONE_CONTROL)}/${releaseTag(ZONE_CONTROL)}-WithMap.zip`;
