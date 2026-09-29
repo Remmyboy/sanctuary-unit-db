@@ -1,7 +1,7 @@
 // The mod download card on the Play page: what the Ladder Reporter does and
 // the two downloads it takes, numbered in install order, as on the /mods
-// page. The standalone zip and the everything zip are one line underneath,
-// for the few who want one or the other. The zips are release assets on the
+// page. The everything zip is one line underneath, for anyone who wants
+// every mod. The zips are release assets on the
 // open-source sanctuary-mods repo, and the versions come from the shared
 // catalogue in src/lib/mods.ts — so bumping one there is the whole deploy,
 // and this card can never disagree with the /mods page.
@@ -76,8 +76,7 @@ export function ReporterCard() {
         </div>
         <p className="hint">
           Want every mod? <a href={EVERYTHING_HREF}>Download everything</a> in one zip instead &mdash; see{' '}
-          <Link to="/mods">what&rsquo;s in it</Link>. Only want this one, without the Mod Manager? Take the{' '}
-          <a href={standaloneHref(REPORTER)}>standalone Ladder Reporter</a>.
+          <Link to="/mods">what&rsquo;s in it</Link>.
         </p>
         <p className="hint">
           It only reports Steam lobby 1v1s that match an open ladder game &mdash; skirmish, LAN, observing and

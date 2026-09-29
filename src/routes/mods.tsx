@@ -1,9 +1,10 @@
 // The mods page: every mod in the sanctuary-mods repo, sold on what it does
 // for your game. The quickest install comes first — everything in one zip —
 // then the pick-and-choose route as two steps: the Mod Manager, then the mods
-// you want. The Standalone zips are tucked into each card's footer for the
-// few who only want one mod. The catalogue lives in src/lib/mods.ts, shared
-// with the Play page's download card, so a version bump moves both.
+// you want. There's no way to run a mod without the manager: other mods'
+// Standalone zips each carried an old copy of the loader, so they were
+// dropped (see standaloneHref). The catalogue lives in src/lib/mods.ts,
+// shared with the Play page's download card, so a version bump moves both.
 
 import { useState, type ReactNode } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
@@ -115,13 +116,9 @@ function ModsPage() {
               Launch the game and it&rsquo;s on &mdash; switch it off or change its settings from{' '}
               <strong>Mods</strong> in the game menu, or <kbd>F8</kbd> mid-match.
             </p>
-            <p className="mods-step-text hint">
-              Only want one mod, without the Mod Manager? Take its <strong>Standalone zip</strong> from the
-              foot of its card instead &mdash; it has everything it needs built in.
-            </p>
             <div className="mod-list">
               {ADD_ONS.map((m) => (
-                <ModCard key={m.id} mod={m} href={managerHref(m)} label="Download" standalone />
+                <ModCard key={m.id} mod={m} href={managerHref(m)} label="Download" addOn />
               ))}
             </div>
           </section>
@@ -168,14 +165,14 @@ function ModCard({
   mod,
   href,
   label,
-  standalone = false,
+  addOn = false,
 }: {
   mod: Mod;
   href: string;
   label: string;
-  /** Offer the Standalone zip in the footer. Not for the Mod Manager, whose
-   *  Standalone is already its main button. */
-  standalone?: boolean;
+  /** One of the mods that go on top of the Mod Manager: a quieter download
+   *  button, so the manager's stays the one that reads as step one. */
+  addOn?: boolean;
 }) {
   return (
     <article className="mod-entry" id={mod.id}>
@@ -189,7 +186,7 @@ function ModCard({
           </h3>
           <p className="mod-tagline">{mod.tagline}</p>
         </div>
-        <a className={standalone ? 'dl-btn ghost' : 'dl-btn'} href={href} aria-label={`Download ${mod.name}`}>
+        <a className={addOn ? 'dl-btn ghost' : 'dl-btn'} href={href} aria-label={`Download ${mod.name}`}>
           {label}
         </a>
       </header>
@@ -206,14 +203,6 @@ function ModCard({
       <footer className="mod-entry-foot">
         {mod.keys && <span className="mod-keys">{mod.keys}</span>}
         <span className="mod-links">
-          {standalone && (
-            <a
-              href={standaloneHref(mod)}
-              title="This mod with everything it needs, for using it without the Mod Manager"
-            >
-              Standalone zip
-            </a>
-          )}
           <a href={sourceHref(mod)} target="_blank" rel="noreferrer">
             Source
           </a>
