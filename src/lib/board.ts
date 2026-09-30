@@ -23,6 +23,8 @@ export const METRICS: Record<string, (u: Unit) => number | null> = {
   buildTime: (u) => u.buildTime,
   health: (u) => u.health,
   dps: (u) => u.dps,
+  range: (u) => u.maxRange ?? 0,
+  speed: (u) => u.movement?.speed ?? 0,
   projectileSpeed: (u) => u.projectileSpeed ?? 0,
   turnRate: (u) => u.movement?.rotationSpeed ?? 0,
   traverseSpeed: (u) => Math.max(0, ...u.weapons.map((w) => w.traverseSpeed ?? 0)),

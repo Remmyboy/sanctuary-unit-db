@@ -405,51 +405,92 @@ upkeep and highest for everything else. Nothing is lit on a tie or when only
 one unit has the stat. The rows and that rule are in `src/lib/compare.ts`. The
 link carries the picks, so a comparison can be shared.
 
+Each figure has a hairline bar under it, as long as it is against the row's
+largest, so magnitude reads at a glance and not just the winner. Rows that
+would only be abstract lead with what the number means in play and keep the
+template value underneath: speed says how long a 512 map takes to cross, and
+acceleration and turn rate become "top speed in 1.3s" and "turns about in 4s".
+DPS is split into ground and air when the two differ.
+
+**Chase** under the table sets two of the compared units loose on open ground,
+one chasing the other, with their weapon ranges drawn round them — the Kodiak
+running down a kiting Longbow, say. It animates the samples from
+`simulateChase` in `src/lib/chase.ts` and sums the run up underneath: when (or
+whether) the chaser gets in range, how long the target was shooting first, and
+what that cost. Only weapons that can hit the other's layer count, a runner
+only shoots back with turrets that turn all the way round, and an attack order
+stops at range rather than ramming. It leaves out shields, turning and shell
+flight time, and says so.
+
+### Game units, made readable
+
+Every distance in the templates is in game units and every speed in game units
+per second, which is exact and tells nobody anything. `src/lib/scale.ts` turns
+them into things a player can picture, using a 512 map (most of the ranked 1v1
+pool) as the yardstick and a T1 tank, about one unit long, as the ruler: time to
+cross a map, to top speed, to turn about, for a shot to reach max range. The
+detail panel ranks speed against every in-game unit that moves the same way
+("faster than 39% of ground units"), and a peer section strips each headline
+stat against the unit's signed-off tier-and-domain peers — each a dot you can
+click through to.
+
 ## How derived values are calculated
 
 Most fields are copied straight across. Several are computed, and the assumptions
 matter if you're using this for balance work:
 
-**DPS.** Ported from the game's own `AI/AIFunctions.lua` —
-`GetWeaponDamagePerSecond` and `GetWeaponCycleMuzzleCount` — with one deliberate
-fix (see point 3). Don't reimplement it from intuition; four separate things
-make the naive version wrong:
-
-```
-muzzleCount = sum of muzzles over salvoSize groups, wrapping: ((i-1) % groupCount) + 1
-cycleTime   = max(reloadTime, (salvoSize - 1) * muzzleSalvoDelay)
-DPS         = (damage * muzzleCount + damageOverTimePulses) / cycleTime
-```
+**DPS.** A tick-for-tick port of the weapon state machine the game actually
+runs — `HostWeapon:Update` in `host/units/weaponsClasses/weaponsBaseClass.lua`
+(`simulateWeapon` in `scripts/extract.js`) — with the target held in the
+sights and every shot landing. It started as a port of the AI's
+`GetWeaponDamagePerSecond`, and every one of these was a way that got it wrong:
 
 1. **Beam `damage` is per tick, not per shot,** and the game runs at
    `Constants.TickRate = 10`. `beamLifetime` says which kind:
-   `-1` continuous (`damage x muzzles x 10`, **reloadTime is irrelevant**),
-   `1` pulse — one tick per reload, `N` burst — N ticks per reload.
-   Auger is a continuous beam: 25.64 x 10 = **256.4 DPS**, not 25.64/3 = 8.5.
-2. **Salvo indices wrap around the muzzle groups.** A weapon with a salvo of 20
+   `-1` continuous (`damage x muzzles x 10`, **reloadTime is irrelevant**, and
+   only the first muzzle group ever fires), `1` pulse — one tick per volley,
+   `N` burst — N ticks per volley. Auger is a continuous beam: 25.64 x 10 =
+   **256.4 DPS**, not 25.64/3 = 8.5.
+2. **A weapon is a beam only if it has a `beam` table.** That is the game's own
+   test (`common/utilities/beams.lua`). `beamLifetime` alone means nothing: the
+   Engraver keeps a stale `-1` from when it was a beam but fires projectiles,
+   and reading it as a beam listed it at 3,333 DPS instead of 303 — ten times
+   its sibling AA turrets.
+3. **Salvo indices wrap around the muzzle groups.** A weapon with a salvo of 20
    over 1 group fires that group 20 times a cycle. Capping at the group count
    put Quasar at 18.75 DPS instead of 375.
-3. **Reload runs concurrently with the salvo, SupCom-style.** The weapon state
-   machine (`host/units/weaponsClasses/weaponsBaseClass.lua`) resets
-   `reloadTimer` as the salvo _starts_ and keeps counting it down while the
-   salvo plays out, so the cycle is `max(reload, salvo stretch)`, not their
-   sum. The AI's own `GetWeaponDamagePerSecond` adds them — the one place this
-   port diverges from it. In-game confirmation: the Chosen Commander (0.5s
-   salvo delay, 1s reload) alternates barrels every half second with no pause,
-   which the additive reading would break into fire-fire-pause. Following the
-   AI's version had, e.g., Kodiak at 316.93 instead of 348.63.
-4. **`damageOverTimePulseCount x damageOverTimePulseDamage`** adds to the
-   numerator.
+4. **Reload runs concurrently with the salvo, SupCom-style.** The state machine
+   resets `reloadTimer` as the salvo _starts_ and keeps counting it down while
+   the salvo plays out, so the cycle is `max(reload, salvo stretch)`, not their
+   sum. The AI's `GetWeaponDamagePerSecond` adds them. In-game confirmation:
+   the Chosen Commander (0.5s salvo delay, 1s reload) alternates barrels with
+   no pause, which the additive reading would break into fire-fire-pause.
+5. **Timers move in 0.1s ticks, as doubles, and fire at `<= 0`.** Each tick
+   subtracts `Constants.TickTimeStep` (0.1). Ten of those leave 1.0 at 1.4e-16,
+   not zero, so a **1s reload fires every 11 ticks — 1.1s**. 0.5s is really
+   0.6s, 0.25s is 0.3s, 5s is 5.1s; 2s and 3s happen to land exactly. This is
+   up to 20% on fast-firing weapons (Jager 100.8 → 84) and 1% on slow ones.
+   Each weapon's real volley-to-volley time is stored as `cycleTime`.
+6. **Fields no game code reads are ignored.** `damageOverTimePulse*`,
+   `chargeTime`, `impactDelay`, `damageBox` and `useDamageCollider` are
+   documented and set on a few templates, but appear in no runtime Lua and not
+   in the compiled engine (`Trebuchet.dll` holds none of the names). Counting
+   damage over time put the Onager at 925 DPS; it deals 520.
 
-Beam totals only, before and after porting: Tripod Bot 453 → 2000, Hovertank
-2955 → 6795, Engraver 333 → 3333, Auger 8.55 → 256.4. Pulse beams were already
-right, which is why the error hid for so long.
+The extractor reports each template that trips 2 or 6 in `meta.dataIssues`.
+The pinned values in `board.test.ts` (Kodiak 342.91, Chosen Commander 90.91,
+Engraver 303.03, Onager 519.8, Jager 0.6s) move only with a real balance
+change or a regression.
 
-**Weapons the game itself scores zero.** Four bomber weapons (Meteor, Inertia,
-Impulse, TALEN) declare an empty `muzzles` list, so `table.getn` returns 0 and
-the reference formula yields 0 DPS despite real damage values. That's a template
-gap, not a genuine zero, so those report `dps: null` and render as "dps unknown"
-rather than a confident 0.
+**Weapons that can't fire.** Four bomber weapons (Meteor, Inertia, Impulse,
+TALEN) declare an empty `muzzles` list, the Laser Bomber's weapon has no muzzle
+groups at all, and the Spitter fires a projectile (`pei211`) that isn't in the
+build. None of them can put a shot out, but that's a template gap rather than a
+genuine zero, so they report `dps: null` and render as "dps unknown".
+
+**Health regen** (`defence.health.regen`, HP per second) is carried as
+`healthRegen`; 101 units have it. Nothing in the Lua switches it off, and the
+game's own information panel reads it straight from the template.
 
 ### Which units are actually in the build
 
@@ -512,11 +553,10 @@ have some leftover stuff`, and `turrets` (line 414) is inside it.
   `tp.weapons` from `tp.turrets` and ends with `tp.weapons = newWeapons` followed
   by a commented-out `--tp.turrets = nil`. That's why both blocks still exist.
 
-Confusingly the runtime Lua still reads `tp.turrets` (host and client
-`SetUpWeapons`, and `templateLoader.lua`'s FFI call), and weapon count comes from
-`Engine.GetUnitTurretCount`. Whatever the engine does internally, `turrets` holds
-the stale values the comment warns about — beam weapons don't exist in that
-format at all, and several units including two Commanders have `weapons` with no
+The runtime settles it: the host builds every unit's weapons from `tp.weapons`
+(`SetUpWeapons` in `host/units/unitsClasses/unitsBaseClass.lua`), and nothing in
+the host reads `turrets` any more. Beam weapons don't exist in the old format at
+all, and several units including two Commanders have `weapons` with no
 `turrets` block. This project reads `weapons` throughout.
 
 **Turn rates.** Two separate things, both surfaced:

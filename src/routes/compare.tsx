@@ -3,13 +3,15 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { loadData, type LoadedData } from '../lib/data';
 import { compareTable, parseCompare } from '../lib/compare';
 import { copyText } from '../lib/clipboard';
-import { fmt, shortName } from '../lib/format';
+import { duration, fmt, shortName } from '../lib/format';
+import { MAP_SIZE, moveClass, type MoveClass } from '../lib/scale';
 import type { Unit } from '../lib/types';
 import { FACTION_COLOURS, UnitIcon } from '../components/UnitIcon';
 import { FactionEmblem } from '../components/FactionEmblem';
 import { GameVersion } from '../components/GameVersion';
 import { PageHead } from '../components/PageHead';
 import { WeaponBlock } from '../components/DetailPanel';
+import { ChaseSim } from '../components/ChaseSim';
 
 // Units side by side: a column each, a row per stat, the best value in each
 // row lit. The picks come from the Units board's compare mode and live in the
@@ -93,7 +95,11 @@ function ComparePage() {
             </Link>
           </div>
         ) : (
-          <CompareTable units={units} loaded={loaded} ids={joined} onRemove={remove} />
+          <>
+            <CompareTable units={units} loaded={loaded} ids={joined} onRemove={remove} />
+            <ChaseSim units={units} loaded={loaded} />
+            <Legend units={loaded.data.units} />
+          </>
         )}
       </main>
     </>
@@ -157,18 +163,29 @@ function CompareTable({
             {section.rows.map((row) => (
               <tr key={row.label}>
                 <th scope="row">{row.label}</th>
-                {row.values.map((v, i) => (
-                  <td key={units[i].id} className={row.best.has(i) ? 'best' : undefined}>
-                    {v == null ? (
-                      <span className="compare-none">—</span>
-                    ) : (
-                      <span className={row.cls}>
-                        {fmt(v)}
-                        {row.unit}
-                      </span>
-                    )}
-                  </td>
-                ))}
+                {row.values.map((v, i) => {
+                  const note = v == null ? null : row.note?.(units[i]);
+                  return (
+                    <td key={units[i].id} className={row.best.has(i) ? 'best' : undefined}>
+                      {v == null ? (
+                        <span className="compare-none">—</span>
+                      ) : (
+                        <>
+                          <span className={row.cls ? `cmp-val ${row.cls}` : 'cmp-val'}>
+                            {row.format ? row.format(v) : fmt(v)}
+                            {row.unit}
+                          </span>
+                          {note && <span className="cmp-note">{note}</span>}
+                          {row.scale != null && (
+                            <span className="cmp-bar" aria-hidden="true">
+                              <i style={{ width: `${Math.max(0, (v / row.scale) * 100)}%` }} />
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </td>
+                  );
+                })}
               </tr>
             ))}
           </tbody>
@@ -196,6 +213,48 @@ function CompareTable({
         )}
       </table>
     </div>
+  );
+}
+
+// The units every number is in, since the game never says. Kept short: one
+// line per kind of figure, each with a yardstick a player already has.
+function Legend({ units }: { units: Unit[] }) {
+  // Measured from the signed-off roster, so the ranges follow the next patch.
+  const range = (cls: MoveClass) => {
+    const speeds = units
+      .filter((u) => u.status === 'in-game' && moveClass(u) === cls)
+      .map((u) => u.movement!.speed);
+    return speeds.length ? `${fmt(Math.min(...speeds))}–${fmt(Math.max(...speeds))}` : '—';
+  };
+  return (
+    <section className="compare-legend" aria-labelledby="legend-title">
+      <h2 id="legend-title">Reading the numbers</h2>
+      <dl>
+        <dt>Distance</dt>
+        <dd>
+          Game units. One is about the length of a T1 tank; a ranked 1v1 map is {MAP_SIZE} across. Range,
+          vision, radar and sonar are radii.
+        </dd>
+        <dt>Speed</dt>
+        <dd>
+          Game units per second. Ground units run {range('ground')}, ships {range('naval')} and aircraft{' '}
+          {range('air')} — so 3.5 against 2.2 is the difference between crossing a {MAP_SIZE} map in{' '}
+          {duration(MAP_SIZE / 3.5)} and {duration(MAP_SIZE / 2.2)}.
+        </dd>
+        <dt>DPS</dt>
+        <dd>
+          Sustained damage per second with the target held in the sights and every shot landing. Rate of fire
+          follows the game's 0.1s ticks, which usually add a tick to the template's reload (1s fires every
+          1.1s).
+        </dd>
+        <dt>Build time</dt>
+        <dd>
+          Build-power-seconds: divide by the builder's build power for real seconds (a T1 engineer has 5).
+        </dd>
+        <dt>Bars</dt>
+        <dd>Each figure against the largest in its row; the lit one is best.</dd>
+      </dl>
+    </section>
   );
 }
 

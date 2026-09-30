@@ -90,7 +90,9 @@ function RateLine({ unit: u }: { unit: Unit }) {
 }
 
 // One line per distinct weapon. Grouping means even the heaviest units top out
-// at four, so every weapon fits without the card running away.
+// at four, so every weapon fits without the card running away. Damage, how
+// often it lands and how far — the three that decide a fight; shot speed is
+// in the detail panel, where it has room to say what it means.
 function WeaponLines({ unit: u }: { unit: Unit }) {
   if (!u.weapons.length) return null;
 
@@ -98,13 +100,9 @@ function WeaponLines({ unit: u }: { unit: Unit }) {
     <span className="wlines">
       {u.weapons.map((w, i) => {
         const bits = [
-          w.damage > 0 ? `${fmt(w.damage)} dmg` : 'impact',
+          w.damage > 0 ? `${fmt(w.damage)} dmg` : 'no dmg',
+          w.beamMode === 'continuous' ? 'beam' : w.cycleTime ? `every ${fmt(w.cycleTime)}s` : null,
           `${w.rangeMax} rng`,
-          w.isBeam
-            ? beamLabel(w).replace(' beam', '')
-            : w.projectileSpeed
-              ? `${fmt(w.projectileSpeed)} spd`
-              : null,
         ].filter(Boolean);
 
         return (
