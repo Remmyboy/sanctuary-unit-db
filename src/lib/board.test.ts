@@ -12,7 +12,7 @@ import {
   type BoardFilters,
 } from './board';
 import { builderName } from './format';
-import { peersOf } from './scale';
+import { peerGroupName, peerRows, peersOf } from './scale';
 import type { UnitsData } from './types';
 
 // Tests run against the committed units.json — the same file the site serves —
@@ -216,5 +216,25 @@ describe('commanders are their own class, not T1', () => {
         .sort(),
     ).toEqual(['ucl0000', 'ugl0000']);
     expect(builderName(eda)).toBe('Commander');
+  });
+});
+
+describe('peers share a class, not just a tier', () => {
+  const peerIds = (id: string) => peersOf(byId.get(id)!, data.units).map((u) => u.id);
+
+  it('a T1 tank is weighed against T1 combat units — artillery yes, engineers and anti-air no', () => {
+    const puma = peerIds('uel1001');
+    expect(puma).toContain('ucl1001'); // Gladius
+    expect(puma).toContain('ucl1101'); // Slinger, artillery
+    expect(puma).not.toContain('uel1501'); // T1 Engineer
+    expect(puma).not.toContain('uel1201'); // Cobra, anti-air
+    expect(peerGroupName(byId.get('uel1001')!)).toBe('T1 combat units');
+  });
+
+  it('engineers are ranked only against engineers, on build power among the rest', () => {
+    expect(peerIds('uel1501').sort()).toEqual(['ucl1501', 'ugl1501']);
+    expect(peerGroupName(byId.get('uel1501')!)).toBe('T1 engineers');
+    const rows = peerRows(byId.get('uel1501')!, peersOf(byId.get('uel1501')!, data.units));
+    expect(rows.some((r) => r.metric.key === 'dps')).toBe(false);
   });
 });

@@ -7,7 +7,7 @@
 // agree to the digit.
 
 import type { Unit, Weapon } from './types';
-import { tierKey } from './format';
+import { isCommander, tierKey } from './format';
 
 /**
  * The yardstick: a map this many game units across. Most of the ranked 1v1
@@ -119,8 +119,86 @@ export const PEER_METRICS: PeerMetric[] = [
   { key: 'range', label: 'Range', value: (u) => u.maxRange || null, better: 'high' },
   { key: 'speed', label: 'Speed', value: (u) => u.movement?.speed || null, better: 'high', unit: 'u/s' },
   { key: 'vision', label: 'Vision', value: (u) => u.vision || null, better: 'high' },
+  { key: 'buildPower', label: 'Build power', value: (u) => u.buildPower || null, better: 'high' },
   { key: 'alloy', label: 'Alloy cost', value: (u) => u.cost.alloys || null, better: 'low' },
 ];
+
+/**
+ * What a unit is for, coarsely — the class it's fairly weighed within. A tank
+ * against an engineer on DPS says nothing, so peers share a class as well as
+ * a tier. Built from the role the game itself assigns through each unit's
+ * strategic icon, with the thin roles folded together so a class has enough
+ * members at each tier to rank: artillery fights alongside direct fire, the
+ * energy side of the economy ("Plasma") sits with the alloy side, and a
+ * transmitter is intel.
+ */
+export type UnitClass =
+  | 'commander'
+  | 'combat'
+  | 'antiAir'
+  | 'antiNaval'
+  | 'engineer'
+  | 'intel'
+  | 'shield'
+  | 'economy'
+  | 'factory'
+  | 'other';
+
+export function unitClass(u: Unit): UnitClass {
+  if (isCommander(u)) return 'commander';
+  switch (u.role) {
+    case 'Direct Fire':
+    case 'Artillery':
+      return 'combat';
+    case 'Anti-Air':
+      return 'antiAir';
+    case 'Anti-Naval':
+      return 'antiNaval';
+    case 'Engineer':
+      return 'engineer';
+    case 'Intel':
+    case 'Transmitter':
+      return 'intel';
+    case 'Shield':
+      return 'shield';
+    case 'Economy':
+    case 'Plasma':
+      return 'economy';
+    // Factories wear the icon of what they build.
+    case 'Air':
+    case 'Land':
+    case 'Naval':
+      return 'factory';
+  }
+  // A handful of big units have no icon symbol; an armed one is a fighter.
+  return u.dps ? 'combat' : 'other';
+}
+
+// "T1 combat units", "T2 anti-air defences": the class, in the domain's words.
+const CLASS_NOUNS: Record<UnitClass, Partial<Record<string, string>> & { default: string }> = {
+  commander: { default: 'commanders' },
+  combat: {
+    Air: 'strike aircraft',
+    Naval: 'warships',
+    Structure: 'defences',
+    default: 'combat units',
+  },
+  antiAir: { Air: 'fighters', Structure: 'anti-air defences', default: 'anti-air units' },
+  antiNaval: { Structure: 'anti-naval defences', default: 'anti-naval units' },
+  engineer: { Structure: 'engineering stations', default: 'engineers' },
+  intel: { Structure: 'intel structures', default: 'scouts' },
+  shield: { Structure: 'shields', default: 'shield units' },
+  economy: { default: 'economy structures' },
+  factory: { default: 'factories' },
+  other: { Structure: 'structures', default: 'units' },
+};
+
+/** The peer group's name: "T1 combat units", "T3 engineering stations", "commanders". */
+export function peerGroupName(u: Unit): string {
+  const cls = unitClass(u);
+  const noun = CLASS_NOUNS[cls][u.domain] ?? CLASS_NOUNS[cls].default;
+  return cls === 'commander' ? noun : `T${u.tier} ${noun}`;
+}
 
 export interface PeerRow {
   metric: PeerMetric;
@@ -135,14 +213,20 @@ export interface PeerRow {
 }
 
 /**
- * The units a unit is really weighed against: same domain and tier, signed off
- * and in the game. A metric is only ranked among the peers that have it, so an
- * armed structure's DPS is compared with turrets rather than a field of
- * generators at zero.
+ * The units a unit is really weighed against: same domain, tier and class,
+ * signed off and in the game — a T1 tank against the other T1 combat units,
+ * never against the engineers or the anti-air. A metric is only ranked among
+ * the peers that have it, and dropped where they all tie.
  */
 export function peersOf(u: Unit, units: Unit[]): Unit[] {
+  const cls = unitClass(u);
   return units.filter(
-    (o) => o.id !== u.id && o.status === 'in-game' && o.domain === u.domain && tierKey(o) === tierKey(u),
+    (o) =>
+      o.id !== u.id &&
+      o.status === 'in-game' &&
+      o.domain === u.domain &&
+      tierKey(o) === tierKey(u) &&
+      unitClass(o) === cls,
   );
 }
 

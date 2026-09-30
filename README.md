@@ -438,7 +438,9 @@ runner only shoots back with turrets that turn all the way round, and an
 attack order stops at range rather than ramming. It leaves out shields,
 turning and shell flight time, and says so. One Longbow kites one Kodiak to
 death; five Kodiaks still can't catch three; ten catch one at 89s for the loss
-of a tank.
+of a tank. Units that would read the same — every commander is just
+"Commander" — get their faction in front ("EDA Commander") so a mirror match
+says who is who.
 
 ### Game units, made readable
 
@@ -449,8 +451,18 @@ pool) as the yardstick and a T1 tank, about one unit long, as the ruler: time to
 cross a map, to top speed, to turn about, for a shot to reach max range. The
 detail panel ranks speed against every in-game unit that moves the same way
 ("faster than 39% of ground units"), and a peer section strips each headline
-stat against the unit's signed-off tier-and-domain peers — each a dot you can
-click through to.
+stat against the unit's signed-off peers — each a dot you can click through
+to.
+
+Peers share a **class** as well as a domain and tier (`unitClass` in
+`scale.ts`), since a tank against an engineer on DPS says nothing. Classes come
+from the role the game assigns through each unit's strategic icon, with thin
+roles folded together so each tier has enough to rank: combat (direct fire and
+artillery), anti-air, anti-naval, engineers, intel (scouts, radar, the
+transmitter), shields, economy (alloy and energy), factories, and commanders. A
+T1 tank is ranked against the other T1 combat units, engineers against
+engineers on build power. A stat every peer ties on is dropped, so identical
+units such as the three factions' T1 engineers show no strips at all.
 
 ## How derived values are calculated
 
