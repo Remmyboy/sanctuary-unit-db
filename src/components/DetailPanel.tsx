@@ -9,6 +9,7 @@ import {
   crossMapSeconds,
   flightSeconds,
   ordinal,
+  peerGroupName,
   peerRows,
   peersOf,
   speedRank,
@@ -549,13 +550,12 @@ function PeerSection({
   const rows = peerRows(u, peers);
   if (!rows.length) return null;
   const byId = new Map(units.map((o) => [o.id, o]));
-  // Commanders are their own class, so they're weighed against each other.
-  const who = isCommander(u)
-    ? 'commanders'
-    : `T${u.tier} ${u.domain === 'Structure' ? 'structures' : `${u.domain.toLowerCase()} units`}`;
+  // Peers share a class as well as a tier: tanks against combat units,
+  // engineers against engineers, commanders against each other.
+  const who = peerGroupName(u);
 
   return (
-    <Section title={`Against ${isCommander(u) ? 'the other ' : ''}${who}`}>
+    <Section title={`Against ${isCommander(u) ? 'the other ' : 'other '}${who}`}>
       <div className="peers">
         {rows.map((row) => {
           const span = row.max - row.min || 1;
