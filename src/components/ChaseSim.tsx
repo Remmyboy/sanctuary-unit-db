@@ -26,10 +26,22 @@ const BEHAVIOURS: Array<[Behaviour, string]> = [
 ];
 const RATES = [1, 2, 4, 8];
 
-const nameOf = (u: Unit) => u.name ?? shortName(u);
+type Namer = (u: Unit) => string;
+
+/**
+ * Names for the units being compared. Commanders and other unnamed units only
+ * have their role ("Commander"), so wherever two would read the same the
+ * faction goes in front — "EDA Commander" against "Chosen Commander".
+ */
+function namer(units: Unit[]): Namer {
+  const base = (u: Unit) => u.name ?? shortName(u);
+  const seen = new Map<string, number>();
+  for (const u of units) seen.set(base(u), (seen.get(base(u)) ?? 0) + 1);
+  return (u) => ((seen.get(base(u)) ?? 0) > 1 ? `${u.faction} ${base(u)}` : base(u));
+}
 const mobile = (u: Unit) => Boolean(u.movement?.speed);
 /** "Kodiak", or "5× Kodiak" for a group. */
-const groupName = (u: Unit, n: number) => (n > 1 ? `${n}× ${nameOf(u)}` : nameOf(u));
+const groupName = (nameOf: Namer, u: Unit, n: number) => (n > 1 ? `${n}× ${nameOf(u)}` : nameOf(u));
 
 /** The likeliest matchup: the longest reach is the one being chased. */
 function defaults(units: Unit[]): [string, string] | null {
@@ -44,6 +56,7 @@ function defaults(units: Unit[]): [string, string] | null {
 
 export function ChaseSim({ units, loaded }: { units: Unit[]; loaded: LoadedData }) {
   const [picked, setPicked] = useState<[string, string] | null>(null);
+  const nameOf = namer(units);
   const [counts, setCounts] = useState<[number, number]>([1, 1]);
   const [behaviour, setBehaviour] = useState<Behaviour>('flee');
   const [gapOverride, setGapOverride] = useState<number | null>(null);
@@ -177,6 +190,7 @@ export function ChaseSim({ units, loaded }: { units: Unit[]; loaded: LoadedData 
         target={target}
         behaviour={behave}
         loaded={loaded}
+        nameOf={nameOf}
       />
     </section>
   );
@@ -189,12 +203,14 @@ function Playback({
   target,
   behaviour,
   loaded,
+  nameOf,
 }: {
   result: ChaseResult;
   chaser: Unit;
   target: Unit;
   behaviour: Behaviour;
   loaded: LoadedData;
+  nameOf: Namer;
 }) {
   const end = result.samples[result.samples.length - 1].t;
   const [t, setTime] = useState(0);
@@ -229,7 +245,14 @@ function Playback({
 
   return (
     <>
-      <Stage result={result} sample={sample} chaser={chaser} target={target} loaded={loaded} />
+      <Stage
+        result={result}
+        sample={sample}
+        chaser={chaser}
+        target={target}
+        loaded={loaded}
+        nameOf={nameOf}
+      />
 
       <div className="chase-transport">
         <button
@@ -268,7 +291,7 @@ function Playback({
         </div>
       </div>
 
-      <Summary result={result} chaser={chaser} target={target} behaviour={behaviour} />
+      <Summary result={result} chaser={chaser} target={target} behaviour={behaviour} nameOf={nameOf} />
     </>
   );
 }
@@ -291,12 +314,14 @@ function Stage({
   chaser,
   target,
   loaded,
+  nameOf,
 }: {
   result: ChaseResult;
   sample: ChaseResult['samples'][number];
   chaser: Unit;
   target: Unit;
   loaded: LoadedData;
+  nameOf: Namer;
 }) {
   const { chaserArms: ca, targetArms: ta } = result;
 
@@ -412,7 +437,7 @@ function Stage({
         })}
         <text x={sx(meanX(labelled))} y={top} textAnchor="middle" className="chase-label">
           {count === 1 || alive.length === count
-            ? groupName(u, count)
+            ? groupName(nameOf, u, count)
             : `${alive.length} of ${count}× ${nameOf(u)}`}
           {alive.length ? '' : ' ✕'}
         </text>
@@ -453,16 +478,18 @@ function Summary({
   chaser,
   target,
   behaviour,
+  nameOf,
 }: {
   result: ChaseResult;
   chaser: Unit;
   target: Unit;
   behaviour: Behaviour;
+  nameOf: Namer;
 }) {
   const cn = r.chaserCount;
   const tnum = r.targetCount;
-  const c = groupName(chaser, cn);
-  const tn = groupName(target, tnum);
+  const c = groupName(nameOf, chaser, cn);
+  const tn = groupName(nameOf, target, tnum);
   // Verb agreement for "Kodiak gets" / "5× Kodiak get".
   const v = (n: number, one: string, many: string) => (n > 1 ? many : one);
   const lines: string[] = [];
