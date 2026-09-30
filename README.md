@@ -413,14 +413,23 @@ acceleration and turn rate become "top speed in 1.3s" and "turns about in 4s".
 DPS is split into ground and air when the two differ.
 
 **Chase** under the table sets two of the compared units loose on open ground,
-one chasing the other, with their weapon ranges drawn round them — the Kodiak
-running down a kiting Longbow, say. It animates the samples from
-`simulateChase` in `src/lib/chase.ts` and sums the run up underneath: when (or
-whether) the chaser gets in range, how long the target was shooting first, and
-what that cost. Only weapons that can hit the other's layer count, a runner
-only shoots back with turrets that turn all the way round, and an attack order
-stops at range rather than ramming. It leaves out shields, turning and shell
-flight time, and says so.
+one side chasing the other, with their weapon ranges drawn round them — the
+Kodiak running down a kiting Longbow, say. Each side can be a group of up to
+20, laid out a few abreast. It animates the samples from `simulateChase` in
+`src/lib/chase.ts` and sums the run up underneath: when (or whether) the
+chasers get in range, how long the targets were shooting first, what that
+cost, and who was lost when.
+
+Every unit fights for itself: it shoots the nearest enemy its guns reach, so
+the front of a group soaks the fire and falls first, and it stops advancing
+only once something is in its own range — the ones behind keep coming up
+until they can shoot too, queueing behind their own front rank rather than
+walking through it. Only weapons that can hit the other's layer count, a
+runner only shoots back with turrets that turn all the way round, and an
+attack order stops at range rather than ramming. It leaves out shields,
+turning and shell flight time, and says so. One Longbow kites one Kodiak to
+death; five Kodiaks still can't catch three; ten catch one at 89s for the loss
+of a tank.
 
 ### Game units, made readable
 

@@ -63,3 +63,39 @@ describe('walking into a longer-ranged unit that holds', () => {
     expect(last.gap).toBeGreaterThan(30);
   });
 });
+
+describe('groups', () => {
+  it('ten tanks do run down one sniper, but lose one getting there', () => {
+    const r = simulateChase({
+      chaser: kodiak,
+      target: longbow,
+      behaviour: 'flee',
+      gap: 60,
+      chaserCount: 10,
+      targetCount: 1,
+    });
+    expect(r.chaserInRange).not.toBeNull();
+    expect(r.targetDies).not.toBeNull();
+    expect(r.chaserLosses.length).toBeGreaterThanOrEqual(1);
+    expect(r.chaserLosses.length).toBeLessThan(10);
+  });
+
+  it('a stand-up fight between equal blocks runs until one side is gone', () => {
+    const r = simulateChase({
+      chaser: unit('Glaive'),
+      target: unit('Auger'),
+      behaviour: 'advance',
+      gap: 44,
+      chaserCount: 4,
+      targetCount: 4,
+    });
+    expect(r.chaserDies != null || r.targetDies != null).toBe(true);
+  });
+
+  it('counts are clamped to 1–20', () => {
+    const r = simulateChase({ chaser: kodiak, target: longbow, behaviour: 'hold', gap: 80, chaserCount: 99 });
+    expect(r.chaserCount).toBe(20);
+    expect(r.targetCount).toBe(1);
+    expect(r.samples[0].chasers).toHaveLength(20);
+  });
+});

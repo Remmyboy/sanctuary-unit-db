@@ -5787,6 +5787,27 @@ html.modding-route {
 .chase-controls .view-toggle {
   height: 30px;
 }
+/* A unit picker and its "how many" sit together as one side of the fight. */
+.chase-side {
+  display: flex;
+  gap: 6px;
+  align-items: flex-end;
+}
+.chase-count input {
+  width: 58px;
+  padding: 5px 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--bg-sunken);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.chase-wreck {
+  fill: var(--text-faint);
+  font-size: 11px;
+}
 .chase-gap {
   grid-template-columns: auto auto;
   align-items: center;

@@ -1,14 +1,23 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Unit } from '../lib/types';
 import type { LoadedData } from '../lib/data';
 import { fmt, shortName } from '../lib/format';
-import { STEP, armament, defaultGap, simulateChase, type Behaviour, type ChaseResult } from '../lib/chase';
+import {
+  MAX_COUNT,
+  STEP,
+  armament,
+  defaultGap,
+  simulateChase,
+  type Behaviour,
+  type Body,
+  type ChaseResult,
+} from '../lib/chase';
 import { FACTION_COLOURS, iconUrl } from './UnitIcon';
 
-// Two of the compared units on open ground, one chasing the other, with their
-// weapon ranges drawn round them. The animation plays back the very samples
-// the summary underneath is worked out from, so what you watch and what you
-// read can't disagree.
+// Two of the compared units on open ground — one of each, or a group of
+// each — one side chasing the other, with their weapon ranges drawn round
+// them. The animation plays back the very samples the summary underneath is
+// worked out from, so what you watch and what you read can't disagree.
 
 const BEHAVIOURS: Array<[Behaviour, string]> = [
   ['flee', 'Runs away'],
@@ -19,6 +28,8 @@ const RATES = [1, 2, 4, 8];
 
 const nameOf = (u: Unit) => u.name ?? shortName(u);
 const mobile = (u: Unit) => Boolean(u.movement?.speed);
+/** "Kodiak", or "5× Kodiak" for a group. */
+const groupName = (u: Unit, n: number) => (n > 1 ? `${n}× ${nameOf(u)}` : nameOf(u));
 
 /** The likeliest matchup: the longest reach is the one being chased. */
 function defaults(units: Unit[]): [string, string] | null {
@@ -32,13 +43,13 @@ function defaults(units: Unit[]): [string, string] | null {
 }
 
 export function ChaseSim({ units, loaded }: { units: Unit[]; loaded: LoadedData }) {
-  const fallback = useMemo(() => defaults(units), [units]);
   const [picked, setPicked] = useState<[string, string] | null>(null);
+  const [counts, setCounts] = useState<[number, number]>([1, 1]);
   const [behaviour, setBehaviour] = useState<Behaviour>('flee');
   const [gapOverride, setGapOverride] = useState<number | null>(null);
 
   // Picks survive only while both units are still being compared.
-  const ids = picked && picked.every((id) => units.some((u) => u.id === id)) ? picked : fallback;
+  const ids = picked && picked.every((id) => units.some((u) => u.id === id)) ? picked : defaults(units);
   const chaser = ids && loaded.byId.get(ids[0]);
   const target = ids && loaded.byId.get(ids[1]);
 
@@ -46,9 +57,14 @@ export function ChaseSim({ units, loaded }: { units: Unit[]; loaded: LoadedData 
 
   const behave: Behaviour = mobile(target) ? behaviour : 'hold';
   const gap = gapOverride ?? defaultGap(chaser, target, behave);
+  const [chaserCount, targetCount] = counts;
   const choose = (next: [string, string]) => {
     setPicked(next);
     setGapOverride(null);
+  };
+  const setCount = (side: 0 | 1, raw: string) => {
+    const n = Math.min(MAX_COUNT, Math.max(1, Math.round(Number(raw) || 1)));
+    setCounts((c) => (side === 0 ? [n, c[1]] : [c[0], n]));
   };
 
   const cArms = armament(chaser, target);
@@ -59,45 +75,72 @@ export function ChaseSim({ units, loaded }: { units: Unit[]; loaded: LoadedData 
     <section className="chase" aria-labelledby="chase-title">
       <h2 id="chase-title">Chase</h2>
       <p className="chase-lede">
-        Set two of these loose on open ground and watch who gets in range first. Rings are weapon ranges
-        against each other.
+        Set these loose on open ground — one of each, or a group of each — and watch who gets in range first.
+        Rings are weapon ranges against each other.
       </p>
 
       <div className="chase-controls">
-        <label>
-          <span>Chaser</span>
-          <select value={chaser.id} onChange={(e) => choose([e.target.value, target.id])}>
-            {units
-              .filter((u) => mobile(u) && u.id !== target.id)
-              .map((u) => (
-                <option key={u.id} value={u.id}>
-                  {nameOf(u)}
-                </option>
-              ))}
-          </select>
-        </label>
+        <div className="chase-side">
+          <label>
+            <span>Chaser</span>
+            <select value={chaser.id} onChange={(e) => choose([e.target.value, target.id])}>
+              {units
+                .filter((u) => mobile(u) && u.id !== target.id)
+                .map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {nameOf(u)}
+                  </option>
+                ))}
+            </select>
+          </label>
+          <label className="chase-count">
+            <span>How many</span>
+            <input
+              type="number"
+              min={1}
+              max={MAX_COUNT}
+              value={chaserCount}
+              onChange={(e) => setCount(0, e.target.value)}
+            />
+          </label>
+        </div>
         <button
           type="button"
           className="chase-swap"
           title="Swap who chases whom"
           aria-label="Swap chaser and target"
           disabled={!mobile(target)}
-          onClick={() => choose([target.id, chaser.id])}
+          onClick={() => {
+            choose([target.id, chaser.id]);
+            setCounts([targetCount, chaserCount]);
+          }}
         >
           ⇄
         </button>
-        <label>
-          <span>Target</span>
-          <select value={target.id} onChange={(e) => choose([chaser.id, e.target.value])}>
-            {units
-              .filter((u) => u.id !== chaser.id)
-              .map((u) => (
-                <option key={u.id} value={u.id}>
-                  {nameOf(u)}
-                </option>
-              ))}
-          </select>
-        </label>
+        <div className="chase-side">
+          <label>
+            <span>Target</span>
+            <select value={target.id} onChange={(e) => choose([chaser.id, e.target.value])}>
+              {units
+                .filter((u) => u.id !== chaser.id)
+                .map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {nameOf(u)}
+                  </option>
+                ))}
+            </select>
+          </label>
+          <label className="chase-count">
+            <span>How many</span>
+            <input
+              type="number"
+              min={1}
+              max={MAX_COUNT}
+              value={targetCount}
+              onChange={(e) => setCount(1, e.target.value)}
+            />
+          </label>
+        </div>
         <div className="view-toggle" role="group" aria-label="What the target does">
           {BEHAVIOURS.map(([b, label]) => (
             <button
@@ -128,8 +171,8 @@ export function ChaseSim({ units, loaded }: { units: Unit[]; loaded: LoadedData 
       </div>
 
       <Playback
-        key={`${chaser.id}-${target.id}-${behave}-${gap}`}
-        result={simulateChase({ chaser, target, behaviour: behave, gap })}
+        key={`${chaser.id}-${chaserCount}-${target.id}-${targetCount}-${behave}-${gap}`}
+        result={simulateChase({ chaser, target, behaviour: behave, gap, chaserCount, targetCount })}
         chaser={chaser}
         target={target}
         behaviour={behave}
@@ -235,8 +278,12 @@ function Playback({
 const gridStep = (width: number) => [5, 10, 20, 50, 100].find((s) => width / s <= 16) ?? 200;
 
 const W = 800;
-const H = 230;
+const H = 250;
 const LANE = H / 2;
+
+const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
+const living = (bodies: Body[]) => bodies.filter((b) => b.hp > 0);
+const meanX = (bodies: Body[]) => bodies.reduce((n, b) => n + b.x, 0) / bodies.length;
 
 function Stage({
   result,
@@ -252,69 +299,123 @@ function Stage({
   loaded: LoadedData;
 }) {
   const { chaserArms: ca, targetArms: ta } = result;
-  // One zoom for the whole run, wide enough for the start and both rings;
-  // the camera then follows the pair, so the ground slides past underneath.
-  const span = useMemo(
-    () => Math.max(ca.reach, ta.reach, result.samples[0].gap, 12) * 2.6,
-    [ca.reach, ta.reach, result.samples],
-  );
-  const scale = W / span;
-  const centre = (sample.chaserX + sample.targetX) / 2;
+
+  // One zoom for the whole run: wide enough for both blocks and both rings
+  // at the start, and short enough that the wider block fits top to bottom.
+  // The camera then follows the fight, so the ground slides past underneath.
+  const start = [...result.samples[0].chasers, ...result.samples[0].targets];
+  const extentX = Math.max(...start.map((b) => b.x)) - Math.min(...start.map((b) => b.x));
+  const extentY = Math.max(...start.map((b) => Math.abs(b.y)));
+  const reach = Math.max(ca.reach, ta.reach, 8);
+  const scale = Math.min(W / Math.max(reach * 2.6, extentX + reach * 1.4, 30), (LANE - 42) / (extentY + 1));
+  const span = W / scale;
+
+  // Follow the living: midway between the two groups' centres.
+  const cl = living(sample.chasers);
+  const tl = living(sample.targets);
+  const centre = (meanX(cl.length ? cl : sample.chasers) + meanX(tl.length ? tl : sample.targets)) / 2;
   const sx = (x: number) => W / 2 + (x - centre) * scale;
+  const sy = (y: number) => LANE + y * scale;
+
   const step = gridStep(span);
   const first = Math.floor((centre - span / 2) / step) * step;
   const lines = Array.from({ length: Math.ceil(span / step) + 2 }, (_, i) => first + i * step);
   const flicker = Math.round(sample.t / STEP) % 4 < 2;
 
-  const actor = (u: Unit, x: number, hp: number, reach: number, firing: boolean, other: number) => {
+  const side = (
+    u: Unit,
+    count: number,
+    bodies: Body[],
+    enemies: Body[],
+    reach: number,
+    spacing: number,
+    facing: 1 | -1,
+  ) => {
     const colour = FACTION_COLOURS[u.faction];
-    const cx = sx(x);
-    const dead = hp <= 0;
     const src = iconUrl(u.icon, u.faction, loaded.iconManifest);
+    const r = clamp(spacing * scale * 0.42, 4, 13);
+    const alive = living(bodies);
+    // The one nearest the enemy wears the full ring; the rest a faint one,
+    // so a group's coverage shows without drowning the picture.
+    const lead = alive.length ? alive.reduce((a, b) => (facing * (b.x - a.x) > 0 ? b : a)) : null;
+    // The label rides over the survivors, not the wrecks left behind.
+    const labelled = alive.length ? alive : bodies;
+    const top = Math.min(...labelled.map((b) => sy(b.y))) - r - 9;
     return (
-      <g opacity={dead ? 0.35 : 1}>
-        {reach > 0 && (
-          <circle
-            cx={cx}
-            cy={LANE}
-            r={reach * scale}
-            fill={colour}
-            fillOpacity={0.06}
-            stroke={colour}
-            strokeOpacity={0.7}
-            strokeDasharray="6 5"
-          />
-        )}
-        {firing && flicker && (
-          <line
-            x1={cx}
-            y1={LANE}
-            x2={sx(other)}
-            y2={LANE}
-            stroke={colour}
-            strokeWidth={2}
-            strokeOpacity={0.9}
-          />
-        )}
-        <circle cx={cx} cy={LANE} r={13} fill="var(--bg)" stroke={colour} strokeWidth={2} />
-        {src ? (
-          <image href={src} x={cx - 11} y={LANE - 11} width={22} height={22} />
-        ) : (
-          <circle cx={cx} cy={LANE} r={6} fill={colour} />
-        )}
-        <text x={cx} y={LANE - 22} textAnchor="middle" className="chase-label">
-          {nameOf(u)}
-          {dead ? ' ✕' : ''}
+      <g>
+        {reach > 0 &&
+          alive.map((b, i) => (
+            <circle
+              key={`ring-${i}`}
+              cx={sx(b.x)}
+              cy={sy(b.y)}
+              r={reach * scale}
+              fill={b === lead ? colour : 'none'}
+              fillOpacity={0.06}
+              stroke={colour}
+              strokeOpacity={b === lead ? 0.7 : 0.16}
+              strokeDasharray="6 5"
+            />
+          ))}
+        {flicker &&
+          bodies.map((b, i) =>
+            b.hp > 0 && b.shooting >= 0 ? (
+              <line
+                key={`shot-${i}`}
+                x1={sx(b.x)}
+                y1={sy(b.y)}
+                x2={sx(enemies[b.shooting].x)}
+                y2={sy(enemies[b.shooting].y)}
+                stroke={colour}
+                strokeWidth={count > 4 ? 1.2 : 2}
+                strokeOpacity={0.85}
+              />
+            ) : null,
+          )}
+        {bodies.map((b, i) => {
+          const x = sx(b.x);
+          const y = sy(b.y);
+          if (b.hp <= 0) {
+            return (
+              <text key={i} x={x} y={y + 4} textAnchor="middle" className="chase-wreck">
+                ✕
+              </text>
+            );
+          }
+          const bar = Math.max(12, r * 2 + 4);
+          return (
+            <g key={i}>
+              <circle cx={x} cy={y} r={r} fill="var(--bg)" stroke={colour} strokeWidth={r > 7 ? 2 : 1.5} />
+              {src && r >= 8 ? (
+                <image href={src} x={x - r * 0.85} y={y - r * 0.85} width={r * 1.7} height={r * 1.7} />
+              ) : (
+                <circle cx={x} cy={y} r={r * 0.45} fill={colour} />
+              )}
+              <rect
+                x={x - bar / 2}
+                y={y + r + 3}
+                width={bar}
+                height={3}
+                rx={1.5}
+                fill="var(--border-strong)"
+              />
+              <rect
+                x={x - bar / 2}
+                y={y + r + 3}
+                width={bar * (b.hp / u.health)}
+                height={3}
+                rx={1.5}
+                fill={b.hp / u.health > 0.35 ? 'var(--good)' : 'var(--bad)'}
+              />
+            </g>
+          );
+        })}
+        <text x={sx(meanX(labelled))} y={top} textAnchor="middle" className="chase-label">
+          {count === 1 || alive.length === count
+            ? groupName(u, count)
+            : `${alive.length} of ${count}× ${nameOf(u)}`}
+          {alive.length ? '' : ' ✕'}
         </text>
-        <rect x={cx - 22} y={LANE + 19} width={44} height={4} rx={2} fill="var(--border-strong)" />
-        <rect
-          x={cx - 22}
-          y={LANE + 19}
-          width={44 * Math.max(0, hp / u.health)}
-          height={4}
-          rx={2}
-          fill={hp / u.health > 0.35 ? 'var(--good)' : 'var(--bad)'}
-        />
       </g>
     );
   };
@@ -326,8 +427,8 @@ function Stage({
           <line key={x} x1={sx(x)} x2={sx(x)} y1={0} y2={H} className="chase-grid" />
         ))}
         <line x1={0} x2={W} y1={LANE} y2={LANE} className="chase-lane" />
-        {actor(target, sample.targetX, sample.targetHp, ta.reach, sample.targetFiring, sample.chaserX)}
-        {actor(chaser, sample.chaserX, sample.chaserHp, ca.reach, sample.chaserFiring, sample.targetX)}
+        {side(target, result.targetCount, sample.targets, sample.chasers, ta.reach, result.targetSpacing, -1)}
+        {side(chaser, result.chaserCount, sample.chasers, sample.targets, ca.reach, result.chaserSpacing, 1)}
         <g className="chase-ruler" transform={`translate(12 ${H - 14})`}>
           <line x1={0} x2={step * scale} y1={0} y2={0} />
           <line x1={0} x2={0} y1={-4} y2={4} />
@@ -358,62 +459,92 @@ function Summary({
   target: Unit;
   behaviour: Behaviour;
 }) {
-  const c = nameOf(chaser);
-  const tn = nameOf(target);
+  const cn = r.chaserCount;
+  const tnum = r.targetCount;
+  const c = groupName(chaser, cn);
+  const tn = groupName(target, tnum);
+  // Verb agreement for "Kodiak gets" / "5× Kodiak get".
+  const v = (n: number, one: string, many: string) => (n > 1 ? many : one);
   const lines: string[] = [];
   const cs = chaser.movement!.speed;
   const ts = target.movement?.speed ?? 0;
+  const reach = fmt(r.chaserArms.reach);
 
   if (r.chaserArms.reach === 0) {
     lines.push(
-      `${c} has nothing that can hit ${tn} — ${target.domain === 'Air' ? 'no anti-air' : 'no weapon for that layer'}.`,
+      `${c} ${v(cn, 'has', 'have')} nothing that can hit ${nameOf(target)} — ${target.domain === 'Air' ? 'no anti-air' : 'no weapon for that layer'}.`,
     );
   } else if (r.chaserInRange === 0) {
-    lines.push(`${tn} starts inside ${c}'s ${fmt(r.chaserArms.reach)} range.`);
+    lines.push(`${tn} ${v(tnum, 'starts', 'start')} inside ${c}'s ${reach} range.`);
   } else if (r.chaserInRange != null) {
     lines.push(
-      `${c} gets ${tn} into its ${fmt(r.chaserArms.reach)} range after ${fmt(r.chaserInRange, 1)}s.`,
+      `${cn > 1 ? `The first of ${c}` : c} gets ${tn} into range (${reach}) after ${fmt(r.chaserInRange, 1)}s.`,
     );
   } else if (r.chaserDies != null) {
-    lines.push(`${c} never gets ${tn} into its ${fmt(r.chaserArms.reach)} range — it's destroyed first.`);
+    lines.push(
+      `${c} never ${v(cn, 'gets', 'get')} ${tn} into ${v(cn, 'its', 'their')} ${reach} range — ${v(cn, "it's", "they're")} destroyed first.`,
+    );
   } else if (behaviour === 'flee' && ts >= cs) {
     lines.push(
-      `${c} never gets ${tn} into range: ${fmt(ts)} u/s against ${fmt(cs)} u/s, so the gap only ${ts > cs ? 'grows' : 'holds'}.`,
+      `${c} never ${v(cn, 'gets', 'get')} ${tn} into range: ${fmt(ts)} u/s against ${fmt(cs)} u/s, so the gap only ${ts > cs ? 'grows' : 'holds'}.`,
     );
   } else {
-    lines.push(`${c} doesn't get ${tn} into range in ${fmt(r.samples[r.samples.length - 1].t, 0)}s.`);
+    lines.push(
+      `${c} ${v(cn, "doesn't", "don't")} get ${tn} into range in ${fmt(r.samples[r.samples.length - 1].t, 0)}s.`,
+    );
   }
 
   if (behaviour === 'flee' && ts > 0 && ts < cs && r.chaserInRange == null && r.chaserDies == null) {
-    lines.push(`It only gains ${fmt(cs - ts, 2)} u/s on a runner at ${fmt(ts)} u/s.`);
+    lines.push(
+      `${v(cn, 'It', 'They')} only gain${v(cn, 's', '')} ${fmt(cs - ts, 2)} u/s on a runner at ${fmt(ts)} u/s.`,
+    );
   }
-  if (r.escaped != null) lines.push(`${tn} gets clear of it after ${fmt(r.escaped, 1)}s.`);
+  if (r.escaped != null) lines.push(`${tn} ${v(tnum, 'gets', 'get')} clear after ${fmt(r.escaped, 1)}s.`);
 
+  const cHealth = chaser.health * cn;
+  const tHealth = target.health * tnum;
+  const combined = (n: number) => (n > 1 ? 'combined ' : '');
   if (r.targetArms.reach > 0) {
     if (behaviour === 'flee' && r.targetArms.dpsRetreating === 0) {
-      lines.push(`${tn}'s guns only point forward, so it can't shoot back while running.`);
+      lines.push(
+        `${tn}'s guns only point forward, so ${v(tnum, 'it', 'they')} can't shoot back while running.`,
+      );
     } else if (r.targetFireTime > 0) {
       lines.push(
-        `${tn} is firing for ${fmt(r.targetFireTime, 1)}s — ${fmt(Math.round(r.damageToChaser))} damage, ${pct(r.damageToChaser, chaser.health)} of ${c}'s health.`,
+        `${tn} ${v(tnum, 'is', 'are')} firing for ${fmt(r.targetFireTime, 1)}s — ${fmt(Math.round(r.damageToChaser))} damage, ${pct(r.damageToChaser, cHealth)} of ${c}'s ${combined(cn)}health.`,
       );
     } else {
-      lines.push(`${tn} never gets a shot in: ${c} stays outside its ${fmt(r.targetArms.reach)} range.`);
+      lines.push(
+        `${tn} never ${v(tnum, 'gets', 'get')} a shot in: ${c} ${v(cn, 'stays', 'stay')} outside ${fmt(r.targetArms.reach)} range.`,
+      );
     }
   }
   if (r.chaserFireTime > 0) {
     lines.push(
-      `${c} fires for ${fmt(r.chaserFireTime, 1)}s — ${fmt(Math.round(r.damageToTarget))} damage, ${pct(r.damageToTarget, target.health)} of ${tn}'s health.`,
+      `${c} ${v(cn, 'fires', 'fire')} for ${fmt(r.chaserFireTime, 1)}s — ${fmt(Math.round(r.damageToTarget))} damage, ${pct(r.damageToTarget, tHealth)} of ${tn}'s ${combined(tnum)}health.`,
     );
   }
-  if (r.targetDies != null) lines.push(`${tn} is destroyed at ${fmt(r.targetDies, 1)}s.`);
-  if (r.chaserDies != null) lines.push(`${c} is destroyed at ${fmt(r.chaserDies, 1)}s.`);
+
+  // Losses, for groups: how many fell and when the first went.
+  const losses = (u: Unit, n: number, at: number[]) =>
+    at.length
+      ? `${nameOf(u)} lose ${at.length} of ${n}${at.length < n ? `, the first at ${fmt(at[0], 1)}s` : ''}`
+      : `${nameOf(u)} lose none`;
+  if (cn > 1 || tnum > 1) {
+    lines.push(`${losses(chaser, cn, r.chaserLosses)}; ${losses(target, tnum, r.targetLosses)}.`);
+  }
+  const wiped = (name: string, n: number, at: number) =>
+    n > 1 ? `The last of ${name} falls at ${fmt(at, 1)}s.` : `${name} is destroyed at ${fmt(at, 1)}s.`;
+  if (r.targetDies != null) lines.push(wiped(tn, tnum, r.targetDies));
+  if (r.chaserDies != null) lines.push(wiped(c, cn, r.chaserDies));
 
   return (
     <div className="chase-summary">
       <p>{lines.join(' ')}</p>
       <p className="hint">
-        Straight line, open ground, both setting off from a standstill. The chaser stops at its own range, as
-        an attack order does. Damage is DPS with every shot landing, less health regen; shields, turning and
+        Straight line, open ground, everyone setting off from a standstill. Each unit shoots the nearest enemy
+        in its reach and stops at its own range, as an attack order does; the ones behind keep coming until
+        they can shoot too. Damage is DPS with every shot landing, less health regen; shields, turning and
         shell flight time are left out.
       </p>
     </div>
