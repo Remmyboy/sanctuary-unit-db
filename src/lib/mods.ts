@@ -51,7 +51,7 @@ export const MODS: Mod[] = [
   {
     id: 'ModManager',
     name: 'Mod Manager',
-    version: '0.8.0',
+    version: '0.9.0',
     tagline:
       'A Mods page in the game menu for switching mods on and off, and a Mods panel in the lobby for the host’s gameplay mods.',
     features: [
@@ -70,6 +70,10 @@ export const MODS: Mod[] = [
       {
         title: 'Gameplay mods, picked by the host',
         text: 'The host switches on the mods for the match in the lobby’s Mods panel, and Start waits until everyone has the same copies. Every lobby starts vanilla, so you can still join anyone.',
+      },
+      {
+        title: 'Play against community AIs',
+        text: 'Drop an AI author’s folder in as it is, and the host can give each AI seat its own AI from the lobby. Plain “AI” is still the game’s own.',
       },
       {
         title: 'Spots a bad install',
