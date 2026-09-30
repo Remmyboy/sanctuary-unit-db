@@ -11,6 +11,7 @@
 // never have started itself, so those two roles are picked from different pools.
 
 import type { Unit } from './types';
+import { isCommander } from './format';
 
 export interface CountedRow {
   id: string;
@@ -145,7 +146,7 @@ export interface QueueResult {
 
 // A game always starts with a commander: its income and storage are the base
 // every build order grows from.
-export const isCommander = (u: Unit) => /Commander$/.test(u.internalName ?? '');
+export { isCommander };
 export const commanderOf = (units: Unit[], faction: string | undefined) =>
   faction ? units.find((u) => u.faction === faction && isCommander(u)) : undefined;
 

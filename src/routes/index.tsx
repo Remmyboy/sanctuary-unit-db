@@ -8,12 +8,14 @@ import {
   STATUS_LABELS,
   activeFactions,
   buildGroups,
+  tierPill,
   visibleGroups,
   type BoardFilters,
   type Group,
   type SortKey,
 } from '../lib/board';
 import type { Faction, Unit } from '../lib/types';
+import { tierKey, tierKeyLabel } from '../lib/format';
 import { FACTION_COLOURS } from '../components/UnitIcon';
 import { FactionEmblem } from '../components/FactionEmblem';
 import { CompactBoard } from '../components/CompactBoard';
@@ -329,10 +331,11 @@ function FilterSidebar({
       {
         key: 'tier' as const,
         title: 'Tier',
-        values: distinct((u) => u.tier)
-          .sort((a, b) => a - b)
-          .map(String),
-        label: (v: string) => `T${v}`,
+        // Commanders first, as their own chip, then T1 up.
+        values: distinct(tierKey).sort((a, b) =>
+          a === 'cmd' ? -1 : b === 'cmd' ? 1 : Number(a) - Number(b),
+        ),
+        label: tierKeyLabel,
       },
       { key: 'role' as const, title: 'Role', values: distinct((u) => u.role).sort() as string[] },
       { key: 'status' as const, title: 'Availability', values: Object.values(STATUS_LABELS) },
@@ -421,7 +424,8 @@ function Board({
             {heading && <h2 className="domain-head">{heading}</h2>}
             <div className="slot">
               <div className="slot-label">
-                {group.tier ? <span className="tier-pill">T{group.tier}</span> : null}
+                {/* The commanders' row is labelled "Commander" already, so it gets no pill. */}
+                {group.tier ? <span className="tier-pill">{tierPill(group.tier)}</span> : null}
                 <span>{group.label}</span>
               </div>
               <div className="slot-row" style={cols}>

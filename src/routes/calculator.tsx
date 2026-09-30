@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { loadData } from '../lib/data';
-import { builderName, duration, fmt, resourceName, shortName } from '../lib/format';
+import { builderName, duration, fmt, resourceName, shortName, tierTag } from '../lib/format';
 import {
   buildResult,
   buildable,
@@ -89,7 +89,7 @@ const byTierName = (a: Unit, b: Unit) => (a.tier ?? 0) - (b.tier ?? 0) || label(
 
 // "T2 · EDA · 3,200a · 48,000e" — the sub line under a pickable unit.
 const subLine = (u: Unit): string =>
-  [u.tier ? `T${u.tier}` : null, u.faction, `${fmt(u.cost.alloys, 0)}a · ${fmt(u.cost.energy, 0)}e`]
+  [tierTag(u), u.faction, `${fmt(u.cost.alloys, 0)}a · ${fmt(u.cost.energy, 0)}e`]
     .filter(Boolean)
     .join(' · ');
 
@@ -116,7 +116,7 @@ const econDetail = (u: Unit): string =>
     .join(' · ');
 
 const econSub = (u: Unit): string =>
-  `${[u.tier ? `T${u.tier}` : null, u.faction].filter(Boolean).join(' ')} · ${econDetail(u)}`;
+  `${[tierTag(u), u.faction].filter(Boolean).join(' ')} · ${econDetail(u)}`;
 
 // Ids and internal names are searchable too, since people quote them; so are
 // "T2" and the faction, which the old combobox labels used to carry.
@@ -124,7 +124,7 @@ const haystacks = new WeakMap<Unit, string>();
 const haystack = (u: Unit): string => {
   let h = haystacks.get(u);
   if (!h) {
-    h = [u.name, u.displayName, u.internalName, u.id, u.role, u.tier ? `T${u.tier}` : null, u.faction]
+    h = [u.name, u.displayName, u.internalName, u.id, u.role, tierTag(u), u.faction]
       .filter(Boolean)
       .join(' ')
       .toLowerCase();
@@ -436,8 +436,7 @@ function CalculatorPage() {
                     aria-pressed={u.id === queueBuilder?.id}
                     onClick={() => patch({ b: u.id })}
                   >
-                    {(u.tier && !isCommander(u) ? `T${u.tier} ` : '') + label(u)}{' '}
-                    <small>{fmt(u.buildPower)} bp</small>
+                    {(tierTag(u) ? `${tierTag(u)} ` : '') + label(u)} <small>{fmt(u.buildPower)} bp</small>
                   </button>
                 ))}
               </div>
@@ -536,7 +535,7 @@ function CalculatorPage() {
                     }
                     onClick={() => patch({ p: u.id })}
                   >
-                    {(u.tier ? `T${u.tier} ` : '') + label(u)}{' '}
+                    {(tierTag(u) ? `${tierTag(u)} ` : '') + label(u)}{' '}
                     <small>
                       {u.upgradesTo === target?.id ? 'upgrade · ' : ''}
                       {fmt(u.buildPower)} bp
