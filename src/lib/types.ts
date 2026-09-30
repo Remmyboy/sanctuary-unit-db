@@ -49,12 +49,16 @@ export interface Weapon {
   salvoDelay: number;
   totalGroups: number;
   shotsPerCycle: number;
+  /** Seconds from one volley to the next, after the game's 0.1s tick rounding — often a tick more than reloadTime. Null for a continuous beam. */
+  cycleTime: number | null;
   rangeMax: number;
   rangeMin: number;
   isBeam: boolean;
   beamLifetime: number | null;
   beamMode: 'continuous' | 'pulse' | 'burst' | null;
   projectileSpeed: number | null;
+  /** A guided missile: steered onto its target, launched at projectileSpeed and accelerating from there. */
+  homing: boolean;
   traverseSpeed: number | null;
   elevationSpeed: number | null;
   traverseArc: number | null;
@@ -72,6 +76,8 @@ export interface Movement {
   speed: number;
   acceleration: number | null;
   rotationSpeed: number | null;
+  /** Planes only: the stall floor they never drop below. */
+  minSpeed: number | null;
 }
 
 export interface Unit {
@@ -97,6 +103,8 @@ export interface Unit {
   upkeep: ResourceRates | null;
   storage: ResourceRates | null;
   health: number;
+  /** HP regained per second, always on. */
+  healthRegen: number | null;
   shields: Shield[];
   buildPower: number | null;
   /** Only units with a range can pour build power into someone else's build. */
