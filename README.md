@@ -371,6 +371,15 @@ each card keeps its own name, so the divergence shows rather than hiding.
 Sorting by a metric reorders whole rows — ranked by their most extreme member —
 so the alignment survives sorting.
 
+**Commanders are their own class.** The templates tag them `TECH1`, and `tier`
+in the data says 1 because that's what the game says, but nothing about a
+commander is T1: every army starts from one, it builds and fights, and there's
+one per faction. So the site keys them on the `COMMAND` tag (`isCommander` in
+`src/lib/format.ts`). They get a row ahead of the T1 land units, their own
+"Commander" chip in the tier filter (`?tier=cmd`), a "Commander" badge instead
+of "Tier 1", no "T1" before their name anywhere, and the detail panel ranks
+them against the other two commanders rather than a field of T1 tanks.
+
 ### Compact view
 
 **Cards | Compact** in the toolbar (`?view=compact`) swaps the cards for small

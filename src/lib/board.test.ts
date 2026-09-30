@@ -8,8 +8,11 @@ import {
   visibleGroups,
   COMPACT_CHUNK,
   DEFAULT_STATUS,
+  COMMANDER_TIER,
   type BoardFilters,
 } from './board';
+import { builderName } from './format';
+import { peersOf } from './scale';
 import type { UnitsData } from './types';
 
 // Tests run against the committed units.json — the same file the site serves —
@@ -182,5 +185,36 @@ describe('compact view', () => {
     const t1Tanks = groups.find((g) => g.units.some((u) => u.id === 'uel1001'))!;
     expect(slotSpan(t1Tanks, factions)).toBe(1);
     expect(slotSpan(t1Tanks, [])).toBe(1);
+  });
+});
+
+describe('commanders are their own class, not T1', () => {
+  const commanders = ['ucl0000', 'uel0000', 'ugl0000'];
+  const groups = buildGroups(data.units);
+
+  it('get a row of their own, ahead of the T1 land units', () => {
+    const row = groups.find((g) => g.units.some((u) => u.id === 'uel0000'))!;
+    expect(row.units.map((u) => u.id).sort()).toEqual(commanders);
+    expect(row.tier).toBe(COMMANDER_TIER);
+    const land = groups.filter((g) => g.domain === 'l');
+    expect(land[0]).toBe(row);
+    expect(compactBlocks(land, 'default')[0].label).toBe('Cmdr');
+  });
+
+  it('have their own tier filter, and T1 no longer includes them', () => {
+    const only = (tier: string) =>
+      data.units.filter((u) => matches(u, { ...noFilters, tier: new Set([tier]) })).map((u) => u.id);
+    expect(only('cmd').sort()).toEqual(commanders);
+    expect(only('1')).not.toContain('uel0000');
+  });
+
+  it('are ranked only against each other, and never called T1', () => {
+    const eda = byId.get('uel0000')!;
+    expect(
+      peersOf(eda, data.units)
+        .map((u) => u.id)
+        .sort(),
+    ).toEqual(['ucl0000', 'ugl0000']);
+    expect(builderName(eda)).toBe('Commander');
   });
 });

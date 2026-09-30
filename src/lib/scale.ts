@@ -7,6 +7,7 @@
 // agree to the digit.
 
 import type { Unit, Weapon } from './types';
+import { tierKey } from './format';
 
 /**
  * The yardstick: a map this many game units across. Most of the ranked 1v1
@@ -141,7 +142,7 @@ export interface PeerRow {
  */
 export function peersOf(u: Unit, units: Unit[]): Unit[] {
   return units.filter(
-    (o) => o.id !== u.id && o.status === 'in-game' && o.domain === u.domain && o.tier === u.tier,
+    (o) => o.id !== u.id && o.status === 'in-game' && o.domain === u.domain && tierKey(o) === tierKey(u),
   );
 }
 

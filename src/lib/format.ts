@@ -23,6 +23,21 @@ export function duration(seconds: number): string {
   return `${Math.floor(m / 60)} h ${m % 60} m`;
 }
 
+// Commanders are tagged TECH1 in the templates, but they're nothing like a T1
+// unit — the whole army starts from one, it builds and fights, and there's
+// only ever one per faction. So the site gives them a class of their own: their
+// own row on the board, their own filter, and ranked only against each other.
+export const isCommander = (u: Unit): boolean => u.tags.includes('COMMAND');
+
+/** The tier the site groups and filters by: "cmd" for commanders, else the tech tier. */
+export const tierKey = (u: Unit): string => (isCommander(u) ? 'cmd' : String(u.tier));
+
+/** A tier filter chip's label for a tierKey. */
+export const tierKeyLabel = (key: string): string => (key === 'cmd' ? 'Commander' : `T${key}`);
+
+/** "T2" to put before a name — or nothing for a commander, whose name already says it. */
+export const tierTag = (u: Unit): string | null => (isCommander(u) || !u.tier ? null : `T${u.tier}`);
+
 // Many structures have no proper name, only a "Tier 2: Land Factory" label.
 export function shortName(u: Unit): string {
   return u.displayName.replace(/^Tier \d+:\s*/, '') || u.id;
@@ -32,7 +47,8 @@ export function shortName(u: Unit): string {
 // three times over is useless — keep the tier on anything without a real name.
 export function builderName(u: Unit): string {
   if (u.name) return u.name;
-  return u.tier ? `T${u.tier} ${shortName(u)}` : shortName(u);
+  const tier = tierTag(u);
+  return tier ? `${tier} ${shortName(u)}` : shortName(u);
 }
 
 // "AOEDelayedCluster" -> "AOE Delayed Cluster"; the first pass breaks an

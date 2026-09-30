@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import type { Unit, Weapon } from '../lib/types';
 import type { LoadedData } from '../lib/data';
 import { STATUS_LABELS } from '../lib/board';
-import { builderName, duration, fmt, resourceName, shortName, splitCamel } from '../lib/format';
+import { builderName, duration, fmt, isCommander, resourceName, shortName, splitCamel } from '../lib/format';
 import { consumes, economyRole, produces, upgradeChain, type UpgradeStep } from '../lib/economy';
 import {
   MAP_SIZE,
@@ -117,7 +117,11 @@ export function DetailPanel({ unit: u, loaded, onOpen, onClose, compare }: Detai
           >
             {u.faction}
           </span>
-          {u.tier ? <span className="badge">Tier {u.tier}</span> : null}
+          {isCommander(u) ? (
+            <span className="badge">Commander</span>
+          ) : u.tier ? (
+            <span className="badge">Tier {u.tier}</span>
+          ) : null}
           <span className="badge">{u.domain}</span>
           {u.role ? <span className="badge">{u.role}</span> : null}
           {u.status !== 'in-game' && (
@@ -545,10 +549,13 @@ function PeerSection({
   const rows = peerRows(u, peers);
   if (!rows.length) return null;
   const byId = new Map(units.map((o) => [o.id, o]));
-  const noun = u.domain === 'Structure' ? 'structures' : `${u.domain.toLowerCase()} units`;
+  // Commanders are their own class, so they're weighed against each other.
+  const who = isCommander(u)
+    ? 'commanders'
+    : `T${u.tier} ${u.domain === 'Structure' ? 'structures' : `${u.domain.toLowerCase()} units`}`;
 
   return (
-    <Section title={`Against T${u.tier ?? '?'} ${noun}`}>
+    <Section title={`Against ${isCommander(u) ? 'the other ' : ''}${who}`}>
       <div className="peers">
         {rows.map((row) => {
           const span = row.max - row.min || 1;
@@ -589,8 +596,8 @@ function PeerSection({
         })}
       </div>
       <p className="hint" style={{ margin: '8px 0 0' }}>
-        Among {peers.length} other signed-off T{u.tier} {noun}. Each bar runs lowest to highest; hover a dot
-        for the unit, click to open it.
+        Among {peers.length} other signed-off {who}. Each bar runs lowest to highest; hover a dot for the
+        unit, click to open it.
       </p>
     </Section>
   );

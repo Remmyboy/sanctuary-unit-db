@@ -3,6 +3,7 @@
 
 import type { Faction, Unit } from './types';
 import { FACTION_ORDER } from '../components/UnitIcon';
+import { isCommander, tierKey } from './format';
 
 // Availability comes from the engine tree's QA tracker crossed with whether the
 // unit actually has art. "In progress" means the model exists but is gated —
@@ -52,10 +53,17 @@ export interface Group {
   byFaction: Partial<Record<string, Unit[]>>;
 }
 
+/** Group.tier for the commanders' row — no unit has a real tier of 0. */
+export const COMMANDER_TIER = 0;
+
+/** A row or block's tier pill: "T2", or "Cmdr" for the commanders. */
+export const tierPill = (tier: number | null): string | null =>
+  tier === COMMANDER_TIER ? 'Cmdr' : tier ? `T${tier}` : null;
+
 export function matches(unit: Unit, f: BoardFilters): boolean {
   if (f.faction.size && !f.faction.has(unit.faction)) return false;
   if (f.domain.size && !f.domain.has(unit.domain)) return false;
-  if (f.tier.size && !f.tier.has(String(unit.tier))) return false;
+  if (f.tier.size && !f.tier.has(tierKey(unit))) return false;
   if (f.role.size && !f.role.has(unit.role ?? '')) return false;
   if (f.status.size && !f.status.has(STATUS_LABELS[unit.status])) return false;
 
@@ -104,22 +112,23 @@ export function buildGroups(units: Unit[]): Group[] {
   // Split slots whose members disagree on tier — they aren't equivalents.
   const parts: Unit[][] = [];
   for (const members of slots.values()) {
-    const tiers = [...new Set(members.map((u) => u.tier))];
+    const tiers = [...new Set(members.map(tierKey))];
     if (tiers.length <= 1) parts.push(members);
-    else for (const tier of tiers) parts.push(members.filter((u) => u.tier === tier));
+    else for (const tier of tiers) parts.push(members.filter((u) => tierKey(u) === tier));
   }
 
   const groups = new Map<string, Group>();
   for (const members of parts) {
     const first = members[0];
     const label = commonLabel(members);
-    const key = `${first.id[2]}|${first.tier}|${label.toLowerCase()}`;
+    const key = `${first.id[2]}|${tierKey(first)}|${label.toLowerCase()}`;
 
     if (!groups.has(key)) {
       groups.set(key, {
         key,
         domain: first.id[2],
-        tier: first.tier ?? 0,
+        // Commanders sort as tier 0: their own row, ahead of T1.
+        tier: isCommander(first) ? COMMANDER_TIER : (first.tier ?? 0),
         label,
         role: members.find((u) => u.role)?.role ?? null,
         code: '',
@@ -214,7 +223,7 @@ export function compactBlocks(groups: Group[], sort: SortKey): CompactBlock[] {
         key: `${group.domain}-${group.tier}`,
         domain: group.domain,
         tier: group.tier,
-        label: group.tier ? `T${group.tier}` : null,
+        label: tierPill(group.tier),
         groups: [group],
       });
   }
