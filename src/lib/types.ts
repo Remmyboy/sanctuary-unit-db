@@ -49,7 +49,7 @@ export interface Weapon {
   salvoDelay: number;
   totalGroups: number;
   shotsPerCycle: number;
-  /** Seconds from one volley to the next, after the game's 0.1s tick rounding — often a tick more than reloadTime. Null for a continuous beam. */
+  /** Seconds from one volley to the next, stepped through the game's own 0.1s countdown — for some reloads (1s → 1.1s) a tick more than reloadTime, for others exactly it. Null for a continuous beam. */
   cycleTime: number | null;
   rangeMax: number;
   rangeMin: number;

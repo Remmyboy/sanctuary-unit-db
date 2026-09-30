@@ -345,7 +345,8 @@ export function WeaponBlock({ weapon: w }: { weapon: Weapon }) {
   // the target — so listing a reload next to it would be actively misleading.
   //
   // Rate of fire is the real volley-to-volley time, not the template's reload:
-  // the game's timers move in 0.1s ticks and usually land a tick late.
+  // the game's timers count down in 0.1s ticks, and some reloads (1s, 0.5s, 5s)
+  // land a tick late while others (2s, 3s) come out exact.
   const cadence: Fact | null =
     w.beamMode === 'continuous' || !w.cycleTime
       ? null

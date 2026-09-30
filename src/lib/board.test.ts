@@ -110,6 +110,17 @@ describe('extracted data invariants (pinned from the game formulas)', () => {
     expect(dps('Jager')).toBeCloseTo(84, 1);
   });
 
+  it('matches shot-by-shot timing logged in game (build 25474094), exact reloads included', () => {
+    const byId = (id: string) => data.units.find((u) => u.id === id)!;
+    // EDA Commander: 2s reload, measured a 2-shot burst every 20 ticks — no extra tick.
+    expect(byId('uel0000').weapons.map((w) => w.cycleTime)).toEqual([2]);
+    expect(byId('uel0000').dps).toBeCloseTo(100, 1);
+    // Chosen Commander: 1s reload, measured each barrel every 11 ticks.
+    expect(byId('ucl0000').weapons.map((w) => w.cycleTime)).toEqual([1.1]);
+    // Stitcher: 0.5s reload, measured every 6 ticks.
+    expect(data.units.find((u) => u.name === 'Stitcher')!.weapons.map((w) => w.cycleTime)).toEqual([0.6]);
+  });
+
   it('a weapon is a beam only if it has a beam table — the Engraver fires projectiles', () => {
     const engraver = data.units.find((u) => u.name === 'Engraver')!;
     expect(engraver.weapons[0].isBeam).toBe(false);

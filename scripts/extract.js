@@ -604,6 +604,9 @@ function cycleMuzzleCount(w) {
 //    counts down by subtracting 0.1 as a double, and ten of those leave 1.0 at
 //    1.4e-16, not zero — so a 1s reload takes 11 ticks, 1.1s. 0.5s is really
 //    0.6s, 0.25s is 0.3s, 5s is 5.1s; 2s and 3s happen to land exactly.
+//    There is no rounding rule — only stepping the countdown gets it right.
+//    Timed in game on build 25474094: Chosen Commander 1.1s, EDA Commander
+//    2.0s, Jager and Stitcher 0.6s, all exactly as simulated.
 // 3. Beam damage is per tick, applied by HostBeam:Update after the weapons
 //    update in the same tick (CollisionUpdate). A continuous beam
 //    (beamLifetime -1) never finishes its salvo, so only the first muzzle group
@@ -759,8 +762,9 @@ function toWeapon(w, where, projectiles) {
     totalGroups: groups.length,
     // Muzzles that actually fire in one cycle, wrapping as the game does.
     shotsPerCycle: cycleMuzzleCount(w),
-    // Seconds from one volley to the next once tick rounding is applied —
-    // often a tick longer than reloadTime. Null for a continuous beam.
+    // Seconds from one volley to the next on the game's own countdown — a
+    // tick longer than reloadTime for some values (1s → 1.1s), exactly it for
+    // others (2s). Null for a continuous beam.
     cycleTime: sim?.cycleTime ?? null,
     rangeMax: w.rangeMax ?? 0,
     rangeMin: w.rangeMin ?? 0,

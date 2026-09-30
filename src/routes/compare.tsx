@@ -244,8 +244,8 @@ function Legend({ units }: { units: Unit[] }) {
         <dt>DPS</dt>
         <dd>
           Sustained damage per second with the target held in the sights and every shot landing. Rate of fire
-          follows the game's 0.1s ticks, which usually add a tick to the template's reload (1s fires every
-          1.1s).
+          is the game's own: its timers count down in 0.1s ticks, so some reloads fire a tick late (1s every
+          1.1s, 0.5s every 0.6s) while others (2s, 3s) are exact — timed in game to match.
         </dd>
         <dt>Build time</dt>
         <dd>

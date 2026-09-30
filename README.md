@@ -471,15 +471,35 @@ sights and every shot landing. It started as a port of the AI's
 4. **Reload runs concurrently with the salvo, SupCom-style.** The state machine
    resets `reloadTimer` as the salvo _starts_ and keeps counting it down while
    the salvo plays out, so the cycle is `max(reload, salvo stretch)`, not their
-   sum. The AI's `GetWeaponDamagePerSecond` adds them. In-game confirmation:
-   the Chosen Commander (0.5s salvo delay, 1s reload) alternates barrels with
-   no pause, which the additive reading would break into fire-fire-pause.
+   sum. The AI's `GetWeaponDamagePerSecond` adds them, which would break the
+   Chosen Commander's two barrels (0.5s apart, 1s reload) into
+   fire-fire-pause. In game they alternate with no pause (see point 5 for the
+   exact gaps).
 5. **Timers move in 0.1s ticks, as doubles, and fire at `<= 0`.** Each tick
-   subtracts `Constants.TickTimeStep` (0.1). Ten of those leave 1.0 at 1.4e-16,
-   not zero, so a **1s reload fires every 11 ticks — 1.1s**. 0.5s is really
-   0.6s, 0.25s is 0.3s, 5s is 5.1s; 2s and 3s happen to land exactly. This is
-   up to 20% on fast-firing weapons (Jager 100.8 → 84) and 1% on slow ones.
-   Each weapon's real volley-to-volley time is stored as `cycleTime`.
+   subtracts `Constants.TickTimeStep` (0.1), and whether a reload gains a tick
+   depends on where that floating-point countdown happens to land — there is
+   no rounding rule. Ten subtractions leave 1.0 at 1.4e-16, not zero, so a
+   **1s reload fires every 11 ticks (1.1s)**. In the current data 0.25, 0.4,
+   0.5, 0.8, 1, 1.2, 3.25, 5, 6, 7, 8, 10, 12, 15 and 16s each gain a tick;
+   0.2, 0.3, 1.4, 1.5, 1.6, 1.8, 2, 2.2, 2.5, 3, 4 and 22s come out exact.
+   That's up to 20% on fast-firing weapons (Jager 100.8 → 84) and about 1% on
+   slow ones. The extractor steps the game's own countdown rather than applying
+   a formula, and stores each weapon's real volley-to-volley time as
+   `cycleTime`.
+
+   **Measured in game (build 25474094),** by logging every shot the host sent
+   in a skirmish against the AI, to the tick:
+
+   | Unit                 | Shots | Measured                                                                    | Data             |
+   | -------------------- | ----- | --------------------------------------------------------------------------- | ---------------- |
+   | Chosen Commander, 1s | 98    | each barrel every 11 ticks, 48/48 gaps; the two barrels 0.6s and 0.5s apart | 1.1s, 90.91 DPS  |
+   | EDA Commander, 2s    | 68    | a 2-shot burst every 20 ticks, no exceptions                                | 2.0s, 100 DPS    |
+   | Jager, 0.5s          | 112   | every 6 ticks, 110/111 gaps (one 7: a retarget)                             | 0.6s, 84 DPS     |
+   | Stitcher, 0.5s       | 112   | every 6 ticks, 111/111 gaps                                                 | 0.6s, 133.33 DPS |
+   | Hyena                | 1,457 | a shot every tick                                                           | 0.2s, 78.6 DPS   |
+
+   Not yet timed live: the Guard Commander, and any 5s reload.
+
 6. **Fields no game code reads are ignored.** `damageOverTimePulse*`,
    `chargeTime`, `impactDelay`, `damageBox` and `useDamageCollider` are
    documented and set on a few templates, but appear in no runtime Lua and not
