@@ -1563,6 +1563,97 @@ img.unit-icon[data-muted='true'] {
   opacity: 0.75;
   margin-top: 2px;
 }
+/* A figure with its reasoning on hover: dotted, like an abbreviation. */
+.has-tip {
+  text-decoration: underline dotted color-mix(in srgb, currentColor 55%, transparent);
+  text-underline-offset: 3px;
+  cursor: help;
+}
+/* A second line under a key-value figure: what the number means in play. */
+.kv-sub {
+  display: block;
+  font-size: 11.5px;
+  color: var(--text-faint);
+}
+
+/* Against its peers: one strip per stat, from the lowest peer to the highest.
+   Peers are small faction-coloured dots; this unit is the ringed one. */
+.peers {
+  display: grid;
+  gap: 3px;
+  padding: 8px 11px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.peer-row {
+  display: grid;
+  grid-template-columns: 72px 1fr 112px;
+  align-items: center;
+  gap: 12px;
+  min-height: 26px;
+  font-size: 12.5px;
+}
+.peer-label {
+  color: var(--text-dim);
+}
+.peer-track {
+  position: relative;
+  height: 16px;
+  margin: 0 6px;
+}
+.peer-track::before {
+  content: '';
+  position: absolute;
+  inset: 50% 0 auto;
+  height: 2px;
+  margin-top: -1px;
+  border-radius: 1px;
+  background: var(--border-strong);
+}
+.peer-dot {
+  position: absolute;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--fc) 60%, var(--bg-raised));
+  cursor: pointer;
+  transition: transform 0.12s var(--ease);
+}
+.peer-dot:hover {
+  transform: scale(1.6);
+  z-index: 3;
+}
+.peer-dot.self {
+  width: 11px;
+  height: 11px;
+  margin: -5.5px 0 0 -5.5px;
+  background: var(--fc, var(--accent));
+  box-shadow:
+    0 0 0 2px var(--bg-sunken),
+    0 0 0 3.5px var(--text);
+  cursor: default;
+  pointer-events: none;
+  z-index: 2;
+}
+.peer-val {
+  text-align: right;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+.peer-val small {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 10.5px;
+  font-weight: 400;
+  color: var(--text-faint);
+}
 
 .unit-links {
   display: flex;
@@ -5585,10 +5676,10 @@ html.modding-route {
   background: color-mix(in srgb, var(--accent) 10%, transparent);
   box-shadow: inset 2px 0 0 var(--accent);
 }
-.compare-table td.best > span {
+.compare-table td.best > .cmp-val {
   font-weight: 700;
 }
-.compare-table td.best > span::before {
+.compare-table td.best > .cmp-val::before {
   content: '◆ ';
   font-size: 9px;
   color: var(--accent);
@@ -5602,6 +5693,240 @@ html.modding-route {
 }
 .compare-weapons .weapon + .weapon {
   margin-top: 8px;
+}
+/* The raw figure behind a derived one ("8 u/s²" under "0.4 s"). */
+.cmp-note {
+  display: block;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+/* Magnitude at a glance: a hairline under each figure, as long as it is
+   against the row's largest. Right-aligned with the numbers. */
+.cmp-bar {
+  display: block;
+  height: 3px;
+  margin: 5px 0 0 auto;
+  max-width: 120px;
+  border-radius: 2px;
+  background: var(--border);
+  overflow: hidden;
+}
+.cmp-bar > i {
+  display: block;
+  height: 100%;
+  margin-left: auto;
+  background: color-mix(in srgb, var(--text-dim) 55%, transparent);
+}
+.compare-table td.best .cmp-bar > i {
+  background: var(--accent);
+}
+/* Chase: two compared units on open ground, range rings and all. */
+.chase {
+  margin: 28px 0 0;
+  padding: 16px 18px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-raised);
+}
+.chase h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.chase-lede {
+  margin: 4px 0 12px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.chase-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 14px;
+  margin-bottom: 12px;
+}
+.chase-controls label {
+  display: grid;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.chase-controls select {
+  min-width: 150px;
+  padding: 5px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--bg-sunken);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.chase-swap {
+  height: 30px;
+  padding: 0 9px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--bg-sunken);
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.chase-swap:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--text);
+}
+.chase-swap:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.chase-controls .view-toggle {
+  height: 30px;
+}
+/* A unit picker and its "how many" sit together as one side of the fight. */
+.chase-side {
+  display: flex;
+  gap: 6px;
+  align-items: flex-end;
+}
+.chase-count input {
+  width: 58px;
+  padding: 5px 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--bg-sunken);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.chase-wreck {
+  fill: var(--text-faint);
+  font-size: 11px;
+}
+.chase-gap {
+  grid-template-columns: auto auto;
+  align-items: center;
+}
+.chase-gap span {
+  grid-column: 1 / -1;
+}
+.chase-gap input {
+  width: 160px;
+  accent-color: var(--accent);
+}
+.chase-gap output {
+  min-width: 44px;
+  font-size: 13px;
+  color: var(--text);
+  text-transform: none;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+.chase-stage {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-sunken);
+  overflow: hidden;
+}
+.chase-stage svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.chase-grid {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+.chase-lane {
+  stroke: var(--border-strong);
+  stroke-dasharray: 2 6;
+}
+.chase-label {
+  fill: var(--text);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.chase-ruler line {
+  stroke: var(--text-dim);
+}
+.chase-ruler text,
+.chase-gap-label {
+  fill: var(--text-dim);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.chase-transport {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin-top: 10px;
+}
+.chase-transport .btn {
+  min-width: 84px;
+  padding: 6px 12px;
+}
+.chase-scrub {
+  flex: 1;
+  min-width: 140px;
+  accent-color: var(--accent);
+}
+.chase-clock {
+  min-width: 86px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.chase-clock small {
+  font-weight: 400;
+  color: var(--text-faint);
+}
+.chase-summary {
+  margin-top: 12px;
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+.chase-summary p {
+  margin: 0;
+}
+.chase-summary .hint {
+  margin-top: 8px;
+}
+
+/* What the units mean, under the table. */
+.compare-legend {
+  max-width: 760px;
+  margin: 22px 0 0;
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+.compare-legend h2 {
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.compare-legend dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 14px;
+  margin: 0;
+}
+.compare-legend dt {
+  color: var(--text);
+  white-space: nowrap;
+}
+.compare-legend dd {
+  margin: 0;
 }
 
 /* On a phone the table scrolls sideways with the stat names pinned; the

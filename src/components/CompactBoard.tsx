@@ -193,6 +193,8 @@ function Readout({ unit: u }: { unit: Unit | null }) {
         <Stat label="Energy" value={fmt(u.cost.energy)} cls="energy-val" />
         <Stat label="HP" value={fmt(u.health)} />
         {u.dps ? <Stat label="DPS" value={fmt(u.dps)} /> : null}
+        {u.maxRange ? <Stat label="Range" value={fmt(u.maxRange)} /> : null}
+        {u.movement?.speed ? <Stat label="Speed" value={`${fmt(u.movement.speed)} u/s`} /> : null}
       </span>
     </div>
   );

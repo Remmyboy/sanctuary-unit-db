@@ -4,6 +4,18 @@ import type { LoadedData } from '../lib/data';
 import { STATUS_LABELS } from '../lib/board';
 import { builderName, duration, fmt, resourceName, shortName, splitCamel } from '../lib/format';
 import { consumes, economyRole, produces, upgradeChain, type UpgradeStep } from '../lib/economy';
+import {
+  MAP_SIZE,
+  crossMapSeconds,
+  flightSeconds,
+  ordinal,
+  peerRows,
+  peersOf,
+  speedRank,
+  swingSeconds,
+  topSpeedSeconds,
+  turnAroundSeconds,
+} from '../lib/scale';
 import { FACTION_COLOURS, UnitIcon } from './UnitIcon';
 import { FactionEmblem } from './FactionEmblem';
 import { beamLabel } from './UnitCard';
@@ -121,18 +133,39 @@ export function DetailPanel({ unit: u, loaded, onOpen, onClose, compare }: Detai
             <Stat label="Alloy" value={<span className="alloy-val">{fmt(u.cost.alloys)}</span>} />
             <Stat label="Energy" value={<span className="energy-val">{fmt(u.cost.energy)}</span>} />
             <Stat label="Build time" value={fmt(u.buildTime)} />
-            <Stat label="Health" value={fmt(u.health)} />
+            <Stat
+              label="Health"
+              value={
+                <>
+                  {fmt(u.health)}
+                  {u.healthRegen ? (
+                    <small title="Regenerated every second, always"> +{fmt(u.healthRegen)}/s</small>
+                  ) : null}
+                </>
+              }
+            />
             {u.dps ? <Stat label="DPS" value={fmt(u.dps)} /> : null}
             {u.maxRange ? <Stat label="Range" value={u.maxRange} /> : null}
-            {u.projectileSpeed ? <Stat label="Proj. speed" value={fmt(u.projectileSpeed)} /> : null}
+            {u.movement?.speed ? (
+              <Stat
+                label="Speed"
+                value={
+                  <>
+                    {fmt(u.movement.speed)}
+                    <small> u/s</small>
+                  </>
+                }
+              />
+            ) : null}
           </dl>
         </Section>
 
+        <PeerSection unit={u} units={loaded.data.units} onOpen={onOpen} />
         <EconomySection unit={u} />
         <AdjacencySection unit={u} />
         <WeaponsSection unit={u} />
         <ShieldSection unit={u} />
-        <MobilitySection unit={u} />
+        <MobilitySection unit={u} units={loaded.data.units} />
         <BuildSection unit={u} byId={byId} iconManifest={iconManifest} onOpen={onOpen} />
         <UpgradeSection unit={u} byId={byId} iconManifest={iconManifest} onOpen={onOpen} />
 
@@ -290,30 +323,74 @@ function WeaponsSection({ unit: u }: { unit: Unit }) {
   );
 }
 
+// One fact in a weapon's line, with the reasoning on hover where the plain
+// figure needs it.
+type Fact = [text: string, title?: string];
+
+const FactLine = ({ facts, className }: { facts: Fact[]; className: string }) => (
+  <div className={className}>
+    {facts.map(([text, title], i) => (
+      <span key={text} title={title} className={title ? 'has-tip' : undefined}>
+        {i > 0 ? ' · ' : ''}
+        {text}
+      </span>
+    ))}
+  </div>
+);
+
 export function WeaponBlock({ weapon: w }: { weapon: Weapon }) {
   // Facts are only listed when the weapon actually has them, so a beam doesn't
   // show an empty speed and a single-shot gun doesn't show a salvo of one.
   // A continuous beam ignores reload entirely — it damages every tick it holds
   // the target — so listing a reload next to it would be actively misleading.
-  const continuous = w.beamMode === 'continuous';
+  //
+  // Rate of fire is the real volley-to-volley time, not the template's reload:
+  // the game's timers count down in 0.1s ticks, and some reloads (1s, 0.5s, 5s)
+  // land a tick late while others (2s, 3s) come out exact.
+  const cadence: Fact | null =
+    w.beamMode === 'continuous' || !w.cycleTime
+      ? null
+      : [
+          `fires every ${fmt(w.cycleTime)}s`,
+          w.cycleTime !== w.reloadTime
+            ? `The template says ${fmt(w.reloadTime)}s, but the game's timers count down in 0.1s ticks and only fire once they reach zero — in practice every ${fmt(w.cycleTime)}s.`
+            : undefined,
+        ];
+  const flight = flightSeconds(w);
+  const shot: Fact | null = w.isBeam
+    ? [beamLabel(w)]
+    : w.projectileSpeed
+      ? w.homing
+        ? [
+            `homing missile, ${fmt(w.projectileSpeed)} u/s at launch`,
+            'Steered onto its target every tick, and accelerates after launch — it doesn’t miss a moving target the way a shell can.',
+          ]
+        : [
+            `${fmt(w.projectileSpeed)} u/s shot, ≈${fmt(flight, 1)}s to max range`,
+            'Straight-line flight time at launch speed. A unit that moves out of the way in that time is missed; artillery arcs take longer still.',
+          ]
+      : null;
   const facts = [
-    continuous ? null : w.reloadTime ? `${w.reloadTime}s reload` : null,
-    `${w.rangeMax} range`,
-    w.damageRadius ? `${w.damageRadius} radius` : null,
-    w.isBeam ? beamLabel(w) : w.projectileSpeed ? `${fmt(w.projectileSpeed)} speed` : null,
-    w.shotsPerCycle > 1 ? `${w.shotsPerCycle} shots/cycle` : null,
-    w.salvoDelay ? `${w.salvoDelay}s between shots` : null,
-  ].filter(Boolean);
+    cadence,
+    [`${w.rangeMax} range${w.rangeMin ? ` (min ${w.rangeMin})` : ''}`] as Fact,
+    w.damageRadius ? ([`${w.damageRadius} splash radius`] as Fact) : null,
+    shot,
+    w.shotsPerCycle > 1 ? ([`${w.shotsPerCycle} shots a volley`] as Fact) : null,
+    w.salvoDelay ? ([`${w.salvoDelay}s apart`] as Fact) : null,
+  ].filter((f): f is Fact => f != null);
 
   // A weapon with no traverse controller is bolted facing forward — worth
   // saying outright, since it changes how the unit has to be positioned.
+  const swing = swingSeconds(w);
   const aim = [
-    w.traverseSpeed ? `${fmt(w.traverseSpeed)}°/s traverse` : 'fixed mount',
-    w.elevationSpeed ? `${fmt(w.elevationSpeed)}°/s elevation` : null,
+    w.traverseSpeed
+      ? ([`${fmt(w.traverseSpeed)}°/s traverse`, `Swings half a turn in ${fmt(swing, 1)}s`] as Fact)
+      : (['fixed mount', 'No turret — the whole unit has to turn to aim'] as Fact),
+    w.elevationSpeed ? ([`${fmt(w.elevationSpeed)}°/s elevation`] as Fact) : null,
     w.traverseArc != null && w.traverseSpeed
-      ? `${w.traverseArc}° arc${w.traverseArc >= 360 ? '' : ' (limited)'}`
+      ? ([`${w.traverseArc}° arc${w.traverseArc >= 360 ? '' : ' (limited)'}`] as Fact)
       : null,
-  ].filter(Boolean);
+  ].filter((f): f is Fact => f != null);
 
   return (
     <div className="weapon">
@@ -325,24 +402,25 @@ export function WeaponBlock({ weapon: w }: { weapon: Weapon }) {
         ) : (
           <span
             className="wdps"
-            title="The template declares no muzzle bones, so the game scores this weapon zero"
+            title="The template gives the game nothing to fire — no muzzle bones, or a projectile that isn't in the build"
           >
             dps unknown
           </span>
         )}
       </div>
-      <div className="weapon-facts">{facts.join(' · ')}</div>
-      <div className="weapon-facts aim">{aim.join(' · ')}</div>
+      <FactLine facts={facts} className="weapon-facts" />
+      <FactLine facts={aim} className="weapon-facts aim" />
       {w.targets.length ? <div className="weapon-targets">Hits {w.targets.join(', ')}</div> : null}
     </div>
   );
 }
 
-// Damage of 0 with a collider-based category means the damage lives on the
-// projectile, not the weapon — say so rather than printing a bare "0 dmg".
+// Damage of 0 comes from a template that hands damage to a "damage collider"
+// (the Phoenix's cluster). No game code reads that field, and the projectile is
+// spawned with the weapon's own damage — zero — so as shipped it does nothing.
 function weaponLabel(w: Weapon): string {
   const kind = w.isBeam ? 'Beam' : w.category ? splitCamel(w.category) : null;
-  if (w.damage <= 0) return `${kind ?? 'Weapon'} · damage on impact`;
+  if (w.damage <= 0) return `${kind ?? 'Weapon'} · no damage as shipped`;
   return kind ? `${fmt(w.damage)} dmg · ${kind}` : `${fmt(w.damage)} dmg`;
 }
 
@@ -361,13 +439,73 @@ function ShieldSection({ unit: u }: { unit: Unit }) {
   );
 }
 
-function MobilitySection({ unit: u }: { unit: Unit }) {
+// What each movement type can cross, from the devs' own notes on MovementType
+// in templateExplainations.lua.
+const MOVEMENT_TYPES: Record<string, string> = {
+  Gunship: 'Gunship — hovers, lands anywhere',
+  Hover: 'Hover — land and water surface',
+  LegsLand: 'Legs — land only',
+  LegsSeabed: 'Legs — land and seabed',
+  LegsAmphibious: 'Legs — land and water surface',
+  Plane: 'Plane — keeps moving, lands on airfields',
+  TracksLand: 'Tracks — land only',
+  TracksSeabed: 'Tracks — land and seabed',
+  TracksAmphibious: 'Tracks — land and water surface',
+  WaterSurface: 'Ship',
+  UnderWater: 'Submarine',
+};
+
+const MOVE_CLASS_NOUN = { ground: 'ground units', air: 'aircraft', naval: 'ships' } as const;
+
+// Raw figures first, then what they mean in play: a speed of 3.5 says nothing
+// until it's "crosses a ranked map in 2½ minutes, quicker than most tanks".
+function MobilitySection({ unit: u, units }: { unit: Unit; units: Unit[] }) {
   const lines: Array<[string, ReactNode]> = [];
-  if (u.movement) {
-    lines.push(['Speed', u.movement.speed]);
-    if (u.movement.acceleration) lines.push(['Acceleration', u.movement.acceleration]);
-    if (u.movement.rotationSpeed) lines.push(['Turn rate', `${u.movement.rotationSpeed}°/s`]);
-    if (u.movement.type) lines.push(['Movement', u.movement.type]);
+  const m = u.movement;
+  if (m?.speed) {
+    const cross = crossMapSeconds(m.speed);
+    const rank = speedRank(u, units);
+    lines.push([
+      'Speed',
+      <>
+        <strong>{fmt(m.speed)} u/s</strong>
+        {cross != null && (
+          <span className="dim">
+            {' '}
+            · crosses a {MAP_SIZE} map in {duration(cross)}
+          </span>
+        )}
+        {rank && (
+          <span className="kv-sub">
+            faster than {Math.round(rank.share * 100)}% of {MOVE_CLASS_NOUN[rank.cls]} in the game
+          </span>
+        )}
+      </>,
+    ]);
+    if (m.minSpeed) {
+      lines.push(['Stall speed', <>{fmt(m.minSpeed)} u/s — can't hover, circles instead</>]);
+    }
+    const top = topSpeedSeconds(u);
+    if (m.acceleration) {
+      lines.push([
+        'Acceleration',
+        <>
+          {fmt(m.acceleration)} u/s²
+          {top != null && <span className="dim"> · top speed in {fmt(top, 1)}s</span>}
+        </>,
+      ]);
+    }
+    const turn = turnAroundSeconds(u);
+    if (m.rotationSpeed) {
+      lines.push([
+        'Turn rate',
+        <>
+          {fmt(m.rotationSpeed)}°/s
+          {turn != null && <span className="dim"> · turns about in {fmt(turn, 1)}s</span>}
+        </>,
+      ]);
+    }
+    if (m.type) lines.push(['Movement', MOVEMENT_TYPES[m.type] ?? m.type]);
   }
   if (u.vision) lines.push(['Vision', u.vision]);
   if (u.radar) lines.push(['Radar', u.radar]);
@@ -383,6 +521,77 @@ function MobilitySection({ unit: u }: { unit: Unit }) {
           <KV key={k} k={k} v={v} />
         ))}
       </dl>
+      <p className="hint" style={{ margin: '8px 0 0' }}>
+        Distances are game units: one is about the length of a T1 tank, and a ranked 1v1 map is {MAP_SIZE}{' '}
+        across. Vision, radar and range are radii.
+      </p>
+    </Section>
+  );
+}
+
+// The unit against the ones it actually competes with — same domain and tier,
+// signed off and in the game. Each strip runs from the lowest to the highest
+// of them; the ringed dot is this unit, the rest are clickable peers.
+function PeerSection({
+  unit: u,
+  units,
+  onOpen,
+}: {
+  unit: Unit;
+  units: Unit[];
+  onOpen: (id: string) => void;
+}) {
+  const peers = peersOf(u, units);
+  const rows = peerRows(u, peers);
+  if (!rows.length) return null;
+  const byId = new Map(units.map((o) => [o.id, o]));
+  const noun = u.domain === 'Structure' ? 'structures' : `${u.domain.toLowerCase()} units`;
+
+  return (
+    <Section title={`Against T${u.tier ?? '?'} ${noun}`}>
+      <div className="peers">
+        {rows.map((row) => {
+          const span = row.max - row.min || 1;
+          const pos = (v: number) => `${((v - row.min) / span) * 100}%`;
+          return (
+            <div className="peer-row" key={row.metric.key}>
+              <span className="peer-label">{row.metric.label}</span>
+              <span className="peer-track" aria-hidden="true">
+                {row.points
+                  .filter((p) => !p.self)
+                  .map((p) => {
+                    const o = byId.get(p.id)!;
+                    return (
+                      <button
+                        type="button"
+                        tabIndex={-1}
+                        key={p.id}
+                        className="peer-dot"
+                        style={
+                          { left: pos(p.value), '--fc': FACTION_COLOURS[o.faction] } as React.CSSProperties
+                        }
+                        title={`${o.name ?? shortName(o)} — ${fmt(p.value)}${row.metric.unit ? ` ${row.metric.unit}` : ''}`}
+                        onClick={() => onOpen(p.id)}
+                      />
+                    );
+                  })}
+                <span className="peer-dot self" style={{ left: pos(row.value) }} />
+              </span>
+              <span className="peer-val">
+                {fmt(row.value)}
+                <small>
+                  {ordinal(row.rank)}
+                  {row.metric.better === 'low' ? ' cheapest' : ''} of {row.of}
+                </small>
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      <p className="hint" style={{ margin: '8px 0 0' }}>
+        Among {peers.length} other signed-off T{u.tier} {noun}. Each bar runs lowest to highest; hover a dot
+        for the unit, click to open it.
+      </p>
     </Section>
   );
 }

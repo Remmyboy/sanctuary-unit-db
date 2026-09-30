@@ -95,12 +95,40 @@ describe('extracted data invariants (pinned from the game formulas)', () => {
   });
 
   it('salvo indices wrap muzzle groups — Kodiak counts all three barrels', () => {
-    expect(dps('Kodiak')).toBeCloseTo(348.63, 1);
+    expect(dps('Kodiak')).toBeCloseTo(342.91, 1);
   });
 
-  it('reload runs concurrently with the salvo — Chosen Commander fires 2×50 per second', () => {
+  it('reload runs concurrently with the salvo — Chosen Commander fires 2×50 every 1.1s', () => {
     const commander = data.units.find((u) => u.id === 'ucl0000')!;
-    expect(commander.dps).toBeCloseTo(100, 1);
+    expect(commander.dps).toBeCloseTo(90.91, 1);
+  });
+
+  it('timers tick down in 0.1s steps as doubles — a 1s reload fires every 11 ticks', () => {
+    const cycles = (name: string) => data.units.find((u) => u.name === name)!.weapons.map((w) => w.cycleTime);
+    expect(cycles('Jager')).toEqual([0.6]); // 0.5s reload
+    expect(cycles('Grinder')).toEqual([10.1]); // 10s reload
+    expect(dps('Jager')).toBeCloseTo(84, 1);
+  });
+
+  it('matches shot-by-shot timing logged in game (build 25474094), exact reloads included', () => {
+    const byId = (id: string) => data.units.find((u) => u.id === id)!;
+    // EDA Commander: 2s reload, measured a 2-shot burst every 20 ticks — no extra tick.
+    expect(byId('uel0000').weapons.map((w) => w.cycleTime)).toEqual([2]);
+    expect(byId('uel0000').dps).toBeCloseTo(100, 1);
+    // Chosen Commander: 1s reload, measured each barrel every 11 ticks.
+    expect(byId('ucl0000').weapons.map((w) => w.cycleTime)).toEqual([1.1]);
+    // Stitcher: 0.5s reload, measured every 6 ticks.
+    expect(data.units.find((u) => u.name === 'Stitcher')!.weapons.map((w) => w.cycleTime)).toEqual([0.6]);
+  });
+
+  it('a weapon is a beam only if it has a beam table — the Engraver fires projectiles', () => {
+    const engraver = data.units.find((u) => u.name === 'Engraver')!;
+    expect(engraver.weapons[0].isBeam).toBe(false);
+    expect(engraver.dps).toBeCloseTo(303.03, 1);
+  });
+
+  it('damage over time is never applied by the game, so it adds nothing — Onager is ~520, not 925', () => {
+    expect(dps('Onager')).toBeCloseTo(519.8, 1);
   });
 
   it('bomber weapons with no muzzles report null DPS, not a confident zero', () => {

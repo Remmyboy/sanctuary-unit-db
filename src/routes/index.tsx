@@ -218,7 +218,9 @@ function BoardPage() {
               <option value="buildTime">Build time</option>
               <option value="health">Health</option>
               <option value="dps">DPS</option>
-              <option value="projectileSpeed">Projectile speed</option>
+              <option value="range">Range</option>
+              <option value="speed">Speed</option>
+              <option value="projectileSpeed">Shot speed</option>
               <option value="turnRate">Turn rate (unit)</option>
               <option value="traverseSpeed">Turn rate (weapon)</option>
             </select>

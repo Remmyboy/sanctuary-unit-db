@@ -20,9 +20,12 @@ const DOMAINS = { l: 'Land', a: 'Air', n: 'Naval', s: 'Structure' };
 const FACTION_TAGS = { e: 'EDA', c: 'CHOSEN', g: 'GUARD', w: 'GUARD' };
 const ALL_FACTION_TAGS = new Set(Object.values(FACTION_TAGS));
 
-// Simulation tick rate, from the game's Constants.TickRate. Beam weapons deal
-// their `damage` value once per tick, so this converts them to per-second.
+// Simulation tick rate and step, from the game's generated constants.lua
+// (TickRate = 10, TickTimeStep = 0.1). Beam weapons deal their `damage` once
+// per tick, and every weapon timer counts down by the step once per tick — as
+// a double, exactly as LuaJIT does, which matters (see simulateWeapon).
 const TICK_RATE = 10;
+const TICK_STEP = 0.1;
 
 // Problems found in the game's own data, surfaced rather than silently patched.
 const issues = [];
@@ -60,6 +63,8 @@ function main() {
   const adjacency = readAdjacencyBuffs(path.join(lua, 'host', 'systems', 'adjacencyBuffs.lua'));
   const models = scanUnitModels(gameDir);
   console.log(`models:    ${models.size} unit ids have LOD art in the scene files`);
+  const projectiles = readProjectiles(path.join(lua, 'common', 'projectiles', 'projectilesTemplates'));
+  console.log(`projectiles: ${projectiles.size} templates`);
   const templateDir = path.join(lua, 'common', 'units', 'unitsTemplates');
 
   const units = [];
@@ -73,7 +78,7 @@ function main() {
     }
     try {
       const raw = parseLuaTable(fs.readFileSync(file, 'utf8'), { assignment: 'UnitTemplate' });
-      units.push(toUnit(raw, id, available, models, adjacency));
+      units.push(toUnit(raw, id, available, models, adjacency, projectiles));
     } catch (err) {
       failures.push({ id, reason: err.message });
     }
@@ -203,6 +208,27 @@ function scanForIds(file, pattern, found) {
   } finally {
     if (fd !== undefined) fs.closeSync(fd);
   }
+}
+
+// Projectile templates, keyed the way the game looks them up
+// (__Templates.Projectiles[weapon.projectileTemplate]): by the lower-case
+// general.tpId, not the upper-case folder name they ship in. Most are visuals
+// only; the handful with a `movement` block are guided missiles that the host
+// steers onto the target (weaponsBaseClass.lua, UpdateProjectile).
+function readProjectiles(dir) {
+  const map = new Map();
+  if (!fs.existsSync(dir)) return map;
+  for (const name of fs.readdirSync(dir)) {
+    const file = path.join(dir, name, `${name}.santp`);
+    if (!fs.existsSync(file)) continue;
+    try {
+      const tp = parseLuaTable(fs.readFileSync(file, 'utf8'), { assignment: 'ProjectileTemplate' });
+      map.set(tp.general?.tpId ?? name.toLowerCase(), tp);
+    } catch (err) {
+      issues.push(`projectile ${name} failed to parse (${err.message})`);
+    }
+  }
+  return map;
 }
 
 // Adjacency bonuses, from host/systems/adjacencyBuffs.lua.
@@ -339,7 +365,7 @@ function statusOf(hasModel, entry) {
   return entry?.enabled ? 'in-game' : 'in-progress';
 }
 
-function toUnit(t, id, available, models, adjacency) {
+function toUnit(t, id, available, models, adjacency, projectiles) {
   const general = t.general ?? {};
   const economy = t.economy ?? {};
   const status = available.get(id);
@@ -357,7 +383,9 @@ function toUnit(t, id, available, models, adjacency) {
 
   // Death explosions are listed alongside weapons but only fire when the unit
   // dies, so they're reported separately and kept out of DPS and range.
-  const allWeapons = (t.weapons ?? []).map(toWeapon).filter((w) => w.damage > 0 || w.rangeMax > 0);
+  const allWeapons = (t.weapons ?? [])
+    .map((w, i) => toWeapon(w, `${id} weapon ${i + 1}`, projectiles))
+    .filter((w) => w.damage > 0 || w.rangeMax > 0);
   const weapons = groupWeapons(allWeapons.filter((w) => w.category !== 'DeathExplosion'));
   const deathExplosion = allWeapons.find((w) => w.category === 'DeathExplosion') ?? null;
 
@@ -400,6 +428,9 @@ function toUnit(t, id, available, models, adjacency) {
     storage: nonEmpty(economy.storage),
 
     health: t.defence?.health?.max ?? 0,
+    // HP per second, always on: nothing in the Lua ever switches it off, and
+    // the game's own information panel shows it straight from the template.
+    healthRegen: t.defence?.health?.regen || null,
     shields: (t.defence?.shields ?? []).map((s) => ({
       name: s.name ?? 'Shield',
       max: s.max ?? 0,
@@ -440,6 +471,8 @@ function toUnit(t, id, available, models, adjacency) {
           speed: t.movement.speed ?? null,
           acceleration: t.movement.acceleration ?? null,
           rotationSpeed: t.movement.rotationSpeed ?? null,
+          // Planes can't hover: this is the stall floor they never drop below.
+          minSpeed: t.movement.minSpeed || null,
         }
       : null,
 
@@ -534,69 +567,193 @@ function aimingOf(w) {
   };
 }
 
-// Ported from the game's own AI/AIFunctions.lua: GetWeaponCycleMuzzleCount.
-// Salvo indices wrap around the muzzle groups, so a weapon whose salvo size
-// exceeds its group count fires some groups more than once per cycle — a series
-// of barrels cycling. Capping at the group count, as this used to, undercounts.
-function cycleMuzzleCount(w) {
-  const groups = w.muzzleGroups ?? [];
-  const salvoSize = w.muzzleSalvoSize ?? 1;
-  if (groups.length < 1) return salvoSize;
+// How many muzzles each muzzle group fires. Mirrors SetUpWeapons
+// (unitsBaseClass.lua), which walks `muzzleGroup.muzzles` — so a group that
+// declares no muzzles list fires nothing, and neither does a weapon with no
+// groups at all. Four bomber weapons ship an empty list; see toWeapon.
+function groupSizes(w) {
+  return (w.muzzleGroups ?? []).map((g) => (Array.isArray(g?.muzzles) ? g.muzzles.length : 0));
+}
 
+// Muzzles fired in one cycle. From AIFunctions.lua's GetWeaponCycleMuzzleCount:
+// salvo indices wrap around the groups, so a weapon whose salvo size exceeds
+// its group count fires some groups more than once per cycle — a series of
+// barrels cycling. Capping at the group count, as this once did, undercounts.
+function cycleMuzzleCount(w) {
+  const groups = groupSizes(w);
+  if (!groups.length) return 0;
   let count = 0;
-  for (let salvoIndex = 1; salvoIndex <= salvoSize; salvoIndex++) {
-    const group = groups[(salvoIndex - 1) % groups.length];
-    // Mirrors table.getn(muzzleGroup.muzzles or muzzleGroup): a list gives its
-    // length, anything else gives 0. Four bomber weapons ship an empty muzzles
-    // list, and the game scores them 0 as a result — see toWeapon.
-    const bones = group?.muzzles ?? group;
-    count += Array.isArray(bones) ? bones.length : 0;
-  }
+  for (let i = 0; i < (w.muzzleSalvoSize ?? 1); i++) count += groups[i % groups.length];
   return count;
 }
 
-// Ported from AIFunctions.lua: GetWeaponDamagePerSecond, with one deliberate
-// divergence. The AI adds the salvo stretch on top of reloadTime, but the real
-// state machine (weaponsBaseClass.lua) resets reloadTimer as the salvo *starts*
-// and keeps counting it down through the salvo, so reload and salvo delay run
-// concurrently: the cycle is whichever is longer, not their sum. The Chosen
-// Commander (0.5s delay, 1s reload) visibly alternates barrels every half
-// second with no pause, which only the concurrent reading predicts.
+// A tick-for-tick port of HostWeapon:Update and its UpdateProjectile /
+// UpdateBeam / AdvanceSalvoState (host/units/weaponsClasses/weaponsBaseClass.lua),
+// with the target held in the sights throughout. Returns the steady-state DPS
+// and the seconds from one volley to the next.
 //
-// For beams `damage` is per tick, not per shot, and the game runs at
-// Constants.TickRate = 10:
-//   beamLifetime -1  continuous — damage x muzzles x 10; reloadTime is irrelevant
-//   beamLifetime  1  pulse (railgun-like) — one tick of damage per reload cycle
-//   beamLifetime  N  burst — N ticks of damage per reload cycle
-// Non-beams fall through to damage x muzzles per cycle.
-function weaponDps(w) {
-  if (w.category === 'DeathExplosion') return 0;
+// Simulating rather than using a formula is deliberate. Three things the
+// template doesn't say out loud decide the real rate of fire:
+//
+// 1. Reload runs concurrently with the salvo. reloadTimer is reset as the salvo
+//    *starts* and keeps counting while it plays out, so a cycle is whichever is
+//    longer, not their sum. (The AI's own GetWeaponDamagePerSecond adds them;
+//    the Chosen Commander visibly alternates barrels with no pause, which only
+//    the concurrent reading predicts.)
+// 2. Every timer moves in 0.1s ticks and only fires once it reaches <= 0. It
+//    counts down by subtracting 0.1 as a double, and ten of those leave 1.0 at
+//    1.4e-16, not zero — so a 1s reload takes 11 ticks, 1.1s. 0.5s is really
+//    0.6s, 0.25s is 0.3s, 5s is 5.1s; 2s and 3s happen to land exactly.
+//    There is no rounding rule — only stepping the countdown gets it right.
+//    Timed in game on build 25474094: Chosen Commander 1.1s, EDA Commander
+//    2.0s, Jager and Stitcher 0.6s, all exactly as simulated.
+// 3. Beam damage is per tick, applied by HostBeam:Update after the weapons
+//    update in the same tick (CollisionUpdate). A continuous beam
+//    (beamLifetime -1) never finishes its salvo, so only the first muzzle group
+//    ever fires and reload is irrelevant. A pulse or burst beam lands
+//    beamLifetime ticks per volley.
+//
+// Anything the host never reads is left out: damageOverTimePulse*, chargeTime,
+// impactDelay and damageBox appear in no runtime code, Lua or compiled — see
+// unreadWeaponFields.
+function simulateWeapon(w, isBeam) {
+  const groups = groupSizes(w);
+  if (!groups.length) return null;
 
-  let damage = w.damage ?? 0;
-  const reloadTime = w.reloadTime ?? 1;
+  const damage = w.damage ?? 0;
+  const reloadTime = w.reloadTime ?? 0;
   const salvoSize = w.muzzleSalvoSize ?? 1;
-  const salvoDelay = w.muzzleSalvoDelay ?? 0;
-  const muzzleCount = cycleMuzzleCount(w);
-  const damageOverTime = (w.damageOverTimePulseCount ?? 0) * (w.damageOverTimePulseDamage ?? 0);
-  const cycleTime = Math.max(reloadTime, (salvoSize - 1) * salvoDelay);
+  const lifetime = w.beamLifetime ?? -1;
 
-  if (w.beamLifetime != null && w.beamLifetime > 0) {
-    damage = damage * w.beamLifetime;
-  } else if (w.beamLifetime != null && w.beamLifetime < 0) {
-    return damage * muzzleCount * TICK_RATE;
+  if (isBeam && lifetime <= 0) return { dps: groups[0] * damage * TICK_RATE, cycleTime: null };
+
+  let reloadTimer = reloadTime;
+  let state = 'reload';
+  let salvosRemaining = 0;
+  let group = 0;
+  let between = 0;
+  let pending = false;
+  let countdown = 0;
+  let beaming = 0; // muzzles whose beam is on
+  let dealt = 0;
+  const starts = []; // [tick, damage dealt before it] at each volley start
+
+  const advance = () => {
+    group = (group + 1) % groups.length;
+    salvosRemaining -= 1;
+    if (salvosRemaining <= 0) state = 'reload';
+    else {
+      between = w.muzzleSalvoDelay ?? 0;
+      state = 'between';
+    }
+  };
+  const waitBetween = () => {
+    if (state !== 'between') return;
+    between -= TICK_STEP;
+    if (between <= 0) state = 'shoot';
+  };
+
+  const beamStep = () => {
+    if (state === 'shoot') {
+      state = 'beam';
+      pending = true;
+      return;
+    }
+    if (state === 'beam') {
+      if (pending) {
+        pending = false;
+        countdown = lifetime;
+        beaming = groups[group];
+        return;
+      }
+      if (countdown > 0 && --countdown === 0) state = 'finish';
+    }
+    if (state === 'finish') {
+      beaming = 0;
+      advance();
+    }
+    waitBetween();
+  };
+
+  const projectileStep = () => {
+    if (state === 'shoot') {
+      dealt += groups[group] * damage;
+      state = 'finish';
+    }
+    if (state === 'finish') advance();
+    waitBetween();
+  };
+
+  // Group rotation repeats after groups.length volleys, so measure across
+  // exactly that many (skipping the first, which starts from a fresh reload).
+  const volleys = groups.length;
+  for (let tick = 0; starts.length < volleys + 2 && tick < 1e6; tick++) {
+    reloadTimer -= TICK_STEP;
+    if (state === 'reload' && reloadTimer <= 0) state = 'target';
+    if (state === 'target') {
+      starts.push([tick, dealt]);
+      reloadTimer = reloadTime;
+      salvosRemaining = salvoSize;
+      state = 'shoot';
+    }
+    if (isBeam) beamStep();
+    else projectileStep();
+    dealt += beaming * damage;
   }
 
-  if (cycleTime <= 0) return 0;
-  return (damage * muzzleCount + damageOverTime) / cycleTime;
+  const [t0, d0] = starts[1];
+  const [t1, d1] = starts[1 + volleys];
+  const seconds = (t1 - t0) / TICK_RATE;
+  return { dps: (d1 - d0) / seconds, cycleTime: round(seconds / volleys) };
 }
 
-function toWeapon(w) {
+// Template fields the documentation describes but no runtime code reads — not
+// the Lua host, not the compiled engine (Trebuchet.dll holds none of these
+// names). Counting them would credit damage the game never deals: the Onager's
+// damage-over-time alone would add 400 DPS to a 525 DPS gun.
+const UNREAD_WEAPON_FIELDS = [
+  'damageOverTimePulseCount',
+  'chargeTime',
+  'impactDelay',
+  'damageBox',
+  'useDamageCollider',
+];
+function unreadWeaponFields(w, where) {
+  const unread = UNREAD_WEAPON_FIELDS.filter((k) => w[k] != null);
+  if (unread.length)
+    issues.push(`${where} sets ${unread.join(', ')} — no game code reads it, so it's ignored`);
+}
+
+function toWeapon(w, where, projectiles) {
   const groups = w.muzzleGroups ?? [];
-  const beamLifetime = w.beamLifetime ?? null;
-  const isBeam = beamLifetime != null;
+  // The game's own test (common/utilities/beams.lua): a weapon is a beam when
+  // it has a `beam` table. beamLifetime alone decides nothing — the Engraver
+  // keeps a stale beamLifetime of -1 from when it was a beam, but fires
+  // projectiles, and reading it as a beam put it at 3,333 DPS instead of ~300.
+  const isBeam = w.beam != null;
+  if (!isBeam && w.beamLifetime != null && w.category !== 'DeathExplosion') {
+    issues.push(`${where} has a beamLifetime but no beam — the game fires it as a projectile`);
+  }
+  const beamLifetime = isBeam ? (w.beamLifetime ?? -1) : null;
+  const projectile = isBeam ? null : projectiles.get(w.projectileTemplate);
+  if (w.category !== 'DeathExplosion') {
+    unreadWeaponFields(w, where);
+    if (!isBeam && w.projectileTemplate && !projectile) {
+      issues.push(
+        `${where} fires projectile "${w.projectileTemplate}", which isn't in the build — it can't fire`,
+      );
+    }
+  }
+
+  const damage = w.damage ?? 0;
+  // A projectile weapon with no projectile template can't fire (the host
+  // dereferences it unguarded), and one with no muzzle bones fires nothing —
+  // both template gaps rather than a genuine zero, so the DPS is unknown.
+  const firesNothing = cycleMuzzleCount(w) === 0 || (!isBeam && !projectile);
+  const sim = w.category === 'DeathExplosion' || firesNothing ? null : simulateWeapon(w, isBeam);
 
   return {
-    damage: w.damage ?? 0,
+    damage,
     damageType: w.damageType ?? 'Normal',
     damageRadius: w.damageRadius ?? 0,
     reloadTime: w.reloadTime ?? 0,
@@ -605,25 +762,30 @@ function toWeapon(w) {
     totalGroups: groups.length,
     // Muzzles that actually fire in one cycle, wrapping as the game does.
     shotsPerCycle: cycleMuzzleCount(w),
+    // Seconds from one volley to the next on the game's own countdown — a
+    // tick longer than reloadTime for some values (1s → 1.1s), exactly it for
+    // others (2s). Null for a continuous beam.
+    cycleTime: sim?.cycleTime ?? null,
     rangeMax: w.rangeMax ?? 0,
     rangeMin: w.rangeMin ?? 0,
     isBeam,
     beamLifetime,
     // -1 holds the beam on target indefinitely; a positive count is how many
-    // ticks of damage it lands per reload.
+    // ticks of damage it lands per volley.
     beamMode: !isBeam ? null : beamLifetime < 0 ? 'continuous' : beamLifetime === 1 ? 'pulse' : 'burst',
     // Beams apply damage along their length rather than launching anything, so
     // the speed on their controllers is a lead-calculation artefact, not travel
     // time. Reporting it would imply a flight time that doesn't exist.
     projectileSpeed: isBeam ? null : projectileSpeedOf(w),
+    // A projectile template with a movement type is steered onto its target
+    // each tick (TargetEntity etc.) rather than flying a ballistic arc. Its
+    // projectileSpeed is the launch speed; the missile accelerates from there.
+    homing: Boolean(projectile?.movement?.type),
     // Tracking speed applies to beams too — they still have to swing onto target.
     ...aimingOf(w),
     targets: w.layerTargetLimits ?? [],
     category: w.category ?? null,
-    // A weapon with damage but no muzzle bones scores 0 under the game formula.
-    // That is a template gap rather than a real zero, so report it as unknown
-    // instead of a confident 0 — toUnit flags which units are affected.
-    dps: (w.damage ?? 0) > 0 && cycleMuzzleCount(w) === 0 ? null : round(weaponDps(w)),
+    dps: damage > 0 && firesNothing ? null : round(sim?.dps ?? 0),
   };
 }
 
@@ -731,8 +893,11 @@ function groupWeapons(weapons) {
       w.rangeMax,
       w.rangeMin,
       w.isBeam,
+      w.beamLifetime,
       w.projectileSpeed,
+      w.homing,
       w.shotsPerCycle,
+      w.cycleTime,
       w.category,
       w.targets,
       w.traverseSpeed,

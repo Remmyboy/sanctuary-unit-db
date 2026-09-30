@@ -95,6 +95,13 @@ const SYMBOLS: Record<string, string> = {
 const comboKey = (icon: UnitIconSpec | null): string | null =>
   icon?.shape && icon?.tech && icon?.symbol ? `${icon.shape}_${icon.tech}_${icon.symbol}` : null;
 
+/** The baked strategic icon's URL, for drawing it somewhere an <img> can't go (inside an SVG). */
+export function iconUrl(icon: UnitIconSpec | null, faction: string, manifest: Set<string>): string | null {
+  const key = comboKey(icon);
+  if (!key || !manifest.has(key)) return null;
+  return `/icons/${(FACTION_COLOURS[faction] ? faction : 'EDA').toLowerCase()}/${key}.png`;
+}
+
 interface UnitIconProps {
   icon: UnitIconSpec | null;
   faction: string;
