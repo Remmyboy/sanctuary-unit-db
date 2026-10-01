@@ -1,4 +1,4 @@
-// Install furniture shared by /mods and /zone-control: the numbered step
+// Install furniture shared by /mods and /gameplay-mods: the numbered step
 // heading, and the engine path with a copy button. Both pages install into
 // the same folder the same way, so they say it the same way.
 

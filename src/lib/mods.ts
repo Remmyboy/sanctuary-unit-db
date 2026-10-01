@@ -1,4 +1,4 @@
-// The mod catalogue behind /mods and the Play page's download card.
+// The mod catalogue behind /mods, /gameplay-mods and the Play page's download card.
 //
 // Every mod lives in the open-source sanctuary-mods repo and ships as release
 // assets there, so the version below is the only thing that moves when one is
@@ -42,8 +42,6 @@ export interface Mod {
   features: Feature[];
   /** Its keys, in words, if it binds any — worth knowing before you install. */
   keys?: string;
-  /** Whose idea it was, for a port of someone else's mod. */
-  credit?: string;
 }
 
 // Ordered the way someone new reads them: the manager first, because the
@@ -322,13 +320,13 @@ export const standaloneHref = (m: Mod): string =>
 export const managerHref = (m: Mod): string =>
   `${MODS_REPO}/releases/download/${releaseTag(m)}/${releaseTag(m)}-ModManager.zip`;
 
-/** Gameplay mods change the match itself, so they aren't add-ons: the lobby
+/** Gameplay mods change the match itself, so they aren't UI mods: the lobby
  *  host switches one on and everyone playing needs the same copy. They stay
  *  out of MODS, and so out of the everything zip, which is the set you can
- *  just switch on; /mods lists them in a section of their own.
+ *  just switch on; /gameplay-mods lists them, with how each one plays.
  *
- *  Zone Control is played on its own map, so it gets its own page,
- *  /zone-control, and its download carries the map too. */
+ *  Zone Control is played on its own map, so its download carries the map
+ *  too. */
 export const ZONE_CONTROL: Mod = {
   id: 'ZoneControl',
   name: 'Zone Control',
@@ -345,8 +343,6 @@ export const ZONE_CONTROL: Mod = {
       text: 'Levels bring better units, T4 heroes and artillery in your base; money buys upgrades and kamikazes.',
     },
   ],
-  credit:
-    'Forged Alliance’s mode by johnie102; map by Saya, AngryZealot and johnie102, with edits by Kasper.',
 };
 
 export const ZONE_CONTROL_MAP = 'Zone Control for FAF 8P V2';
@@ -358,8 +354,8 @@ export const zoneControlHref = (): string =>
   `${MODS_REPO}/releases/download/${releaseTag(ZONE_CONTROL)}/${releaseTag(ZONE_CONTROL)}-WithMap.zip`;
 
 /** Phantom-X is Lua only, with no map: its release's -ModManager.zip is the
- *  whole download, and it plays on any map, so it has no page of its own. Its
- *  panel is drawn by the Mod API, which is why it needs Mod Manager 0.10.0. */
+ *  whole download, and it plays on any map. Its panel is drawn by the Mod API,
+ *  which is why it needs Mod Manager 0.10.0. */
 export const PHANTOM_X: Mod = {
   id: 'PhantomX',
   name: 'Phantom-X',
@@ -388,11 +384,10 @@ export const PHANTOM_X: Mod = {
       text: 'Best with three or more players. AIs stay allied until someone breaks with them.',
     },
   ],
-  credit: 'Forged Alliance’s Phantom-X by Novaprim3, Duck_42, mead, SpikeyNoob and Fichom.',
 };
 
-/** Every gameplay mod on /mods, in the order shown. */
-export const GAMEPLAY_MODS: { mod: Mod; href: string; label: string; page?: '/zone-control' }[] = [
-  { mod: ZONE_CONTROL, href: zoneControlHref(), label: 'Download mod + map', page: '/zone-control' },
+/** Every gameplay mod on /gameplay-mods, in the order shown. */
+export const GAMEPLAY_MODS: { mod: Mod; href: string; label: string }[] = [
+  { mod: ZONE_CONTROL, href: zoneControlHref(), label: 'Download mod + map' },
   { mod: PHANTOM_X, href: managerHref(PHANTOM_X), label: 'Download' },
 ];

@@ -67,6 +67,7 @@ export default defineConfig(({ mode, command }) => {
           // crawler follows the link to it and would write it back as text.
           filter: ({ path }) =>
             path !== '/modding' &&
+            path !== '/zone-control' &&
             !path.startsWith('/downloads/') &&
             !MODDING_SNAPSHOTS.some((snapshot) => path === `/modding/${snapshot.id}`),
         },

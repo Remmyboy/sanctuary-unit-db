@@ -20,8 +20,8 @@ const NAV = [
   {
     label: 'Modding',
     links: [
-      ['/mods', 'Mods'],
-      ['/zone-control', 'Zone Control'],
+      ['/mods', 'UI Mods'],
+      ['/gameplay-mods', 'Gameplay Mods'],
       ['/modding', 'Modding'],
     ],
   },
