@@ -42,6 +42,8 @@ export interface Mod {
   features: Feature[];
   /** Its keys, in words, if it binds any — worth knowing before you install. */
   keys?: string;
+  /** Whose idea it was, for a port of someone else's mod. */
+  credit?: string;
 }
 
 // Ordered the way someone new reads them: the manager first, because the
@@ -51,7 +53,7 @@ export const MODS: Mod[] = [
   {
     id: 'ModManager',
     name: 'Mod Manager',
-    version: '0.9.0',
+    version: '0.10.1',
     tagline:
       'A Mods page in the game menu for switching mods on and off, and a Mods panel in the lobby for the host’s gameplay mods.',
     features: [
@@ -85,7 +87,7 @@ export const MODS: Mod[] = [
   {
     id: 'SanctuaryHud',
     name: 'SanctuaryDB HUD',
-    version: '0.14.1',
+    version: '0.15.0',
     tagline:
       'A mini-map, a proper economy readout, reclaim values, build timers, alerts and post-match stats.',
     features: [
@@ -122,6 +124,10 @@ export const MODS: Mod[] = [
         text: 'When the game ends, a stats window for every army: score, resources gathered, spent and wasted, units built, lost and killed, with charts over time.',
       },
       {
+        title: 'Every panel your size',
+        text: 'Drag the grip in a panel’s corner to resize it: the economy strip, commander, bottom panels or mini-map. Each one remembers its size.',
+      },
+      {
         title: 'Optional extras',
         text: 'Switch on the ones you want: cursors that show what a right-click will do, waypoints and rally points you can drag, a build queue you reorder by dragging, Ctrl-A for every unit of the selected types, and a match clock.',
       },
@@ -131,7 +137,7 @@ export const MODS: Mod[] = [
   {
     id: 'EcoManager',
     name: 'Eco Manager',
-    version: '0.7.3',
+    version: '0.8.1',
     tagline: 'See what’s eating your economy, and upgrade extractors without babysitting them.',
     features: [
       {
@@ -150,12 +156,16 @@ export const MODS: Mod[] = [
         title: 'Upgrades that don’t stall you',
         text: 'Each upgrade waits, paused, until its engineer actually starts work — so queueing five at once won’t flatten your economy.',
       },
+      {
+        title: 'Sized to fit',
+        text: 'Drag the grip in either panel’s corner to make it bigger or smaller. It stays that size next match.',
+      },
     ],
   },
   {
     id: 'IdleEngineers',
     name: 'Idle Engineers',
-    version: '0.5.3',
+    version: '0.6.1',
     tagline: 'Never lose track of an engineer or factory with nothing to do.',
     features: [
       {
@@ -168,7 +178,7 @@ export const MODS: Mod[] = [
       },
       {
         title: 'Gone when you don’t need it',
-        text: 'It disappears completely when nothing is idle. Put it wherever you like and lock it there.',
+        text: 'It disappears completely when nothing is idle. Put it wherever you like, drag its corner to the size you want, and lock it there.',
       },
     ],
   },
@@ -233,7 +243,7 @@ export const MODS: Mod[] = [
   {
     id: 'ReplayManager',
     name: 'Replay Manager',
-    version: '0.4.3',
+    version: '0.4.4',
     tagline: 'Watch replays properly: any player’s view, no fog, every economy.',
     features: [
       {
@@ -312,10 +322,13 @@ export const standaloneHref = (m: Mod): string =>
 export const managerHref = (m: Mod): string =>
   `${MODS_REPO}/releases/download/${releaseTag(m)}/${releaseTag(m)}-ModManager.zip`;
 
-/** Zone Control is a game mode, not an add-on: a gameplay mod the lobby host
- *  switches on, played on its own map. So it stays out of MODS (and so out of
- *  the everything zip, where a 15 MB map nobody asked for would ride along)
- *  and gets its own page, /zone-control, with a card on /mods pointing there. */
+/** Gameplay mods change the match itself, so they aren't add-ons: the lobby
+ *  host switches one on and everyone playing needs the same copy. They stay
+ *  out of MODS, and so out of the everything zip, which is the set you can
+ *  just switch on; /mods lists them in a section of their own.
+ *
+ *  Zone Control is played on its own map, so it gets its own page,
+ *  /zone-control, and its download carries the map too. */
 export const ZONE_CONTROL: Mod = {
   id: 'ZoneControl',
   name: 'Zone Control',
@@ -332,6 +345,8 @@ export const ZONE_CONTROL: Mod = {
       text: 'Levels bring better units, T4 heroes and artillery in your base; money buys upgrades and kamikazes.',
     },
   ],
+  credit:
+    'Forged Alliance’s mode by johnie102; map by Saya, AngryZealot and johnie102, with edits by Kasper.',
 };
 
 export const ZONE_CONTROL_MAP = 'Zone Control for FAF 8P V2';
@@ -341,3 +356,43 @@ export const ZONE_CONTROL_MAP = 'Zone Control for FAF 8P V2';
  *  already has the map. */
 export const zoneControlHref = (): string =>
   `${MODS_REPO}/releases/download/${releaseTag(ZONE_CONTROL)}/${releaseTag(ZONE_CONTROL)}-WithMap.zip`;
+
+/** Phantom-X is Lua only, with no map: its release's -ModManager.zip is the
+ *  whole download, and it plays on any map, so it has no page of its own. Its
+ *  panel is drawn by the Mod API, which is why it needs Mod Manager 0.10.0. */
+export const PHANTOM_X: Mod = {
+  id: 'PhantomX',
+  name: 'Phantom-X',
+  version: '0.1.0',
+  tagline:
+    'Supreme Commander’s Phantom-X: everyone starts allied, until some of you secretly become phantoms.',
+  features: [
+    {
+      title: 'Trust nobody',
+      text: 'A few minutes in, phantoms are chosen in secret and fed a share of everyone else’s income. The last one standing wins.',
+    },
+    {
+      title: 'Hunt them down',
+      text: 'The innocents win by killing every phantom. Paladins hunt with a smaller bonus, which a phantom can pay to take away.',
+    },
+    {
+      title: 'Alliances on a panel',
+      text: 'Break or offer alliances, vote, volunteer and mark suspects from one panel, with notices when roles are revealed.',
+    },
+    {
+      title: 'Set it up your way',
+      text: 'How many phantoms, when they’re picked, their bonus, paladins and reveals: 13 lobby options, with the original’s defaults.',
+    },
+    {
+      title: 'Any map, three or more',
+      text: 'Best with three or more players. AIs stay allied until someone breaks with them.',
+    },
+  ],
+  credit: 'Forged Alliance’s Phantom-X by Novaprim3, Duck_42, mead, SpikeyNoob and Fichom.',
+};
+
+/** Every gameplay mod on /mods, in the order shown. */
+export const GAMEPLAY_MODS: { mod: Mod; href: string; label: string; page?: '/zone-control' }[] = [
+  { mod: ZONE_CONTROL, href: zoneControlHref(), label: 'Download mod + map', page: '/zone-control' },
+  { mod: PHANTOM_X, href: managerHref(PHANTOM_X), label: 'Download' },
+];

@@ -4961,9 +4961,200 @@ html.modding-route {
   }
 }
 
-/* Game modes on /mods: a rule-headed section under the two steps. */
+/* Gameplay mods on /mods: a rule-headed section under the two steps, linked
+   from the masthead. */
 .mods-modes {
   margin-top: 34px;
+  scroll-margin-top: calc(var(--header-h) + 52px);
+}
+
+/* A card's screenshots beside its features: the shot gets the wider share,
+   the features fall to one column next to it. */
+.mod-body.has-shots {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 18px 24px;
+  align-items: start;
+}
+.mod-credit {
+  margin: 14px 0 0;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--text-dim);
+}
+
+.mod-shots {
+  min-width: 0;
+  /* Beside a long feature list, the shot stays in view as you read down. */
+  position: sticky;
+  top: calc(var(--header-h) + 52px);
+}
+.mod-shot-main {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  padding: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 70%),
+    var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: zoom-in;
+  transition: border-color 0.15s;
+}
+.mod-shot-main:hover,
+.mod-shot-main:focus-visible {
+  border-color: var(--accent);
+}
+/* A frame fills the viewer, scaling down. A panel is a few hundred game
+   pixels, so it may grow to 2× its cut size; object-fit keeps its shape when
+   the viewer's height is what limits it. Absolutely placed, so the
+   percentages resolve against the viewer's aspect-ratio height. */
+.mod-shot-main img {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+}
+.mod-shot-main img[data-kind='panel'] {
+  width: min(100% - 24px, var(--w) * 2px);
+  height: min(100% - 24px, var(--h) * 2px);
+  object-fit: contain;
+}
+.mod-shot-caption {
+  margin: 8px 0 0;
+  min-height: 2lh;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+.mod-shot-thumbs {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+}
+.mod-shot-thumbs button {
+  position: relative;
+  display: block;
+  width: 64px;
+  height: 36px;
+  padding: 2px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  cursor: pointer;
+  opacity: 0.6;
+  transition:
+    opacity 0.15s,
+    border-color 0.15s;
+}
+.mod-shot-thumbs button:hover {
+  opacity: 1;
+}
+.mod-shot-thumbs button[aria-pressed='true'] {
+  opacity: 1;
+  border-color: var(--accent);
+}
+.mod-shot-thumbs img {
+  position: absolute;
+  inset: 2px;
+  margin: auto;
+  display: block;
+  max-width: calc(100% - 4px);
+  max-height: calc(100% - 4px);
+}
+
+/* Full size, over a dimmed page. */
+.mod-lightbox {
+  max-width: 96vw;
+  max-height: 96vh;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  overflow: visible;
+}
+.mod-lightbox::backdrop {
+  background: rgb(0 0 0 / 0.85);
+}
+.mod-lightbox figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+.mod-lightbox img {
+  display: block;
+  max-width: 96vw;
+  max-height: calc(96vh - 52px);
+  width: auto;
+  height: auto;
+  border-radius: var(--radius);
+  box-shadow: 0 20px 60px rgb(0 0 0 / 0.6);
+}
+.mod-lightbox img[data-kind='panel'] {
+  width: min(96vw, var(--w) * 3px);
+  height: min(96vh - 52px, var(--h) * 3px);
+  object-fit: contain;
+  box-shadow: none;
+}
+.mod-lightbox figcaption {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 96vw;
+  font-size: 13.5px;
+  color: #e6e9ee;
+}
+.mod-lightbox-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+}
+.mod-lightbox-count {
+  min-width: 4ch;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: #aab2bd;
+}
+.mod-lightbox button {
+  padding: 3px 10px;
+  font: inherit;
+  color: #e6e9ee;
+  background: rgb(255 255 255 / 0.08);
+  border: 1px solid rgb(255 255 255 / 0.2);
+  border-radius: 3px;
+  cursor: pointer;
+}
+.mod-lightbox button:hover {
+  background: rgb(255 255 255 / 0.16);
+}
+.mod-lightbox-close {
+  flex: none;
+}
+
+@media (max-width: 760px) {
+  .mod-body.has-shots {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .mod-shots {
+    position: static;
+  }
+  .mod-lightbox figcaption {
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 0 12px;
+  }
 }
 .mods-modes .mods-or {
   margin-bottom: 12px;
