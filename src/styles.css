@@ -4961,47 +4961,265 @@ html.modding-route {
   }
 }
 
-/* Game modes on /mods: a rule-headed section under the two steps. */
-.mods-modes {
-  margin-top: 34px;
-}
-.mods-modes .mods-or {
-  margin-bottom: 12px;
+/* A card's screenshots beside its features: the shot gets the wider share,
+   the features fall to one column next to it. */
+.mod-body.has-shots {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 18px 24px;
+  align-items: start;
 }
 
-/* ---------- zone control ----------
-   The /mods layout (steps beside a sticky download rail), then the board and
-   the rules. The legend's swatches are the preview's own colours. */
-.zc-page .mods-step:first-of-type .mods-step-head {
+.mod-shots {
+  min-width: 0;
+  /* Beside a long feature list, the shot stays in view as you read down. */
+  position: sticky;
+  top: calc(var(--header-h) + 52px);
+}
+.mod-shot-main {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  padding: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 70%),
+    var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: zoom-in;
+  transition: border-color 0.15s;
+}
+.mod-shot-main:hover,
+.mod-shot-main:focus-visible {
+  border-color: var(--accent);
+}
+/* A frame fills the viewer, scaling down. A panel is a few hundred game
+   pixels, so it may grow to 2× its cut size; object-fit keeps its shape when
+   the viewer's height is what limits it. Absolutely placed, so the
+   percentages resolve against the viewer's aspect-ratio height. */
+.mod-shot-main img {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+}
+.mod-shot-main img[data-kind='panel'] {
+  width: min(100% - 24px, var(--w) * 2px);
+  height: min(100% - 24px, var(--h) * 2px);
+  object-fit: contain;
+}
+.mod-shot-caption {
+  margin: 8px 0 0;
+  min-height: 2lh;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+.mod-shot-thumbs {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+}
+.mod-shot-thumbs button {
+  position: relative;
+  display: block;
+  width: 64px;
+  height: 36px;
+  padding: 2px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  cursor: pointer;
+  opacity: 0.6;
+  transition:
+    opacity 0.15s,
+    border-color 0.15s;
+}
+.mod-shot-thumbs button:hover {
+  opacity: 1;
+}
+.mod-shot-thumbs button[aria-pressed='true'] {
+  opacity: 1;
+  border-color: var(--accent);
+}
+.mod-shot-thumbs img {
+  position: absolute;
+  inset: 2px;
+  margin: auto;
+  display: block;
+  max-width: calc(100% - 4px);
+  max-height: calc(100% - 4px);
+}
+
+/* Full size, over a dimmed page. */
+.mod-lightbox {
+  max-width: 96vw;
+  max-height: 96vh;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  overflow: visible;
+}
+.mod-lightbox::backdrop {
+  background: rgb(0 0 0 / 0.85);
+}
+.mod-lightbox figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+.mod-lightbox img {
+  display: block;
+  max-width: 96vw;
+  max-height: calc(96vh - 52px);
+  width: auto;
+  height: auto;
+  border-radius: var(--radius);
+  box-shadow: 0 20px 60px rgb(0 0 0 / 0.6);
+}
+.mod-lightbox img[data-kind='panel'] {
+  width: min(96vw, var(--w) * 3px);
+  height: min(96vh - 52px, var(--h) * 3px);
+  object-fit: contain;
+  box-shadow: none;
+}
+.mod-lightbox figcaption {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 96vw;
+  font-size: 13.5px;
+  color: #e6e9ee;
+}
+.mod-lightbox-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+}
+.mod-lightbox-count {
+  min-width: 4ch;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: #aab2bd;
+}
+.mod-lightbox button {
+  padding: 3px 10px;
+  font: inherit;
+  color: #e6e9ee;
+  background: rgb(255 255 255 / 0.08);
+  border: 1px solid rgb(255 255 255 / 0.2);
+  border-radius: 3px;
+  cursor: pointer;
+}
+.mod-lightbox button:hover {
+  background: rgb(255 255 255 / 0.16);
+}
+.mod-lightbox-close {
+  flex: none;
+}
+
+@media (max-width: 760px) {
+  .mod-body.has-shots {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .mod-shots {
+    position: static;
+  }
+  .mod-lightbox figcaption {
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 0 12px;
+  }
+}
+
+/* ---------- gameplay mods ----------
+   The /mods layout (steps beside a sticky download rail), then how each mode
+   plays under a rule of its own: Zone Control's board and rules, Phantom-X's
+   rules. The map legend's swatches are the preview's own colours. */
+.gm-page .mods-step:first-of-type .mods-step-head {
   margin-top: 4px;
 }
-.zc-get-meta {
-  margin: -6px 0 0 !important;
-  font-size: 12px !important;
-  text-align: center;
+/* Each mode is one card holding everything about it, so the page reads one
+   mode at a time; the jump links up top pick one. */
+.gm-jump {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
 }
-.zc-get-meta a,
-.zc-more,
-.zc-credit-links a,
+.gm-jump a {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px 14px;
+  text-decoration: none;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: border-color 0.15s;
+}
+.gm-jump a:hover {
+  border-color: var(--accent);
+}
+.gm-jump strong {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--text);
+}
+.gm-jump span {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+.gm-mods {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  margin-top: 28px;
+}
+/* The set-up and rules under a mode's features, ruled off from them. */
+.gm-guide {
+  margin-top: 22px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+.gm-guide > .gm-section:first-child {
+  margin-top: 18px;
+}
+.gm-more,
+.gm-credit-links a,
 .page-lede a {
   color: var(--accent);
   text-decoration: none;
 }
-.zc-get-meta a:hover,
-.zc-more:hover,
-.zc-credit-links a:hover,
+.gm-more:hover,
+.gm-credit-links a:hover,
 .page-lede a:hover {
   text-decoration: underline;
 }
-.zc-tree {
+.gm-tree {
   margin: 10px 0 0 !important;
   font-size: 12px !important;
   line-height: 1.9 !important;
 }
-.zc-tree code {
+.gm-tree code {
   overflow-wrap: anywhere;
 }
-.zc-step-actions {
+.gm-step-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -5009,7 +5227,7 @@ html.modding-route {
   margin: 12px 0 0;
   font-size: 13px;
 }
-.zc-steps {
+.gm-steps {
   margin: 0 0 8px;
   padding-left: 22px;
   max-width: 78ch;
@@ -5017,27 +5235,27 @@ html.modding-route {
   line-height: 1.6;
   color: var(--text-dim);
 }
-.zc-steps li + li {
+.gm-steps li + li {
   margin-top: 4px;
 }
-.zc-steps li::marker {
+.gm-steps li::marker {
   font-family: var(--font-display);
   font-weight: 700;
   color: var(--accent);
 }
-.zc-steps strong {
+.gm-steps strong {
   color: var(--text);
   font-weight: 600;
 }
 
-.zc-section {
-  margin-top: 36px;
+.gm-section {
+  margin-top: 32px;
 }
-.zc-heading {
+.gm-heading {
   margin: 0 0 12px;
   padding-bottom: 8px;
   font-family: var(--font-display);
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -5121,31 +5339,31 @@ html.modding-route {
   font-size: 12.5px;
 }
 
-.zc-rules {
+.gm-rules {
   margin-top: 4px;
 }
 
-.zc-table-wrap {
+.gm-table-wrap {
   overflow-x: auto;
   margin-top: 12px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
 }
-.zc-table {
+.gm-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
 }
-.zc-table th,
-.zc-table td {
+.gm-table th,
+.gm-table td {
   padding: 8px 12px;
   text-align: left;
   border-bottom: 1px solid var(--border);
 }
-.zc-table tbody tr:last-child > * {
+.gm-table tbody tr:last-child > * {
   border-bottom: none;
 }
-.zc-table thead th {
+.gm-table thead th {
   font-family: var(--font-display);
   font-size: 11px;
   font-weight: 700;
@@ -5155,76 +5373,81 @@ html.modding-route {
   background: var(--bg-raised);
   white-space: nowrap;
 }
-.zc-table tbody th {
+.gm-table tbody th {
   font-family: var(--font-display);
   font-weight: 700;
   color: var(--text);
 }
-.zc-table td {
+.gm-table td {
   color: var(--text-dim);
 }
-.zc-table td.num {
+.gm-table td.num {
   font-variant-numeric: tabular-nums;
   color: var(--text);
 }
-.zc-pair .zc-table {
+.gm-pair .gm-table {
   border: 1px solid var(--border);
 }
 
-.zc-pair {
+.gm-pair {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 0 28px;
 }
-.zc-options {
+.gm-options {
   margin: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-.zc-options dt {
+.gm-options dt {
   font-size: 13.5px;
   font-weight: 600;
   color: var(--text);
 }
-.zc-options dt span {
+.gm-options dt span {
   margin-left: 6px;
   font-size: 12px;
   font-weight: 500;
   color: var(--accent-strong);
   font-variant-numeric: tabular-nums;
 }
-.zc-options dd {
+.gm-options-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px 26px;
+}
+.gm-options dd {
   margin: 1px 0 0;
   font-size: 12.5px;
   line-height: 1.5;
   color: var(--text-dim);
 }
 
-.zc-credits {
+.gm-credits {
   padding: 18px 20px;
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--accent) 5%, transparent), transparent 120px),
-    var(--bg-raised);
+    var(--bg-sunken);
   border: 1px solid var(--border);
   border-radius: var(--radius);
 }
-.zc-credits .zc-heading {
+.gm-credits .gm-heading {
   border-bottom: none;
   padding-bottom: 0;
 }
-.zc-credits p {
+.gm-credits p {
   margin: 0 0 10px;
   max-width: 78ch;
   font-size: 13.5px;
   line-height: 1.65;
   color: var(--text-dim);
 }
-.zc-credits strong {
+.gm-credits strong {
   color: var(--text);
   font-weight: 600;
 }
-.zc-credit-links {
+.gm-credit-links {
   display: flex;
   flex-wrap: wrap;
   gap: 6px 20px;

@@ -115,8 +115,10 @@ test('mods page lists every mod with live download links', async ({ page, reques
   // a shell. Its downloads are release assets whose URL is derived from the
   // version in src/lib/mods.ts, which is the thing that goes stale.
   await page.goto('/mods');
-  // Eight mods in the two steps, and Zone Control under game modes.
-  expect(await page.locator('.mod-entry').count()).toBe(9);
+  // The UI mods: the Mod Manager in step 1, seven more in step 2. Gameplay
+  // mods have a page of their own.
+  expect(await page.locator('.mod-entry').count()).toBe(8);
+  await expect(page.locator('#ZoneControl')).toHaveCount(0);
   await expect(page.locator('.install-path code')).toContainText('Playtest\\engine');
 
   // Step 1 is the Mod Manager's Standalone zip; every other mod's button is
@@ -131,12 +133,12 @@ test('mods page lists every mod with live download links', async ({ page, reques
   );
   await expect(page.locator('.mod-links a', { hasText: 'Standalone' })).toHaveCount(0);
 
-  // Zone Control's button is the mod and its map together; its page explains it.
-  await expect(page.locator('#ZoneControl .dl-btn')).toHaveAttribute(
-    'href',
-    /sanctuary-mods\/releases\/download\/ZoneControl-[\d.]+\/ZoneControl-[\d.]+-WithMap\.zip/,
-  );
-  await expect(page.locator('#ZoneControl .mod-links a[href="/zone-control"]')).toHaveCount(1);
+  // The screenshots are served, not dead images (they're lazy, so ask for
+  // one directly rather than wait for it to scroll into view).
+  const shot = await page.locator('#SanctuaryHud .mod-shot-main img').getAttribute('src');
+  const shotResponse = await request.get(shot!);
+  expect(shotResponse.status()).toBe(200);
+  expect(shotResponse.headers()['content-type']).toBe('image/webp');
 
   // The everything zip is built into the site at build time: a real zip, not
   // the page shell or a prerendered copy mangled into text.
@@ -154,33 +156,46 @@ test('mods page lists every mod with live download links', async ({ page, reques
   expect(errors).toEqual([]);
 });
 
-test('zone control page walks the setup and shows the map', async ({ page, request }) => {
+test('gameplay mods page sets up each mode and shows the map', async ({ page, request }) => {
   const errors = collectErrors(page);
 
-  await page.goto('/zone-control');
-  await expect(page.getByRole('heading', { name: 'Zone Control', level: 1 })).toBeVisible();
+  // Zone Control had a page of its own; old links land on its card here.
+  const old = await request.get('/zone-control', { maxRedirects: 0 });
+  expect(old.status()).toBe(308);
+  expect(old.headers().location).toBe('/gameplay-mods#ZoneControl');
 
-  // The three steps: the Mod Manager, the mod + map zip, then the lobby.
-  await expect(page.locator('.mods-step h2')).toHaveCount(3);
-  await expect(page.locator('.zc-step-actions .dl-btn').first()).toHaveAttribute(
+  await page.goto('/gameplay-mods');
+  await expect(page.getByRole('heading', { name: 'Gameplay Mods', level: 1 })).toBeVisible();
+
+  // The shared step (the Mod Manager), then one card per mode.
+  await expect(page.locator('.mods-step h2')).toHaveCount(2);
+  await expect(page.locator('.gm-step-actions .dl-btn').first()).toHaveAttribute(
     'href',
     /ModManager-[\d.]+\/ModManager-[\d.]+-Standalone\.zip$/,
   );
-  await expect(page.locator('.mods-everything .dl-btn')).toHaveAttribute(
+  await expect(page.locator('.mod-entry')).toHaveCount(2);
+  await expect(page.locator('#ZoneControl .mod-entry-head .dl-btn')).toHaveAttribute(
     'href',
-    /ZoneControl-[\d.]+-WithMap\.zip$/,
+    /ZoneControl-[\d.]+\/ZoneControl-[\d.]+-WithMap\.zip$/,
+  );
+  await expect(page.locator('#PhantomX .mod-entry-head .dl-btn')).toHaveAttribute(
+    'href',
+    /PhantomX-[\d.]+\/PhantomX-[\d.]+-ModManager\.zip$/,
   );
 
   // The preview is served, not a dead image.
   const map = await request.get('/zone-control/map.png');
   expect(map.status()).toBe(200);
   expect(map.headers()['content-type']).toBe('image/png');
-  await expect(page.locator('.zc-map img')).toHaveJSProperty('complete', true);
-  expect(await page.locator('.zc-map img').evaluate((img: HTMLImageElement) => img.naturalWidth)).toBe(512);
+  const mapImg = page.locator('#ZoneControl .zc-map img');
+  await mapImg.scrollIntoViewIfNeeded();
+  await expect(mapImg).toHaveJSProperty('complete', true);
+  expect(await mapImg.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBe(512);
 
-  // The original's makers are credited.
-  await expect(page.locator('.zc-credits')).toContainText('johnie102');
-  await expect(page.locator('.zc-credits')).toContainText('AngryZealot');
+  // Each original's makers are credited, on their own mode's card.
+  await expect(page.locator('#ZoneControl .gm-credits')).toContainText('johnie102');
+  await expect(page.locator('#ZoneControl .gm-credits')).toContainText('AngryZealot');
+  await expect(page.locator('#PhantomX .gm-credits')).toContainText('Novaprim3');
 
   expect(errors).toEqual([]);
 });

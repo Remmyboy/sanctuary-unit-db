@@ -10,6 +10,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { LADDER_MAPS, mapPreviewSlug } from '../src/lib/ladder-maps.ts';
 import { FACTION_EMBLEMS, MASTHEAD_ART, mastheadSrc } from '../src/lib/art.ts';
+import { MOD_SHOTS, shotSrc, thumbSrc } from '../src/lib/mod-shots.ts';
 
 const PUBLIC = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'public');
 
@@ -41,6 +42,7 @@ function main() {
   checkIcons(units);
   checkPreviews(units);
   checkArt(units);
+  checkModShots();
   checkLadderPreviews();
   report();
 }
@@ -136,6 +138,21 @@ function checkArt(units) {
   const known = new Set(units.map((u) => u.id));
   const hd = manifest.filter((id) => known.has(id)).length;
   notes.push(`${hd}/${previews.size} unit renders are the developers' 384px, rest the game's 64px`);
+}
+
+// The in-game screenshots on /mods (scripts/build-mod-shots.js). A missing one
+// is a broken image on a mod card.
+function checkModShots() {
+  let count = 0;
+  for (const [modId, shots] of Object.entries(MOD_SHOTS)) {
+    for (const shot of shots) {
+      for (const url of [shotSrc(modId, shot), thumbSrc(modId, shot)]) {
+        if (!exists(url.slice(1))) fail(`missing mod screenshot public${url} — run npm run modshots`);
+      }
+      count++;
+    }
+  }
+  notes.push(`${count} mod screenshots`);
 }
 
 // The ranked pools shipped in src/lib/ladder-maps.ts against the art in
