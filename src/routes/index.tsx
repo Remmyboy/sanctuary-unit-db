@@ -21,6 +21,7 @@ import { FactionEmblem } from '../components/FactionEmblem';
 import { CompactBoard } from '../components/CompactBoard';
 import { CompareTray } from '../components/CompareTray';
 import { COMPARE_MAX, parseCompare, togglePick } from '../lib/compare';
+import { str } from '../lib/search';
 import { UnitCard } from '../components/UnitCard';
 import { DetailPanel } from '../components/DetailPanel';
 import { HeaderSearch } from '../components/HeaderSearch';
@@ -44,12 +45,6 @@ interface BoardSearch {
   /** Units picked for comparison, comma-joined ids. */
   compare?: string;
 }
-
-const str = (v: unknown): string | undefined => {
-  // Bare numbers in the URL (?tier=1) arrive parsed; normalise back to string.
-  const s = v == null ? '' : String(v);
-  return s ? s : undefined;
-};
 
 export const Route = createFileRoute('/')({
   // Data comes from /data/units.json at runtime; there is nothing to render on

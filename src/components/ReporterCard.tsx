@@ -6,17 +6,14 @@
 // catalogue in src/lib/mods.ts — so bumping one there is the whole deploy,
 // and this card can never disagree with the /mods page.
 
-import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
-import { copyText } from '../lib/clipboard';
-import { ENGINE_PATH, EVERYTHING_HREF, managerHref, mod, sourceHref, standaloneHref } from '../lib/mods';
+import { CopyPath } from './ModInstall';
+import { EVERYTHING_HREF, managerHref, mod, sourceHref, standaloneHref } from '../lib/mods';
 
 const MANAGER = mod('ModManager');
 const REPORTER = mod('LadderReporter');
 
 export function ReporterCard() {
-  const [copied, setCopied] = useState(false);
-
   return (
     <div className="queue-widget reporter-card" id="reporter">
       <h2>Auto-reporting</h2>
@@ -59,21 +56,7 @@ export function ReporterCard() {
           Extract both into your game&rsquo;s <code>engine</code> folder, so <code>winhttp.dll</code> sits
           next to <code>Sanctuary.exe</code>, then launch the game and play ranked.
         </p>
-        <div className="install-path">
-          <code>{ENGINE_PATH}</code>
-          <button
-            type="button"
-            className="linkish"
-            onClick={async () => {
-              if (await copyText(ENGINE_PATH)) {
-                setCopied(true);
-                setTimeout(() => setCopied(false), 1500);
-              }
-            }}
-          >
-            {copied ? 'Copied ✓' : 'Copy'}
-          </button>
-        </div>
+        <CopyPath />
         <p className="hint">
           Want every mod? <a href={EVERYTHING_HREF}>Download everything</a> in one zip instead &mdash; see{' '}
           <Link to="/mods">what&rsquo;s in it</Link>.

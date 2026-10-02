@@ -11,15 +11,11 @@ import { fetchQueueCounts } from '../lib/queue-counts';
 import { HeadStat, PageHead } from '../components/PageHead';
 import { leaderboard, mapPools } from '../server/queue-fns';
 import type { LeaderboardRow, QueueCounts } from '../lib/ladder-types';
+import { str } from '../lib/search';
 
 interface LadderSearch {
   mode?: string;
 }
-
-const str = (v: unknown): string | undefined => {
-  const s = v == null ? '' : String(v);
-  return s ? s : undefined;
-};
 
 const TABS: { mode: LeaderboardMode; label: string }[] = [
   { mode: '1v1', label: '1v1' },

@@ -21,8 +21,9 @@ import {
   type QueueResult,
   type Stock,
 } from '../lib/calc';
-import { copyText } from '../lib/clipboard';
+import { useCopyFeedback } from '../lib/use-copy-feedback';
 import type { Faction, ResourceRates, Unit } from '../lib/types';
+import { str } from '../lib/search';
 import { FACTION_COLOURS, FACTION_ORDER, UnitIcon } from '../components/UnitIcon';
 import { FactionEmblem } from '../components/FactionEmblem';
 import { GameVersion } from '../components/GameVersion';
@@ -45,11 +46,6 @@ interface CalcSearch {
   b?: string;
   s?: string;
 }
-
-const str = (v: unknown): string | undefined => {
-  const s = v == null ? '' : String(v);
-  return s ? s : undefined;
-};
 
 export const Route = createFileRoute('/calculator')({
   ssr: false,
@@ -309,7 +305,7 @@ function CalculatorPage() {
   // rather than picked, and it could drift after a game patch. Copy link pins
   // every current selection into the URL before putting it on the clipboard,
   // so the recipient sees exactly this setup.
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopyFeedback();
   const copyLink = async () => {
     setPanel(null);
     await navigate({
@@ -326,10 +322,7 @@ function CalculatorPage() {
       },
       replace: true,
     });
-    if (await copyText(window.location.href)) {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    }
+    await copy(window.location.href);
     // On refusal the address bar still holds the pinned URL, so copying by
     // hand works regardless.
   };

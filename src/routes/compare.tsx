@@ -1,8 +1,8 @@
-import { useState } from 'react';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { loadData, type LoadedData } from '../lib/data';
 import { compareTable, parseCompare } from '../lib/compare';
-import { copyText } from '../lib/clipboard';
+import { str } from '../lib/search';
+import { useCopyFeedback } from '../lib/use-copy-feedback';
 import { duration, fmt, shortName } from '../lib/format';
 import { MAP_SIZE, moveClass, type MoveClass } from '../lib/scale';
 import type { Unit } from '../lib/types';
@@ -23,7 +23,7 @@ interface CompareSearch {
 export const Route = createFileRoute('/compare')({
   ssr: false,
   validateSearch: (raw: Record<string, unknown>): CompareSearch => ({
-    units: raw.units == null ? undefined : String(raw.units) || undefined,
+    units: str(raw.units),
   }),
   head: () => ({
     meta: [
@@ -50,13 +50,7 @@ function ComparePage() {
   const remove = (id: string) =>
     navigate({ search: { units: ids.filter((x) => x !== id).join(',') || undefined }, replace: true });
 
-  const [copied, setCopied] = useState(false);
-  const copyLink = async () => {
-    if (await copyText(window.location.href)) {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    }
-  };
+  const { copied, copy } = useCopyFeedback();
 
   return (
     <>
@@ -75,7 +69,7 @@ function ComparePage() {
         <div className="toolbar-controls">
           <GameVersion game={loaded.data.meta.game} generatedAt={loaded.data.meta.generatedAt} />
           {units.length > 0 && (
-            <button type="button" className="linkish" onClick={copyLink}>
+            <button type="button" className="linkish" onClick={() => copy(window.location.href)}>
               {copied ? 'Copied ✓' : 'Copy link'}
             </button>
           )}

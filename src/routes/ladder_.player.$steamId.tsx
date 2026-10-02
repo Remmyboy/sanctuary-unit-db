@@ -11,15 +11,11 @@ import { MODES, isMode, type Mode } from '../lib/ladder-modes';
 import { setDisplayName } from '../server/auth-fns';
 import { profileGet } from '../server/match-fns';
 import type { Me, Profile } from '../lib/ladder-types';
+import { str } from '../lib/search';
 
 interface ProfileSearch {
   mode?: string;
 }
-
-const str = (v: unknown): string | undefined => {
-  const s = v == null ? '' : String(v);
-  return s ? s : undefined;
-};
 
 export const Route = createFileRoute('/ladder_/player/$steamId')({
   ssr: false,
