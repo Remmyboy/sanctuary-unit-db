@@ -2,7 +2,7 @@
 // over the units array — everything stateful lives in the route's search params.
 
 import type { Faction, Unit } from './types';
-import { FACTION_ORDER } from '../components/UnitIcon';
+import { FACTION_ORDER } from './faction-colours';
 import { isCommander, tierKey } from './format';
 
 // Availability comes from the engine tree's QA tracker crossed with whether the
@@ -15,7 +15,7 @@ export const STATUS_LABELS: Record<string, string> = {
 };
 export const DEFAULT_STATUS = 'In game';
 
-export const DOMAIN_ORDER: Record<string, number> = { l: 0, a: 1, n: 2, s: 3 };
+const DOMAIN_ORDER: Record<string, number> = { l: 0, a: 1, n: 2, s: 3 };
 export const DOMAIN_NAMES: Record<string, string> = { l: 'Land', a: 'Air', n: 'Naval', s: 'Structure' };
 
 export const METRICS: Record<string, (u: Unit) => number | null> = {
@@ -166,7 +166,7 @@ function commonLabel(units: Unit[]): string {
   return [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0][0];
 }
 
-export const byTechTree = (a: Group, b: Group): number =>
+const byTechTree = (a: Group, b: Group): number =>
   DOMAIN_ORDER[a.domain] - DOMAIN_ORDER[b.domain] || a.tier - b.tier || a.code.localeCompare(b.code);
 
 export function visibleGroups(groups: Group[], filters: BoardFilters, sort: SortKey): Group[] {

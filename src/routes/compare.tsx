@@ -1,12 +1,13 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import { loadData, type LoadedData } from '../lib/data';
+import { loadData, unitArt, type LoadedData } from '../lib/data';
 import { compareTable, parseCompare } from '../lib/compare';
 import { str } from '../lib/search';
 import { useCopyFeedback } from '../lib/use-copy-feedback';
 import { duration, fmt, shortName } from '../lib/format';
 import { MAP_SIZE, moveClass, type MoveClass } from '../lib/scale';
 import type { Unit } from '../lib/types';
-import { FACTION_COLOURS, UnitIcon } from '../components/UnitIcon';
+import { UnitIcon } from '../components/UnitIcon';
+import { FACTION_COLOURS } from '../lib/faction-colours';
 import { FactionEmblem } from '../components/FactionEmblem';
 import { GameVersion } from '../components/GameVersion';
 import { PageHead } from '../components/PageHead';
@@ -255,15 +256,11 @@ function Legend({ units }: { units: Unit[] }) {
 // The sharp developer render where there is one, else the game's thumbnail,
 // else the strategic icon.
 function Render({ unit: u, loaded }: { unit: Unit; loaded: LoadedData }) {
-  const src = loaded.renders.has(u.id)
-    ? `/renders/${u.id}.webp`
-    : loaded.previews.has(u.id)
-      ? `/previews/${u.id}.png`
-      : null;
+  const art = unitArt(u, loaded);
   return (
     <span className="compare-render">
-      {src ? (
-        <img src={src} alt="" width={88} height={88} decoding="async" />
+      {art ? (
+        <img src={art.src} alt="" width={88} height={88} decoding="async" />
       ) : (
         <UnitIcon
           icon={u.icon}

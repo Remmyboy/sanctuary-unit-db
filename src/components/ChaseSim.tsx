@@ -12,7 +12,8 @@ import {
   type Body,
   type ChaseResult,
 } from '../lib/chase';
-import { FACTION_COLOURS, iconUrl } from './UnitIcon';
+import { iconUrl } from './UnitIcon';
+import { FACTION_COLOURS } from '../lib/faction-colours';
 
 // Two of the compared units on open ground — one of each, or a group of
 // each — one side chasing the other, with their weapon ranges drawn round

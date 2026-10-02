@@ -1,7 +1,8 @@
 import type { Unit, Weapon } from '../lib/types';
 import { fmt, shortName } from '../lib/format';
 import { economyRole, netRate } from '../lib/economy';
-import { FACTION_COLOURS, UnitIcon } from './UnitIcon';
+import { UnitIcon } from './UnitIcon';
+import { FACTION_COLOURS } from '../lib/faction-colours';
 
 interface UnitCardProps {
   unit: Unit;

@@ -16,7 +16,7 @@ import {
 } from '../lib/board';
 import type { Faction, Unit } from '../lib/types';
 import { tierKey, tierKeyLabel } from '../lib/format';
-import { FACTION_COLOURS } from '../components/UnitIcon';
+import { FACTION_COLOURS } from '../lib/faction-colours';
 import { FactionEmblem } from '../components/FactionEmblem';
 import { CompactBoard } from '../components/CompactBoard';
 import { CompareTray } from '../components/CompareTray';
@@ -359,7 +359,10 @@ function FilterSidebar({
                   onClick={() => onToggle(g.key, String(v))}
                 >
                   {'colour' in g && g.colour ? (
-                    <FactionEmblem faction={String(v)} colour={FACTION_COLOURS[String(v)] ?? '#888'} />
+                    <FactionEmblem
+                      faction={String(v)}
+                      colour={FACTION_COLOURS[String(v)] ?? FACTION_COLOURS.Unknown}
+                    />
                   ) : null}
                   {'label' in g && g.label ? g.label(String(v)) : String(v)}
                 </button>

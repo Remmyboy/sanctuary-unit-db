@@ -7,14 +7,8 @@
 // Canvas is a 64x64 box: outline shape at the edge, role glyph in the upper
 // middle, tech-tier pips along the bottom.
 
-import type { Faction, UnitIconSpec } from '../lib/types';
-
+import type { UnitIconSpec } from '../lib/types';
 import { FACTION_COLOURS } from '../lib/faction-colours';
-
-export { FACTION_COLOURS };
-
-// Column order everywhere in the UI.
-export const FACTION_ORDER: Faction[] = ['EDA', 'Chosen', 'Guard'];
 
 // Outline silhouettes. The "2" variants repeat the same outline inset, which is
 // how the game distinguishes the heavier chassis of the same movement class.
@@ -95,7 +89,7 @@ const SYMBOLS: Record<string, string> = {
 const comboKey = (icon: UnitIconSpec | null): string | null =>
   icon?.shape && icon?.tech && icon?.symbol ? `${icon.shape}_${icon.tech}_${icon.symbol}` : null;
 
-/** The baked strategic icon's URL, for drawing it somewhere an <img> can't go (inside an SVG). */
+/** The baked strategic icon's URL, or null where this combo has no extracted artwork. */
 export function iconUrl(icon: UnitIconSpec | null, faction: string, manifest: Set<string>): string | null {
   const key = comboKey(icon);
   if (!key || !manifest.has(key)) return null;
@@ -112,13 +106,12 @@ interface UnitIconProps {
 }
 
 export function UnitIcon({ icon, faction, manifest, size = 40, muted = false }: UnitIconProps) {
-  const key = comboKey(icon);
-  if (key && manifest.has(key)) {
-    const dir = (FACTION_COLOURS[faction] ? faction : 'EDA').toLowerCase();
+  const src = iconUrl(icon, faction, manifest);
+  if (src) {
     return (
       <img
         className="unit-icon"
-        src={`/icons/${dir}/${key}.png`}
+        src={src}
         width={size}
         height={size}
         alt=""
@@ -131,8 +124,8 @@ export function UnitIcon({ icon, faction, manifest, size = 40, muted = false }: 
   return <UnitIconSvg icon={icon} faction={faction} size={size} muted={muted} />;
 }
 
-/** The generated fallback, also used directly for combos the game never shipped. */
-export function UnitIconSvg({ icon, faction, size = 40, muted = false }: Omit<UnitIconProps, 'manifest'>) {
+/** The generated fallback, for combos the game never shipped artwork for. */
+function UnitIconSvg({ icon, faction, size = 40, muted = false }: Omit<UnitIconProps, 'manifest'>) {
   const colour = muted ? 'var(--icon-muted)' : (FACTION_COLOURS[faction] ?? FACTION_COLOURS.Unknown);
   const shape = icon?.shape ?? 'land1';
   const shapePath = SHAPES[shape] ?? SHAPES.land1;

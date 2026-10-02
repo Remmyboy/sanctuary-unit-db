@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { loadData } from '../lib/data';
-import { builderName, duration, fmt, resourceName, shortName, tierTag } from '../lib/format';
+import { builderName, duration, fmt, isCommander, resourceName, shortName, tierTag } from '../lib/format';
 import {
   buildResult,
   buildable,
@@ -9,13 +9,13 @@ import {
   commanderOf,
   economyResult,
   expandQueue,
-  isCommander,
   isConsumer,
   isStorage,
   isProducer,
   packRows,
   shown,
   simulateQueue,
+  STALL_EPSILON,
   unpackRows,
   type CountedRow,
   type QueueResult,
@@ -24,7 +24,8 @@ import {
 import { useCopyFeedback } from '../lib/use-copy-feedback';
 import type { Faction, ResourceRates, Unit } from '../lib/types';
 import { str } from '../lib/search';
-import { FACTION_COLOURS, FACTION_ORDER, UnitIcon } from '../components/UnitIcon';
+import { UnitIcon } from '../components/UnitIcon';
+import { FACTION_COLOURS, FACTION_ORDER } from '../lib/faction-colours';
 import { FactionEmblem } from '../components/FactionEmblem';
 import { GameVersion } from '../components/GameVersion';
 import { PageHead } from '../components/PageHead';
@@ -82,6 +83,13 @@ type RowKey = 'a' | 'e' | 'q';
 const label = (u: Unit): string => u.name ?? shortName(u);
 
 const byTierName = (a: Unit, b: Unit) => (a.tier ?? 0) - (b.tier ?? 0) || label(a).localeCompare(label(b));
+
+// Builder chips run lowest tier first, then weakest first within a tier.
+const byTierPower = (a: Unit, b: Unit) =>
+  (a.tier ?? 0) - (b.tier ?? 0) || (a.buildPower ?? 0) - (b.buildPower ?? 0);
+
+// A builder chip's name, tier first: "T2 Engineer" (see step 3 below).
+const chipLabel = (u: Unit): string => (tierTag(u) ? `${tierTag(u)} ` : '') + label(u);
 
 // "T2 · EDA · 3,200a · 48,000e" — the sub line under a pickable unit.
 const subLine = (u: Unit): string =>
@@ -173,7 +181,7 @@ function CalculatorPage() {
     const list = target.builtBy.map((id) => byId.get(id)).filter((u): u is Unit => Boolean(u));
     const upFrom = upgradeSourceOf.get(target.id);
     if (upFrom && shown(upFrom) && (upFrom.buildPower ?? 0) > 0) list.push(upFrom);
-    return list.sort((a, b) => (a.tier ?? 0) - (b.tier ?? 0) || (a.buildPower ?? 0) - (b.buildPower ?? 0));
+    return list.sort(byTierPower);
   }, [target, byId, upgradeSourceOf]);
   const primary = (search.p && builders.find((u) => u.id === search.p)) || builders[0] || undefined;
 
@@ -249,9 +257,7 @@ function CalculatorPage() {
   const queueBuilders = useMemo(
     () =>
       queueFaction
-        ? shownUnits
-            .filter((u) => u.faction === queueFaction && canAssist(u))
-            .sort((a, b) => (a.tier ?? 0) - (b.tier ?? 0) || (a.buildPower ?? 0) - (b.buildPower ?? 0))
+        ? shownUnits.filter((u) => u.faction === queueFaction && canAssist(u)).sort(byTierPower)
         : [],
     [shownUnits, queueFaction],
   );
@@ -408,7 +414,7 @@ function CalculatorPage() {
                   else patch({ f: faction === fc ? undefined : fc });
                 }}
               >
-                <FactionEmblem faction={fc} colour={FACTION_COLOURS[fc] ?? '#888'} />
+                <FactionEmblem faction={fc} colour={FACTION_COLOURS[fc] ?? FACTION_COLOURS.Unknown} />
                 {fc}
               </button>
             ))}
@@ -429,7 +435,7 @@ function CalculatorPage() {
                     aria-pressed={u.id === queueBuilder?.id}
                     onClick={() => patch({ b: u.id })}
                   >
-                    {(tierTag(u) ? `${tierTag(u)} ` : '') + label(u)} <small>{fmt(u.buildPower)} bp</small>
+                    {chipLabel(u)} <small>{fmt(u.buildPower)} bp</small>
                   </button>
                 ))}
               </div>
@@ -528,7 +534,7 @@ function CalculatorPage() {
                     }
                     onClick={() => patch({ p: u.id })}
                   >
-                    {(tierTag(u) ? `${tierTag(u)} ` : '') + label(u)}{' '}
+                    {chipLabel(u)}{' '}
                     <small>
                       {u.upgradesTo === target?.id ? 'upgrade · ' : ''}
                       {fmt(u.buildPower)} bp
@@ -978,7 +984,7 @@ function QueueReadout({ plan }: { plan: QueueResult | null }) {
     );
 
   const done = Number.isFinite(plan.finish);
-  const stalled = done && plan.finish > plan.ideal + 0.05;
+  const stalled = done && plan.finish > plan.ideal + STALL_EPSILON;
   const res = [
     ['alloys', 'alloy-val'],
     ['energy', 'energy-val'],
@@ -1066,7 +1072,7 @@ function Timeline({ plan }: { plan: QueueResult }) {
               <td>{i + 1}</td>
               <td>
                 {builderName(s.unit)}
-                {lost > 0.05 && <small className="bad"> +{duration(lost)} stalled</small>}
+                {lost > STALL_EPSILON && <small className="bad"> +{duration(lost)} stalled</small>}
               </td>
               <td>{duration(s.end)}</td>
               <td>{fmt(s.after.alloys, 0)}</td>

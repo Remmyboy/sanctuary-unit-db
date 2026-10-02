@@ -35,6 +35,9 @@ export const isStorage = (u: Unit) =>
 
 /* ---------------- maths ---------------- */
 
+const assistPowerOf = (assists: CountedRow[], byId: Map<string, Unit>): number =>
+  assists.reduce((sum, row) => sum + (byId.get(row.id)?.buildPower ?? 0) * row.count, 0);
+
 export interface BuildResult {
   target: Unit;
   primary: Unit;
@@ -53,7 +56,7 @@ export function buildResult(
 ): BuildResult | null {
   if (!target || !primary) return null;
 
-  const assistPower = assists.reduce((sum, row) => sum + (byId.get(row.id)?.buildPower ?? 0) * row.count, 0);
+  const assistPower = assistPowerOf(assists, byId);
   const total = (primary.buildPower ?? 0) + assistPower;
   if (total <= 0) return null;
 
@@ -107,7 +110,7 @@ export function economyResult(economy: CountedRow[], byId: Map<string, Unit>): E
 // can't cover that, progress slows to the fraction it can. Walking between
 // build sites is not modelled.
 
-export const TICKS_PER_SEC = 10;
+const TICKS_PER_SEC = 10;
 // A queue that can't finish inside four hours of game time is treated as
 // never finishing — it's stuck, not slow.
 const MAX_TICKS = 4 * 3600 * TICKS_PER_SEC;
@@ -126,6 +129,10 @@ export interface QueueStep {
   ideal: number;
   after: Stock;
 }
+
+// How far past its ideal time (in seconds) a build, or the whole queue, can
+// finish before the readout calls it held up.
+export const STALL_EPSILON = 0.05;
 
 export interface QueueResult {
   steps: QueueStep[];
@@ -146,7 +153,6 @@ export interface QueueResult {
 
 // A game always starts with a commander: its income and storage are the base
 // every build order grows from.
-export { isCommander };
 export const commanderOf = (units: Unit[], faction: string | undefined) =>
   faction ? units.find((u) => u.faction === faction && isCommander(u)) : undefined;
 
@@ -166,8 +172,7 @@ export function simulateQueue(
   byId: Map<string, Unit>,
 ): QueueResult | null {
   if (!builder || !queue.length) return null;
-  const assistPower = assists.reduce((sum, row) => sum + (byId.get(row.id)?.buildPower ?? 0) * row.count, 0);
-  const power = (builder.buildPower ?? 0) + assistPower;
+  const power = (builder.buildPower ?? 0) + assistPowerOf(assists, byId);
   if (power <= 0) return null;
 
   const econ = economyResult(startEconomy, byId);

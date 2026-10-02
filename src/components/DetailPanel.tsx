@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { Unit, Weapon } from '../lib/types';
-import type { LoadedData } from '../lib/data';
+import { unitArt, type LoadedData } from '../lib/data';
 import { STATUS_LABELS } from '../lib/board';
 import { builderName, duration, fmt, isCommander, resourceName, shortName, splitCamel } from '../lib/format';
 import { consumes, economyRole, produces, upgradeChain, type UpgradeStep } from '../lib/economy';
@@ -17,7 +17,8 @@ import {
   topSpeedSeconds,
   turnAroundSeconds,
 } from '../lib/scale';
-import { FACTION_COLOURS, UnitIcon } from './UnitIcon';
+import { UnitIcon } from './UnitIcon';
+import { FACTION_COLOURS } from '../lib/faction-colours';
 import { FactionEmblem } from './FactionEmblem';
 import { beamLabel } from './UnitCard';
 
@@ -31,7 +32,8 @@ interface DetailPanelProps {
 }
 
 export function DetailPanel({ unit: u, loaded, onOpen, onClose, compare }: DetailPanelProps) {
-  const { byId, iconManifest, previews, renders } = loaded;
+  const { byId, iconManifest } = loaded;
+  const art = unitArt(u, loaded);
 
   return (
     <>
@@ -51,22 +53,13 @@ export function DetailPanel({ unit: u, loaded, onOpen, onClose, compare }: Detai
           <span className="detail-stage-faction" aria-hidden="true">
             {u.faction}
           </span>
-          {renders.has(u.id) ? (
+          {art ? (
             <img
-              className="detail-render hd"
-              src={`/renders/${u.id}.webp`}
+              className={art.hd ? 'detail-render hd' : 'detail-render'}
+              src={art.src}
               alt={u.name ?? u.displayName}
-              width={170}
-              height={170}
-              decoding="async"
-            />
-          ) : previews.has(u.id) ? (
-            <img
-              className="detail-render"
-              src={`/previews/${u.id}.png`}
-              alt={u.name ?? u.displayName}
-              width={150}
-              height={150}
+              width={art.hd ? 170 : 150}
+              height={art.hd ? 170 : 150}
               decoding="async"
             />
           ) : (
@@ -165,7 +158,7 @@ export function DetailPanel({ unit: u, loaded, onOpen, onClose, compare }: Detai
           </dl>
         </Section>
 
-        <PeerSection unit={u} units={loaded.data.units} onOpen={onOpen} />
+        <PeerSection unit={u} units={loaded.data.units} byId={byId} onOpen={onOpen} />
         <EconomySection unit={u} />
         <AdjacencySection unit={u} />
         <WeaponsSection unit={u} />
@@ -540,16 +533,17 @@ function MobilitySection({ unit: u, units }: { unit: Unit; units: Unit[] }) {
 function PeerSection({
   unit: u,
   units,
+  byId,
   onOpen,
 }: {
   unit: Unit;
   units: Unit[];
+  byId: Map<string, Unit>;
   onOpen: (id: string) => void;
 }) {
   const peers = peersOf(u, units);
   const rows = peerRows(u, peers);
   if (!rows.length) return null;
-  const byId = new Map(units.map((o) => [o.id, o]));
   // Peers share a class as well as a tier: tanks against combat units,
   // engineers against engineers, commanders against each other.
   const who = peerGroupName(u);

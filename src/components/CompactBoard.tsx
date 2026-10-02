@@ -9,7 +9,8 @@ import { useState } from 'react';
 import type { Faction, Unit } from '../lib/types';
 import { compactBlocks, slotSpan, DOMAIN_NAMES, type Group, type SortKey } from '../lib/board';
 import { fmt, shortName } from '../lib/format';
-import { FACTION_COLOURS, UnitIcon } from './UnitIcon';
+import { UnitIcon } from './UnitIcon';
+import { FACTION_COLOURS } from '../lib/faction-colours';
 import { FactionEmblem } from './FactionEmblem';
 
 interface CompactBoardProps {
