@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useId, useRef, useState } from 'react';
 import { tierTag } from '../../lib/format';
 import type { Unit } from '../../lib/types';
 import { UnitIcon } from '../UnitIcon';
@@ -41,6 +41,7 @@ export function PickerPanel({
   onPick: (u: Unit) => void;
   onClose: () => void;
 }) {
+  const id = useId();
   const [q, setQ] = useState('');
   const [active, setActive] = useState(0);
   const mount = useRef<HTMLDivElement>(null);
@@ -89,43 +90,67 @@ export function PickerPanel({
     }
   };
 
+  // The combobox pattern: focus stays in the input, the arrows move a
+  // highlight through the listbox, and aria-activedescendant tells a screen
+  // reader which option that is. The options are out of the tab order for
+  // the same reason; they are still buttons, for the mouse.
+  const name = placeholder.replace(/…$/, '');
+  const optionId = (u: Unit) => `${id}-${u.id}`;
+
   return (
     <div className="picker" ref={mount} onKeyDown={onKeyDown}>
       {explainer && <div className="picker-note">{explainer}</div>}
+      <label className="sr-only" htmlFor={`${id}-input`}>
+        {name}
+      </label>
       <input
         ref={inputRef}
+        id={`${id}-input`}
         type="text"
         placeholder={placeholder}
         autoComplete="off"
         spellCheck={false}
         role="combobox"
         aria-expanded="true"
+        aria-controls={`${id}-list`}
+        aria-autocomplete="list"
+        aria-activedescendant={rows[activeIdx] ? optionId(rows[activeIdx]) : undefined}
         value={q}
         onChange={(e) => {
           setQ(e.target.value);
           setActive(0);
         }}
       />
-      <div className="picker-list" style={{ maxHeight: listMax }} ref={listRef}>
-        {rows.length ? (
-          rows.map((u, i) => (
-            <button
-              type="button"
-              key={u.id}
-              className={`picker-item${i === activeIdx ? ' active' : ''}`}
-              onClick={() => onPick(u)}
-            >
-              <UnitIcon icon={u.icon} faction={u.faction} manifest={iconManifest} size={26} />
-              <span className="who">
-                <span>{label(u)}</span>
-                <small>{subFor(u)}</small>
-              </span>
-            </button>
-          ))
-        ) : (
-          <p className="picker-empty">No matches</p>
-        )}
+      {/* With no matches the listbox is empty and takes no height, so the
+          message below it sits where the rows would. */}
+      <div
+        className="picker-list"
+        id={`${id}-list`}
+        role="listbox"
+        aria-label={name}
+        style={{ maxHeight: listMax }}
+        ref={listRef}
+      >
+        {rows.map((u, i) => (
+          <button
+            type="button"
+            key={u.id}
+            id={optionId(u)}
+            role="option"
+            aria-selected={i === activeIdx}
+            tabIndex={-1}
+            className={`picker-item${i === activeIdx ? ' active' : ''}`}
+            onClick={() => onPick(u)}
+          >
+            <UnitIcon icon={u.icon} faction={u.faction} manifest={iconManifest} size={26} />
+            <span className="who">
+              <span>{label(u)}</span>
+              <small>{subFor(u)}</small>
+            </span>
+          </button>
+        ))}
       </div>
+      {!rows.length && <p className="picker-empty">No matches</p>}
     </div>
   );
 }

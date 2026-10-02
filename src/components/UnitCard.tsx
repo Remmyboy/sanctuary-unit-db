@@ -33,14 +33,15 @@ export const UnitCard = memo(function UnitCard({ unit: u, iconManifest, picked, 
           <UnitIcon icon={u.icon} faction={u.faction} manifest={iconManifest} size={32} muted={muted} />
         </span>
         <span className="who">
-          <h4>
+          {/* A span, not a heading: a button can only hold phrasing content. */}
+          <span className="card-name">
             {u.name ?? shortName(u)}
             {u.status === 'in-progress' && (
               <span className="wip" title={u.statusReason ?? 'Not enabled'}>
                 WIP
               </span>
             )}
-          </h4>
+          </span>
           <small>{u.displayName}</small>
         </span>
       </span>

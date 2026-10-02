@@ -138,7 +138,6 @@ function UnitIconSvg({ icon, faction, size = 40, muted = false }: Omit<UnitIconP
       viewBox="0 0 64 64"
       width={size}
       height={size}
-      role="img"
       aria-hidden="true"
       style={{ color: colour }}
     >

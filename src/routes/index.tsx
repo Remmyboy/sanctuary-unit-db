@@ -150,15 +150,18 @@ function BoardPage() {
   const onUnitClick = picking ? togglePicked : openDetail;
   const pickedSet = useMemo(() => (picking ? new Set(picks) : undefined), [picking, picks]);
 
+  // Escape leaves compare mode, or drops a unit param that matched nothing.
+  // An open drawer is a modal dialog that handles its own Escape, so while
+  // one is showing this leaves the key to it.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
+      if (e.key !== 'Escape' || selected) return;
       if (search.unit) closeDetail();
       else if (picking) setPicking(false);
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [search.unit, picking, closeDetail]);
+  }, [selected, search.unit, picking, closeDetail]);
 
   // Toggling a chip rewrites its group's param; an empty set drops the param —
   // except Availability, whose default is a real filter, so clearing it has to
@@ -186,6 +189,7 @@ function BoardPage() {
         // word is typed. The match itself trims (see matches in lib/board).
         onChange={(q) => patch({ q: q || undefined })}
         placeholder="Search name, id, role or tag…"
+        label="Search units"
       />
       <PageHead
         art="units"

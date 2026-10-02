@@ -102,7 +102,12 @@ function LobbyRow({ lobby: l }: { lobby: Lobby }) {
       <span className="lobby-map" title={l.map}>
         {mapLabel(l.map) || '—'}
       </span>
-      <span className="lobby-seats" aria-label={`${l.players} of ${l.maxPlayers} players`}>
+      {/* aria-label does nothing on a plain span, so a screen reader gets
+          the seats as hidden text and skips the pips and the bare "2/8". */}
+      <span className="lobby-seats">
+        <span className="sr-only">
+          {l.players} of {l.maxPlayers} players
+        </span>
         {l.maxPlayers > 0 && l.maxPlayers <= MAX_PIPS && (
           <span className="lobby-pips" aria-hidden="true">
             {Array.from({ length: l.maxPlayers }, (_, i) => (
@@ -110,7 +115,7 @@ function LobbyRow({ lobby: l }: { lobby: Lobby }) {
             ))}
           </span>
         )}
-        <span className="lobby-count">
+        <span className="lobby-count" aria-hidden="true">
           {l.players}/{l.maxPlayers}
         </span>
       </span>
