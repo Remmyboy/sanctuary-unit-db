@@ -763,7 +763,7 @@ img.unit-icon[data-muted='true'] {
   height: 1px;
   background: linear-gradient(90deg, var(--border-strong), transparent);
 }
-.col-heads + div .domain-head {
+.col-heads + .domain-head {
   margin-top: 10px;
 }
 
@@ -916,8 +916,7 @@ img.unit-icon[data-muted='true'] {
   align-items: flex-start;
   gap: 12px 26px;
 }
-.cblocks > .domain-head,
-.cblocks > * > .domain-head {
+.cblocks > .domain-head {
   flex-basis: 100%;
   margin: 14px 0 0;
 }

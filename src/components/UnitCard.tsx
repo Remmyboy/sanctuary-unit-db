@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { Unit, Weapon } from '../lib/types';
 import { fmt, shortName } from '../lib/format';
 import { economyRole, netRate } from '../lib/economy';
@@ -12,7 +13,9 @@ interface UnitCardProps {
   onOpen: (id: string) => void;
 }
 
-export function UnitCard({ unit: u, iconManifest, picked, onOpen }: UnitCardProps) {
+// Memoised: the board holds a few hundred of these, and opening a unit or
+// picking one to compare leaves all but a card or two exactly as they were.
+export const UnitCard = memo(function UnitCard({ unit: u, iconManifest, picked, onOpen }: UnitCardProps) {
   // Only no-model units get dimmed — an in-progress unit has real art and real
   // numbers, it just isn't switched on, so it keeps its colour and says why.
   const muted = u.status === 'no-model';
@@ -53,7 +56,7 @@ export function UnitCard({ unit: u, iconManifest, picked, onOpen }: UnitCardProp
       <WeaponLines unit={u} />
     </button>
   );
-}
+});
 
 function Readout({ label, value, cls }: { label: string; value: string; cls?: string }) {
   return (

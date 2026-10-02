@@ -18,17 +18,21 @@ export const DEFAULT_STATUS = 'In game';
 const DOMAIN_ORDER: Record<string, number> = { l: 0, a: 1, n: 2, s: 3 };
 export const DOMAIN_NAMES: Record<string, string> = { l: 'Land', a: 'Air', n: 'Naval', s: 'Structure' };
 
-export const METRICS: Record<string, (u: Unit) => number | null> = {
-  alloys: (u) => u.cost.alloys,
-  energy: (u) => u.cost.energy,
-  buildTime: (u) => u.buildTime,
-  health: (u) => u.health,
-  dps: (u) => u.dps,
-  range: (u) => u.maxRange ?? 0,
-  speed: (u) => u.movement?.speed ?? 0,
-  projectileSpeed: (u) => u.projectileSpeed ?? 0,
-  turnRate: (u) => u.movement?.rotationSpeed ?? 0,
-  traverseSpeed: (u) => Math.max(0, ...u.weapons.map((w) => w.traverseSpeed ?? 0)),
+// The board's sort orders, in the order its Order menu lists them.
+export const METRICS: Record<string, { label: string; value: (u: Unit) => number | null }> = {
+  alloys: { label: 'Alloy', value: (u) => u.cost.alloys },
+  energy: { label: 'Energy', value: (u) => u.cost.energy },
+  buildTime: { label: 'Build time', value: (u) => u.buildTime },
+  health: { label: 'Health', value: (u) => u.health },
+  dps: { label: 'DPS', value: (u) => u.dps },
+  range: { label: 'Range', value: (u) => u.maxRange ?? 0 },
+  speed: { label: 'Speed', value: (u) => u.movement?.speed ?? 0 },
+  projectileSpeed: { label: 'Shot speed', value: (u) => u.projectileSpeed ?? 0 },
+  turnRate: { label: 'Turn rate (unit)', value: (u) => u.movement?.rotationSpeed ?? 0 },
+  traverseSpeed: {
+    label: 'Turn rate (weapon)',
+    value: (u) => Math.max(0, ...u.weapons.map((w) => w.traverseSpeed ?? 0)),
+  },
 };
 
 export type SortKey = keyof typeof METRICS | 'default';
@@ -181,7 +185,7 @@ export function visibleGroups(groups: Group[], filters: BoardFilters, sort: Sort
 
   // Sorting keeps rows intact so the alignment survives — a row is ranked by its
   // strongest member, which is what you want when hunting for the costliest slot.
-  const metric = METRICS[sort];
+  const metric = METRICS[sort].value;
   const scoreOf = (g: Group) => Math.max(...g.units.map((u) => metric(u) ?? 0));
   return kept.sort((a, b) => scoreOf(b) - scoreOf(a) || byTechTree(a, b));
 }

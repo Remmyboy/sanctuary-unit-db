@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { loadData } from '../lib/data';
 import {
@@ -57,7 +57,7 @@ export const Route = createFileRoute('/')({
     tier: str(raw.tier),
     role: str(raw.role),
     status: str(raw.status),
-    sort: METRICS[String(raw.sort)] ? (String(raw.sort) as SortKey) : undefined,
+    sort: Object.hasOwn(METRICS, String(raw.sort)) ? (String(raw.sort) as SortKey) : undefined,
     unit: str(raw.unit),
     view: raw.view === 'compact' ? 'compact' : undefined,
     compare: str(raw.compare),
@@ -88,9 +88,15 @@ function BoardPage() {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
 
-  const patch = (p: Partial<BoardSearch>) =>
-    navigate({ search: (prev: BoardSearch) => ({ ...prev, ...p }), replace: true });
+  const patch = useCallback(
+    (p: Partial<BoardSearch>) =>
+      navigate({ search: (prev: BoardSearch) => ({ ...prev, ...p }), replace: true }),
+    [navigate],
+  );
 
+  // Keyed on the filter params themselves, not the whole search: opening a
+  // unit or picking one to compare changes the search too, and shouldn't
+  // refilter the board.
   const filters: BoardFilters = useMemo(
     () => ({
       faction: toSet(search.faction),
@@ -100,13 +106,13 @@ function BoardPage() {
       status: statusToSet(search.status),
       search: search.q ?? '',
     }),
-    [search],
+    [search.faction, search.domain, search.tier, search.role, search.status, search.q],
   );
   const sort: SortKey = search.sort ?? 'default';
 
   const groups = useMemo(() => buildGroups(loaded.data.units), [loaded]);
   const visible = useMemo(() => visibleGroups(groups, filters, sort), [groups, filters, sort]);
-  const factions = activeFactions(filters.faction);
+  const factions = useMemo(() => activeFactions(filters.faction), [filters.faction]);
   const shownCount = visible.reduce((n, g) => n + g.units.length, 0);
   // Per-faction counts for the masthead, following the filters like the board.
   const perFaction = useMemo(() => {
@@ -115,19 +121,34 @@ function BoardPage() {
     return counts;
   }, [visible]);
 
-  const openDetail = (id: string) => patch({ unit: id });
-  const closeDetail = () => patch({ unit: undefined });
+  // The click handlers stay the same function from render to render, so the
+  // memoised cards don't all re-render when only the open unit changes.
+  const openDetail = useCallback((id: string) => patch({ unit: id }), [patch]);
+  const closeDetail = useCallback(() => patch({ unit: undefined }), [patch]);
   const selected = search.unit ? loaded.byId.get(search.unit) : undefined;
 
   // Compare mode turns a click on a card or tile from "open it" into "pick it".
   // The mode is this visit's state; the picks are in the URL.
   const [picking, setPicking] = useState(false);
-  const picks = parseCompare(search.compare, (id) => loaded.byId.has(id));
+  const known = useCallback((id: string) => loaded.byId.has(id), [loaded.byId]);
+  const picks = useMemo(() => parseCompare(search.compare, known), [search.compare, known]);
   const pickedUnits = picks.map((id) => loaded.byId.get(id)!);
   const setPicks = (ids: string[]) => patch({ compare: ids.length ? ids.join(',') : undefined });
-  const togglePicked = (id: string) => setPicks(togglePick(picks, id));
+  // Toggled against the picks in the URL at the time rather than this
+  // render's, which is what lets it stay stable as the picks change.
+  const togglePicked = useCallback(
+    (id: string) =>
+      navigate({
+        search: (prev: BoardSearch) => {
+          const ids = togglePick(parseCompare(prev.compare, known), id);
+          return { ...prev, compare: ids.length ? ids.join(',') : undefined };
+        },
+        replace: true,
+      }),
+    [navigate, known],
+  );
   const onUnitClick = picking ? togglePicked : openDetail;
-  const pickedSet = picking ? new Set(picks) : undefined;
+  const pickedSet = useMemo(() => (picking ? new Set(picks) : undefined), [picking, picks]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -137,7 +158,7 @@ function BoardPage() {
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  });
+  }, [search.unit, picking, closeDetail]);
 
   // Toggling a chip rewrites its group's param; an empty set drops the param —
   // except Availability, whose default is a real filter, so clearing it has to
@@ -210,16 +231,11 @@ function BoardPage() {
               }
             >
               <option value="default">Tech tree</option>
-              <option value="alloys">Alloy</option>
-              <option value="energy">Energy</option>
-              <option value="buildTime">Build time</option>
-              <option value="health">Health</option>
-              <option value="dps">DPS</option>
-              <option value="range">Range</option>
-              <option value="speed">Speed</option>
-              <option value="projectileSpeed">Shot speed</option>
-              <option value="turnRate">Turn rate (unit)</option>
-              <option value="traverseSpeed">Turn rate (weapon)</option>
+              {Object.entries(METRICS).map(([key, m]) => (
+                <option key={key} value={key}>
+                  {m.label}
+                </option>
+              ))}
             </select>
           </label>
         </div>
@@ -418,7 +434,7 @@ function Board({
         const heading = headingFor(i);
 
         return (
-          <div key={group.key} style={{ display: 'contents' }}>
+          <Fragment key={group.key}>
             {heading && <h2 className="domain-head">{heading}</h2>}
             <div className="slot">
               <div className="slot-label">
@@ -447,7 +463,7 @@ function Board({
                 })}
               </div>
             </div>
-          </div>
+          </Fragment>
         );
       })}
     </div>
