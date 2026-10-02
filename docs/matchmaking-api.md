@@ -134,6 +134,11 @@ Unchanged, plus an optional `matchId`. When it names an open match between
 the two reported players, that match takes the result; otherwise it is
 ignored and the newest open match between them is used as before.
 
+Like `/api/mm/session`, the ticket must be minted with identity
+`sanctuarydb-ladder` (`identity` in the body is optional and only checked for
+equality), and a banned reporter is answered `403`. Both routes answer `429`
+past 20 requests a minute from one IP — far above what the mod sends.
+
 ## Why a match went manual
 
 Every 1v1 match that could have been auto but wasn't carries the reason in

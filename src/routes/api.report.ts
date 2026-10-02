@@ -52,7 +52,9 @@ function parseBody(raw: unknown): ReportBody | string {
   if (typeof d?.ticket !== 'string') return 'ticket';
   // The reporter mints every ticket with one identity, as for /api/mm/session.
   // Pinning it means a ticket minted for some other purpose can't report.
-  if (d.identity !== undefined && d.identity !== TICKET_IDENTITY) return `identity (must be ${TICKET_IDENTITY})`;
+  if (d.identity !== undefined && d.identity !== TICKET_IDENTITY) {
+    return `identity (must be ${TICKET_IDENTITY})`;
+  }
   if (!Array.isArray(d.participants) || !Array.isArray(d.winnerSteamIds)) return 'arrays';
   const ids = d.participants.map((p) => p?.steamId);
   if (ids.length !== 2) return 'participant count';
