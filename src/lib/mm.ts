@@ -1,7 +1,9 @@
 // Auto-launch matchmaking: the shapes and constants shared by the mod-facing
 // API (src/routes/api.mm.*), the ladder server functions and the UI. The
-// timings are mirrored in supabase/migrations/0009_matchmaking.sql, where
-// the sweep actually enforces them — change both together.
+// timings are mirrored in the SQL that enforces them — the countdown in
+// pair_queue (0013), the 15 s presence window in is_launchable and friends
+// (0014), the launch timeouts in sweep_mm_matches (0012); supabase/README.md
+// lists each function's live migration. Change both together.
 
 export const FACTIONS = ['EDA', 'Chosen', 'Guard'] as const;
 export type Faction = (typeof FACTIONS)[number];

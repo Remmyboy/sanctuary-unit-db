@@ -6,6 +6,6 @@ import { fumadocsMdx } from 'fumadocs-mdx/vite';
 export default defineConfig({
   plugins: [...fumadocsMdx()],
   test: {
-    include: ['src/**/*.test.ts', 'scripts/**/*.test.js'],
+    include: ['src/**/*.test.ts', 'scripts/**/*.test.js', 'supabase/**/*.test.ts'],
   },
 });
