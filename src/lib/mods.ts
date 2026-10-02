@@ -183,7 +183,7 @@ export const MODS: Mod[] = [
   {
     id: 'BuildHotkeys',
     name: 'Build Hotkeys',
-    version: '0.4.0',
+    version: '0.4.1',
     tagline:
       'One key per kind of unit, the same on every faction, and the game’s own keys wherever you want them.',
     features: [
