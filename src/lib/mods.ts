@@ -85,7 +85,7 @@ export const MODS: Mod[] = [
   {
     id: 'SanctuaryHud',
     name: 'SanctuaryDB HUD',
-    version: '0.15.0',
+    version: '0.15.2',
     tagline:
       'A mini-map, a proper economy readout, reclaim values, build timers, alerts and post-match stats.',
     features: [
@@ -359,7 +359,7 @@ export const zoneControlHref = (): string =>
 export const PHANTOM_X: Mod = {
   id: 'PhantomX',
   name: 'Phantom-X',
-  version: '0.1.0',
+  version: '0.1.1',
   tagline:
     'Supreme Commander’s Phantom-X: everyone starts allied, until some of you secretly become phantoms.',
   features: [
