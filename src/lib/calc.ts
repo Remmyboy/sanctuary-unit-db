@@ -98,6 +98,18 @@ export function economyResult(economy: CountedRow[], byId: Map<string, Unit>): E
   return { ...t, alloysNet: t.alloysIn - t.alloysOut, energyNet: t.energyIn - t.energyOut };
 }
 
+// A build at a steady income. When it draws more of a resource per second than
+// the economy nets, it stalls in proportion: drawing twice the net takes twice
+// as long. `stretch` is the worst of the two ratios, Infinity when a resource
+// has no net income at all; at or under 1 the build runs at full speed.
+export function incomeLimited(build: BuildResult, econ: EconomyResult): { stretch: number; seconds: number } {
+  const stretch = Math.max(
+    econ.alloysNet > 0 ? build.alloysPerSec / econ.alloysNet : Infinity,
+    econ.energyNet > 0 ? build.energyPerSec / econ.energyNet : Infinity,
+  );
+  return { stretch, seconds: stretch > 1 ? build.seconds * stretch : build.seconds };
+}
+
 /* ---------------- build order ---------------- */
 // A queue of builds worked one after another by the same builder (plus any
 // assists), starting from a stockpile. Unlike a single build, the economy
