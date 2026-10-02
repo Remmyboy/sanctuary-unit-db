@@ -877,10 +877,12 @@ can't, because there's no game install on a build server. The split is:
   Steam sign-in only works on the origin `SITE_URL` names — not on preview
   deployment URLs. The database schema lives in `supabase/migrations/`, applied
   with `npm run db:migrate` (`scripts/db-migrate.js`): each pending file once,
-  in filename order, recorded in a `schema_migrations` table, against
-  `DATABASE_URL` from the environment or `.env`. `npm run db:migrate -- 0005`
-  stops after 0005, for two-step rollouts. `supabase/README.md` lists which
-  migration holds each SQL function's live definition.
+  in filename order and in its own transaction with its `schema_migrations`
+  row, against `DATABASE_URL` from the environment or `.env`. TLS is required
+  except for a localhost database; `?sslmode=` on the URL or `PGSSLMODE`
+  overrides that. `npm run db:migrate -- 0005` stops after 0005, for two-step
+  rollouts. `supabase/README.md` lists which migration holds each SQL
+  function's live definition.
 
 - `npm run extract` / `icons` / `refresh` need the game install and only ever
   run on your machine. Their output is committed.
@@ -909,8 +911,9 @@ scripts/            local-only data pipeline, plain Node
   lua-parser.js     Lua table literal -> JS
   locate-game.js    finds the install via Steam's library index
   extract.js        templates -> public/data/units.json
-  lib/              extract.js's pure parts, unit-tested: weapons.js (firing
-                    simulation, DPS, grouping), tag-expression.js (canBuild)
+  lib/              the scripts' pure parts, unit-tested: weapons.js (firing
+                    simulation, DPS, grouping) and tag-expression.js (canBuild)
+                    for extract.js, db-ssl.js for db-migrate.js
   diff-data.js      what a re-extract changed vs the committed units.json
   png.js            zero-dep 8-bit PNG decode/encode against node:zlib
   build-icons.js    icons-src/ -> per-faction PNGs

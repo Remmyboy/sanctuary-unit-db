@@ -1,6 +1,6 @@
 # Ladder database
 
-`migrations/` is the ladder schema, applied in filename order by `npm run db:migrate` (`scripts/db-migrate.js`), once each, tracked in a `schema_migrations` table. Applied files are history: never edit one, add the next number instead.
+`migrations/` is the ladder schema, applied in filename order by `npm run db:migrate` (`scripts/db-migrate.js`), once each, each in one transaction with its row in a `schema_migrations` table. Applied files are history: never edit one, add the next number instead.
 
 Most functions are `create or replace`d by later migrations, so the first file to define one is rarely the one that runs. This is where each function's live definition is. `migrations.test.ts` rebuilds this list from the SQL and fails if it drifts, applies every migration to an in-memory Postgres (PGlite), and checks the SQL Elo and 1v1 pairing against `src/lib/elo.ts` and `src/lib/matchmaking.ts`.
 
