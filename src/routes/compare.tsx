@@ -11,7 +11,7 @@ import { FACTION_COLOURS } from '../lib/faction-colours';
 import { FactionEmblem } from '../components/FactionEmblem';
 import { GameVersion } from '../components/GameVersion';
 import { PageHead } from '../components/PageHead';
-import { WeaponBlock } from '../components/DetailPanel';
+import { WeaponBlock } from '../components/detail/WeaponsSection';
 import { ChaseSim } from '../components/ChaseSim';
 
 // Units side by side: a column each, a row per stat, the best value in each

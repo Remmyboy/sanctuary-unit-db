@@ -1513,6 +1513,25 @@ img.unit-icon[data-muted='true'] {
   font-variant-numeric: tabular-nums;
 }
 
+/* Spacing within a detail section: a block that follows another, a heading
+   that opens a second group, and the hint that closes the section (whose own
+   margin spaces it from the next). */
+.section .then {
+  margin-top: 8px;
+}
+.section > h3.then-group {
+  margin-top: 16px;
+}
+.section .hint.footnote {
+  margin: 8px 0 0;
+}
+
+/* The faction badge wears the faction's colour, its border at 40%. */
+.badge.badge-faction {
+  color: var(--fc);
+  border-color: color-mix(in srgb, var(--fc) 40%, transparent);
+}
+
 /* One block per distinct weapon — reads better than a wide table in a narrow
    panel, and scales to the four-weapon maximum without horizontal scroll. */
 .weapon {
