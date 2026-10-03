@@ -5,7 +5,7 @@
 // Standalone zips each carried an old copy of the loader, so they were
 // dropped (see standaloneHref). The catalogue lives in src/lib/mods.ts,
 // shared with the Play page's download card, so a version bump moves both.
-// Gameplay mods (Zone Control, Phantom-X) have a page of their own,
+// Gameplay mods (Zone Control, Phantom-X, Unit Restrictions) have a page of their own,
 // /gameplay-mods: the host picks them per match, so they install differently.
 
 import { Link, createFileRoute } from '@tanstack/react-router';

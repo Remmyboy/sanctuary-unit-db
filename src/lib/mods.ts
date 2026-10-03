@@ -51,7 +51,7 @@ export const MODS: Mod[] = [
   {
     id: 'ModManager',
     name: 'Mod Manager',
-    version: '0.11.0',
+    version: '0.12.0',
     tagline:
       'A Mods page in the game menu for switching mods on and off, and a Mods panel in the lobby for the host’s gameplay mods.',
     features: [
@@ -394,8 +394,36 @@ export const PHANTOM_X: Mod = {
   ],
 };
 
+/** Unit Restrictions is Lua only too, with no map. Its unit picker in the
+ *  lobby is the Mod API's, which is why it needs Mod Manager 0.12.0. */
+export const UNIT_RESTRICTIONS: Mod = {
+  id: 'UnitRestrictions',
+  name: 'Unit Restrictions',
+  version: '0.1.0',
+  tagline: 'Take units out of the match: a whole section like air, or just one faction’s tank.',
+  features: [
+    {
+      title: 'Switch off a whole section',
+      text: 'No land, no air, no naval or no experimentals, one switch each. Engineers and commanders always stay, and so do the factories that build them.',
+    },
+    {
+      title: 'Pick units from a grid',
+      text: 'A column per faction and a row per kind of unit. Restrict just the EDA Puma, every T1 tank, or a whole faction or tech level in one click.',
+    },
+    {
+      title: 'Everyone sees the list',
+      text: 'Other players open the same grid in the lobby, so nobody finds out mid-match that their favourite unit is gone.',
+    },
+    {
+      title: 'Gone from every build menu',
+      text: 'Restricted units can’t be built, and the host turns one down if anything queues it anyway, AI included.',
+    },
+  ],
+};
+
 /** Every gameplay mod on /gameplay-mods, in the order shown. */
 export const GAMEPLAY_MODS: { mod: Mod; href: string; label: string }[] = [
   { mod: ZONE_CONTROL, href: zoneControlHref(), label: 'Download mod + map' },
   { mod: PHANTOM_X, href: managerHref(PHANTOM_X), label: 'Download' },
+  { mod: UNIT_RESTRICTIONS, href: managerHref(UNIT_RESTRICTIONS), label: 'Download' },
 ];

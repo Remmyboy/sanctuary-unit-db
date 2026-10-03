@@ -173,7 +173,7 @@ test('gameplay mods page sets up each mode and shows the map', async ({ page, re
     'href',
     /ModManager-[\d.]+\/ModManager-[\d.]+-Standalone\.zip$/,
   );
-  await expect(page.locator('.mod-entry')).toHaveCount(2);
+  await expect(page.locator('.mod-entry')).toHaveCount(3);
   await expect(page.locator('#ZoneControl .mod-entry-head .dl-btn')).toHaveAttribute(
     'href',
     /ZoneControl-[\d.]+\/ZoneControl-[\d.]+-WithMap\.zip$/,
@@ -181,6 +181,10 @@ test('gameplay mods page sets up each mode and shows the map', async ({ page, re
   await expect(page.locator('#PhantomX .mod-entry-head .dl-btn')).toHaveAttribute(
     'href',
     /PhantomX-[\d.]+\/PhantomX-[\d.]+-ModManager\.zip$/,
+  );
+  await expect(page.locator('#UnitRestrictions .mod-entry-head .dl-btn')).toHaveAttribute(
+    'href',
+    /UnitRestrictions-[\d.]+\/UnitRestrictions-[\d.]+-ModManager\.zip$/,
   );
 
   // The preview is served, not a dead image.
