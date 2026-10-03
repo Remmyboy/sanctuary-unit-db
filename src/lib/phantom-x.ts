@@ -1,5 +1,5 @@
 // The rules the Phantom-X card on /gameplay-mods explains, copied from the mod's
-// mod.json and release notes (sanctuary-mods, PhantomX 0.1.1). They are the
+// mod.json and release notes (sanctuary-mods, PhantomX 0.2.0). They are the
 // mod's numbers, not ours: when a release changes one, change it here with
 // the version in src/lib/mods.ts.
 
