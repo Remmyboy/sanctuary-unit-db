@@ -301,7 +301,7 @@ export function mod(id: string): Mod {
   return found;
 }
 
-export const releaseTag = (m: Mod): string => `${m.id}-${m.version}`;
+const releaseTag = (m: Mod): string => `${m.id}-${m.version}`;
 
 export const releaseNotes = (m: Mod): string => `${MODS_REPO}/releases/tag/${releaseTag(m)}`;
 
@@ -354,7 +354,7 @@ export const ZONE_CONTROL_MAP = 'Zone Control for FAF 8P V2';
 /** The mod and its map in one zip, laid out to extract straight into
  *  `engine`. The release's -ModManager.zip is the mod alone, for someone who
  *  already has the map. */
-export const zoneControlHref = (): string =>
+const zoneControlHref = (): string =>
   `${MODS_REPO}/releases/download/${releaseTag(ZONE_CONTROL)}/${releaseTag(ZONE_CONTROL)}-WithMap.zip`;
 
 /** Phantom-X is Lua only, with no map: its release's -ModManager.zip is the

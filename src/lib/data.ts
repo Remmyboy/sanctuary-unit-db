@@ -21,6 +21,16 @@ export function loadData(): Promise<LoadedData> {
   return cache;
 }
 
+/**
+ * The sharpest picture there is of a unit: the developers' 384px render (hd),
+ * else the game's 64px thumbnail, else null — callers fall back to the icon.
+ */
+export function unitArt(u: Unit, loaded: LoadedData): { src: string; hd: boolean } | null {
+  if (loaded.renders.has(u.id)) return { src: `/renders/${u.id}.webp`, hd: true };
+  if (loaded.previews.has(u.id)) return { src: `/previews/${u.id}.png`, hd: false };
+  return null;
+}
+
 async function load(): Promise<LoadedData> {
   const [data, iconManifest, previews, renders] = await Promise.all([
     fetchJson<UnitsData>('/data/units.json'),

@@ -44,9 +44,10 @@ function moddingPrerenderPages(): { path: string }[] {
 // reference retain server handlers for authenticated data, redirects, and
 // proper 404 responses. Nitro packages both the static output and Node server.
 export default defineConfig(({ mode, command }) => {
-  // Server functions read process.env (SUPABASE_URL etc.), which plain Vite
-  // only fills from the shell — so surface .env files there too, without
-  // letting them shadow anything the shell already set.
+  // Server functions read process.env (DATABASE_URL or POSTGRES_URL,
+  // STEAM_API_KEY, SESSION_SECRET...), which plain Vite only fills from the
+  // shell — so surface .env files there too, without letting them shadow
+  // anything the shell already set.
   const env = loadEnv(mode, process.cwd(), '');
   for (const [key, value] of Object.entries(env)) {
     process.env[key] ??= value;

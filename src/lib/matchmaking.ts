@@ -1,5 +1,6 @@
 // Matchmaking rules, mirrored from the database where they actually run
-// (supabase/migrations/0002_ladder.sql: queue_radius() and pair_queue()).
+// (queue_radius() in supabase/migrations/0002_ladder.sql, pair_queue() in
+// 0013_manual_slots.sql; supabase/README.md lists each live definition).
 // The SQL is the live copy; this module pins the same behaviour under vitest.
 // Change both together.
 

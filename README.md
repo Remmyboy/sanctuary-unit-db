@@ -7,27 +7,34 @@ files. Among its pages:
 - **/calculator/** — build time, resource drain and economy planning
 
 Built with [TanStack Start](https://tanstack.com/start) (React + TypeScript on
-Vite), prerendered to a purely static site — there is no server at runtime.
-The game data pipeline is separate: plain Node scripts that read a local game
-install and commit their output to `public/`.
+Vite). The content pages are prerendered to static HTML; the ladder, lobbies
+and modding reference keep server routes, which Nitro packages as serverless
+functions (see [Deploying](#deploying)). The game data pipeline is separate:
+plain Node scripts that read a local game install and commit their output to
+`public/`.
 
 ## Quick start
 
-Needs Node 22.12+ (`engines` enforces it; Vite 7 won't run on less).
+Needs Node 22.18+ (`engines` enforces it; `.nvmrc` pins 24, which CI uses).
+The scripts import `.ts` modules from `src/lib/` directly, which relies on
+Node's built-in type stripping, unflagged from 22.18. Vite 8 itself needs
+22.12+.
 
 ```bash
 npm install
 npm run dev       # Vite dev server at http://localhost:5173
-npm test          # unit tests over the calculators, grouping and data invariants
+npm test          # unit tests: calculators, data invariants, extractor maths, SQL migrations
 npm run typecheck # tsc
-npm run build     # prerender every route to dist/client/
+npm run build     # prerender the content pages, bundle the server into .output/
 npm run verify    # check public/ data + art are complete (no game needed)
 
-npm run refresh   # extract + icons: regenerate data from a local game install
+npm run refresh   # extract + icons + diff: regenerate data from a local game install
 ```
 
-`refresh` is `npm run extract` (game data → `public/data/units.json`) followed by
-`npm run icons` (`icons-src/` → `public/icons/`, plus both manifests).
+`refresh` is `npm run extract` (game data → `public/data/units.json`), then
+`npm run icons` (`icons-src/` → `public/icons/`, plus both manifests), then
+`npm run diff`, which reports what changed against the committed units.json —
+balance tweaks and new units by name, so an extractor regression stands out.
 
 `extract` finds the game automatically by reading Steam's `libraryfolders.vdf`,
 preferring the Playtest branch over the older Demo when both are installed. If
@@ -111,15 +118,29 @@ properly needs per-map knowledge of which starts share a corner.
 
 ## Pages
 
-Routes are files in `src/routes/` (TanStack Router file-based routing); each is
-prerendered at build time and hydrates into an SPA.
+Routes are files in `src/routes/` (TanStack Router file-based routing). The
+content pages are prerendered at build time and hydrate into an SPA; the
+match room and player profiles render on request.
 
-| Page          | Route file                  | What it does                              |
-| ------------- | --------------------------- | ----------------------------------------- |
-| `/`           | `src/routes/index.tsx`      | Unit database — the aligned faction board |
-| `/compare`    | `src/routes/compare.tsx`    | Units side by side, best value lit        |
-| `/calculator` | `src/routes/calculator.tsx` | Build time, drain and economy planning    |
-| `/mods`       | `src/routes/mods.tsx`       | The sanctuary-mods catalogue and installs |
+| Page                        | Route file                    | What it does                                                |
+| --------------------------- | ----------------------------- | ----------------------------------------------------------- |
+| `/`                         | `index.tsx`                   | Unit database — the aligned faction board                   |
+| `/compare`                  | `compare.tsx`                 | Units side by side, best value lit                          |
+| `/calculator`               | `calculator.tsx`              | Build time, drain and economy planning                      |
+| `/mods`                     | `mods.tsx`                    | UI mods: the sanctuary-mods catalogue and installs          |
+| `/gameplay-mods`            | `gameplay-mods.tsx`           | Zone Control and Phantom-X (`/zone-control` redirects here) |
+| `/lobbies`                  | `lobbies.tsx`                 | Open custom-game lobbies, live from Steam's server list     |
+| `/play`                     | `play.tsx`                    | Ladder queues, your open match, the reporter mod            |
+| `/ladder`                   | `ladder.tsx`                  | Standings per mode plus the overall                         |
+| `/ladder/match/<id>`        | `ladder_.match.$matchId.tsx`  | The match room: map, teams, host, report/confirm/dispute    |
+| `/ladder/player/<id>`       | `ladder_.player.$steamId.tsx` | A player's ratings, history and rating graphs               |
+| `/ladder/admin`             | `ladder_.admin.tsx`           | Disputes, live games, test-game deletion, map pools         |
+| `/modding/<version>/<page>` | `modding.$version.$.tsx`      | Versioned modding reference (`/modding` goes to the newest) |
+| `/sitemap.xml`              | `sitemap[.]xml.ts`            | Sitemap on the `SITE_URL` origin                            |
+
+The `api.*.ts` files are server-only routes: Steam sign-in, the lobby list,
+queue counts, the game-version check, the reporter and the mod's matchmaking
+API.
 
 All UI state lives in the URL as typed search params — filters, sort, the open
 unit, the calculator setup — using the same param names and encoding as the
@@ -722,7 +743,7 @@ Each has four states (`normal`, `over`, `selected`, `selected_over`); only
 They are **two-tone tint masks**: magenta marks the region the game recolours
 with the player's colour (note `GetColor()` above), black is the glyph and
 outline. Shipped as-is they render as magenta squares, so `npm run icons` bakes
-one copy per faction using the palette in `public/icons.js`.
+one copy per faction using the palette in `src/lib/faction-colours.ts`.
 
 ### Re-extracting
 
@@ -827,10 +848,11 @@ the glow/Discord/superseded icon variants, and the black emblems.
 
 ## Caveats
 
-- Currently built from the **demo** install, so balance values are provisional.
-  `meta.isDemo` is set in the JSON if you want to surface that in the UI later.
-- The site defaults to the 140 signed-off units. Another 86 are modelled but
-  gated, and 57 have no model at all — use the Availability filter to see them.
+- Currently built from the **Playtest** install (the Steam build is in
+  `public/data/version.json`), so balance values are still pre-release.
+  `meta.isDemo` is set in the JSON when the data comes from the Demo instead.
+- The site defaults to the 174 signed-off units. Another 66 are modelled but
+  gated, and 55 have no model at all — use the Availability filter to see them.
 - Nothing here is authoritative. Re-run `npm run extract` after a game patch.
 
 ## Deploying
@@ -841,9 +863,11 @@ can't, because there's no game install on a build server. The split is:
 - `npm run build` (Vite) only needs the **committed** `public/data` + art, so
   it runs anywhere, including on Vercel. The content pages are prerendered
   and served as static files, exactly as before.
-- Since the ladder was added, the build's server bundle (`dist/server/`) is
-  deployed too: `vercel.json` uses the `tanstack-start` preset, which wraps it
-  in a serverless function for the server functions and `/api/auth/*` routes.
+- Since the ladder was added, the build has a server half too. Nitro
+  (`nitro()` in `vite.config.ts`) packages it: into `.output/` locally, and on
+  Vercel into the Build Output API layout (`.vercel/output/`), which serves the
+  prerendered pages as static files and the server functions and `/api/*`
+  routes as serverless functions. `vercel.json` only sets cache headers.
   The ladder needs env vars (see `.env.example`): `DATABASE_URL`,
   `STEAM_API_KEY`, `SESSION_SECRET`, `SITE_URL`.
 
@@ -852,7 +876,13 @@ can't, because there's no game install on a build server. The split is:
   Use the deployed public origin in hosting configuration; `http://localhost:4173` is only for local browser tests.
   Steam sign-in only works on the origin `SITE_URL` names — not on preview
   deployment URLs. The database schema lives in `supabase/migrations/`, applied
-  with `supabase db push` (or pasted into the SQL editor).
+  with `npm run db:migrate` (`scripts/db-migrate.js`): each pending file once,
+  in filename order and in its own transaction with its `schema_migrations`
+  row, against `DATABASE_URL` from the environment or `.env`. TLS is required
+  except for a localhost database; `?sslmode=` on the URL or `PGSSLMODE`
+  overrides that. `npm run db:migrate -- 0005` stops after 0005, for two-step
+  rollouts. `supabase/README.md` lists which migration holds each SQL
+  function's live definition.
 
 - `npm run extract` / `icons` / `refresh` need the game install and only ever
   run on your machine. Their output is committed.
@@ -864,8 +894,10 @@ vercel deploy
 The workflow after a game patch is: `npm run refresh` locally, `npm run verify`,
 `npm test` (it pins known-good derived values, so a surprising diff here is
 either a real balance change or an extractor regression), then commit the
-regenerated `public/` and push. CI (`.github/workflows/ci.yml`) runs verify,
-typecheck, tests and the build on every push — none of it needs the game.
+regenerated `public/` and push. CI (`.github/workflows/ci.yml`) runs on pull
+requests and pushes to main: `verify`, `lint`, `format:check`, the build,
+`typecheck`, the unit tests, the Playwright e2e suite and
+`test:modding-versions` — none of it needs the game.
 
 If you ever want extraction automated, it has to run somewhere the game files
 exist — a self-hosted runner or your own machine on a schedule — pushing the
@@ -879,12 +911,22 @@ scripts/            local-only data pipeline, plain Node
   lua-parser.js     Lua table literal -> JS
   locate-game.js    finds the install via Steam's library index
   extract.js        templates -> public/data/units.json
-  build-icons.js    icons-src/ -> per-faction PNGs (zero-dep PNG codec)
+  lib/              the scripts' pure parts, unit-tested: weapons.js (firing
+                    simulation, DPS, grouping) and tag-expression.js (canBuild)
+                    for extract.js, db-ssl.js for db-migrate.js
+  diff-data.js      what a re-extract changed vs the committed units.json
+  png.js            zero-dep 8-bit PNG decode/encode against node:zlib
+  build-icons.js    icons-src/ -> per-faction PNGs
   ladder-previews.js  ranked pool art -> public/ladder-maps/
   build-art.js      the developers' artwork -> public/art/, public/renders/
+  build-mod-shots.js  mod screenshots -> public/art/mods/
   verify.js         checks public/ data + art consistency (no game needed)
+  db-migrate.js     applies supabase/migrations/ to DATABASE_URL
+  test-modding-versions.js  builds with fixture modding snapshots, runs their e2e
 supabase/
   migrations/       ladder database schema + SQL functions (pairing, Elo)
+  migrations.test.ts  applies them to in-memory PGlite, checks SQL against src/lib
+  README.md         which migration holds each function's live definition
 src/                the site, TanStack Start + React + TypeScript
   router.tsx        router factory + legacy-compatible search param encoding
   routes/

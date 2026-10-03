@@ -5,6 +5,7 @@ import {
   commanderOf,
   economyResult,
   expandQueue,
+  incomeLimited,
   isStorage,
   packRows,
   simulateQueue,
@@ -38,6 +39,40 @@ describe('build maths', () => {
   it('returns null without a builder or with zero build power', () => {
     const target = byId.get('ues3511')!;
     expect(buildResult(target, undefined, [], byId)).toBeNull();
+  });
+
+  // Same build: 140s drawing 14.29 alloy/s and 142.86 energy/s.
+  describe('at a steady income', () => {
+    const build = buildResult(
+      byId.get('ues3511')!,
+      byId.get('uel2501')!,
+      [{ id: 'uel2501', count: 2 }],
+      byId,
+    )!;
+    const econ = (alloysNet: number, energyNet: number) => ({
+      ...economyResult([], byId),
+      alloysNet,
+      energyNet,
+    });
+
+    it('runs at full speed when income covers the drain', () => {
+      const r = incomeLimited(build, econ(30, 300));
+      expect(r.stretch).toBeLessThan(1);
+      expect(r.seconds).toBeCloseTo(140, 5);
+    });
+
+    it('stretches by the worse-covered resource', () => {
+      // Half the alloy it draws, plenty of energy: twice as long.
+      const r = incomeLimited(build, econ(build.alloysPerSec / 2, 1000));
+      expect(r.stretch).toBeCloseTo(2, 5);
+      expect(r.seconds).toBeCloseTo(280, 5);
+    });
+
+    it('never finishes with no net income of a resource', () => {
+      const r = incomeLimited(build, econ(30, 0));
+      expect(r.stretch).toBe(Infinity);
+      expect(r.seconds).toBe(Infinity);
+    });
   });
 });
 

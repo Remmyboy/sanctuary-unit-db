@@ -1,16 +1,17 @@
-import { useState } from 'react';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import { loadData, type LoadedData } from '../lib/data';
+import { loadData, unitArt, type LoadedData } from '../lib/data';
 import { compareTable, parseCompare } from '../lib/compare';
-import { copyText } from '../lib/clipboard';
+import { str } from '../lib/search';
+import { useCopyFeedback } from '../lib/use-copy-feedback';
 import { duration, fmt, shortName } from '../lib/format';
 import { MAP_SIZE, moveClass, type MoveClass } from '../lib/scale';
 import type { Unit } from '../lib/types';
-import { FACTION_COLOURS, UnitIcon } from '../components/UnitIcon';
+import { UnitIcon } from '../components/UnitIcon';
+import { FACTION_COLOURS } from '../lib/faction-colours';
 import { FactionEmblem } from '../components/FactionEmblem';
 import { GameVersion } from '../components/GameVersion';
 import { PageHead } from '../components/PageHead';
-import { WeaponBlock } from '../components/DetailPanel';
+import { WeaponBlock } from '../components/detail/WeaponsSection';
 import { ChaseSim } from '../components/ChaseSim';
 
 // Units side by side: a column each, a row per stat, the best value in each
@@ -23,7 +24,7 @@ interface CompareSearch {
 export const Route = createFileRoute('/compare')({
   ssr: false,
   validateSearch: (raw: Record<string, unknown>): CompareSearch => ({
-    units: raw.units == null ? undefined : String(raw.units) || undefined,
+    units: str(raw.units),
   }),
   head: () => ({
     meta: [
@@ -50,13 +51,7 @@ function ComparePage() {
   const remove = (id: string) =>
     navigate({ search: { units: ids.filter((x) => x !== id).join(',') || undefined }, replace: true });
 
-  const [copied, setCopied] = useState(false);
-  const copyLink = async () => {
-    if (await copyText(window.location.href)) {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    }
-  };
+  const { copied, copy } = useCopyFeedback();
 
   return (
     <>
@@ -75,7 +70,7 @@ function ComparePage() {
         <div className="toolbar-controls">
           <GameVersion game={loaded.data.meta.game} generatedAt={loaded.data.meta.generatedAt} />
           {units.length > 0 && (
-            <button type="button" className="linkish" onClick={copyLink}>
+            <button type="button" className="linkish" onClick={() => copy(window.location.href)}>
               {copied ? 'Copied ✓' : 'Copy link'}
             </button>
           )}
@@ -261,15 +256,11 @@ function Legend({ units }: { units: Unit[] }) {
 // The sharp developer render where there is one, else the game's thumbnail,
 // else the strategic icon.
 function Render({ unit: u, loaded }: { unit: Unit; loaded: LoadedData }) {
-  const src = loaded.renders.has(u.id)
-    ? `/renders/${u.id}.webp`
-    : loaded.previews.has(u.id)
-      ? `/previews/${u.id}.png`
-      : null;
+  const art = unitArt(u, loaded);
   return (
     <span className="compare-render">
-      {src ? (
-        <img src={src} alt="" width={88} height={88} decoding="async" />
+      {art ? (
+        <img src={art.src} alt="" width={88} height={88} decoding="async" />
       ) : (
         <UnitIcon
           icon={u.icon}

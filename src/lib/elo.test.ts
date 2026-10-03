@@ -1,5 +1,6 @@
-// Pins the rating maths that supabase/migrations/0003_results.sql transcribes
-// — if these change, the SQL must change with them.
+// Pins the rating maths that apply_match_result (live in
+// supabase/migrations/0006_drop_legacy_ratings.sql) transcribes — if these
+// change, the SQL must change with them.
 
 import { describe, expect, it } from 'vitest';
 import {

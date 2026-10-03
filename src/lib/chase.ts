@@ -19,7 +19,7 @@ export type Behaviour = 'flee' | 'hold' | 'advance';
 /** Simulation step, seconds. Half a game tick: smooth enough to animate. */
 export const STEP = 0.05;
 /** Longest run, seconds. Past this a chase has long since been decided. */
-export const MAX_SECONDS = 180;
+const MAX_SECONDS = 180;
 /** Largest group per side: past this the picture is a blur and the maths is the same. */
 export const MAX_COUNT = 20;
 /** Closest two enemies get: roughly their bodies touching. */

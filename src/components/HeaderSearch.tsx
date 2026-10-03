@@ -13,9 +13,11 @@ interface HeaderSearchProps {
   value: string;
   onChange: (value: string) => void;
   placeholder: string;
+  /** The field's accessible name; the placeholder is only a hint. */
+  label: string;
 }
 
-export function HeaderSearch({ value, onChange, placeholder }: HeaderSearchProps) {
+export function HeaderSearch({ value, onChange, placeholder, label }: HeaderSearchProps) {
   const [slot] = useState(() => document.querySelector('.header-slot'));
 
   // "/" focuses the field from anywhere, the shortcut the keycap advertises.
@@ -33,6 +35,9 @@ export function HeaderSearch({ value, onChange, placeholder }: HeaderSearchProps
   if (!slot) return null;
   return createPortal(
     <div className="search">
+      <label className="sr-only" htmlFor="search">
+        {label}
+      </label>
       <svg viewBox="0 0 16 16" width={13} height={13} aria-hidden="true">
         <circle cx={7} cy={7} r={5} fill="none" stroke="currentColor" strokeWidth={1.6} />
         <line
