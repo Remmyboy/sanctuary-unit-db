@@ -388,7 +388,7 @@ function PhantomXGuide() {
         <ol className="gm-steps">
           <li>
             Extract the zip into your <code>engine</code> folder. It needs Mod Manager 0.10.0 or later, for
-            every player.
+            every player, and 0.11.0 to show the roles in replays.
           </li>
           <li>Host a lobby on any map. It&rsquo;s best with three or more players.</li>
           <li>

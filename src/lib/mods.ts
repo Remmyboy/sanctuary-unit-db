@@ -51,7 +51,7 @@ export const MODS: Mod[] = [
   {
     id: 'ModManager',
     name: 'Mod Manager',
-    version: '0.10.1',
+    version: '0.11.0',
     tagline:
       'A Mods page in the game menu for switching mods on and off, and a Mods panel in the lobby for the host’s gameplay mods.',
     features: [
@@ -85,7 +85,7 @@ export const MODS: Mod[] = [
   {
     id: 'SanctuaryHud',
     name: 'SanctuaryDB HUD',
-    version: '0.15.2',
+    version: '0.16.0',
     tagline:
       'A mini-map, a proper economy readout, reclaim values, build timers, alerts and post-match stats.',
     features: [
@@ -95,7 +95,7 @@ export const MODS: Mod[] = [
       },
       {
         title: 'Your economy at a glance',
-        text: 'Alloy and energy stored, in, out and net per second, with a stall warning and how long until you run dry.',
+        text: 'Alloy and energy stored, in, out and net per second, how long until you run dry, how fast your builds really go when you stall, and what a full store is wasting.',
       },
       {
         title: 'See what the wrecks are worth',
@@ -122,12 +122,16 @@ export const MODS: Mod[] = [
         text: 'When the game ends, a stats window for every army: score, resources gathered, spent and wasted, units built, lost and killed, with charts over time.',
       },
       {
+        title: 'Quit from the result screen',
+        text: 'A Quit button beside the result and the match stats takes you straight back to the menu.',
+      },
+      {
         title: 'Every panel your size',
         text: 'Drag the grip in a panel’s corner to resize it: the economy strip, commander, bottom panels or mini-map. Each one remembers its size.',
       },
       {
         title: 'Optional extras',
-        text: 'Switch on the ones you want: cursors that show what a right-click will do, waypoints and rally points you can drag, a build queue you reorder by dragging, Ctrl-A for every unit of the selected types, and a match clock.',
+        text: 'Switch on the ones you want: cursors that show what a right-click will do, waypoints and rally points you can drag, a build queue you reorder by dragging, Ctrl-A for every unit of the selected types, Delete asking for a second press before it blows up your commander, and a match clock.',
       },
     ],
     keys: 'F10 shows and hides it · F2 the mini-map · F3 the match stats',
@@ -135,7 +139,7 @@ export const MODS: Mod[] = [
   {
     id: 'EcoManager',
     name: 'Eco Manager',
-    version: '0.8.1',
+    version: '0.9.0',
     tagline: 'See what’s eating your economy, and upgrade extractors without babysitting them.',
     features: [
       {
@@ -163,7 +167,7 @@ export const MODS: Mod[] = [
   {
     id: 'IdleEngineers',
     name: 'Idle Engineers',
-    version: '0.6.1',
+    version: '0.7.0',
     tagline: 'Never lose track of an engineer or factory with nothing to do.',
     features: [
       {
@@ -183,7 +187,7 @@ export const MODS: Mod[] = [
   {
     id: 'BuildHotkeys',
     name: 'Build Hotkeys',
-    version: '0.4.1',
+    version: '0.5.0',
     tagline:
       'One key per kind of unit, the same on every faction, and the game’s own keys wherever you want them.',
     features: [
@@ -221,7 +225,7 @@ export const MODS: Mod[] = [
   {
     id: 'LadderReporter',
     name: 'Ladder Reporter',
-    version: '0.3.4',
+    version: '0.3.5',
     tagline: 'Queue for a ranked 1v1 on the site, and the ladder does the rest.',
     features: [
       {
@@ -241,7 +245,7 @@ export const MODS: Mod[] = [
   {
     id: 'ReplayManager',
     name: 'Replay Manager',
-    version: '0.4.4',
+    version: '0.5.0',
     tagline: 'Watch replays properly: any player’s view, no fog, every economy.',
     features: [
       {
@@ -250,7 +254,7 @@ export const MODS: Mod[] = [
       },
       {
         title: 'Compare economies',
-        text: 'Every army’s economy side by side, with whole-game totals, so you can see where it was won.',
+        text: 'Every army’s economy side by side, with whole-game totals, so you can see where it was won. Click a column to sort by it.',
       },
       {
         title: 'Full playback control',
@@ -262,7 +266,7 @@ export const MODS: Mod[] = [
   {
     id: 'CameraUtilities',
     name: 'Camera Utilities',
-    version: '0.1.2',
+    version: '0.2.0',
     tagline: 'A clean picture for screenshots, videos and casting.',
     features: [
       {
@@ -279,7 +283,7 @@ export const MODS: Mod[] = [
       },
       {
         title: 'Change it mid-shot',
-        text: 'Every switch is on a small in-game panel, so you never have to leave the match.',
+        text: 'Every switch is on a small in-game panel, so you never have to leave the match. It stays up even with the whole HUD switched off.',
       },
     ],
     keys: 'F4 opens the panel',
@@ -359,7 +363,7 @@ export const zoneControlHref = (): string =>
 export const PHANTOM_X: Mod = {
   id: 'PhantomX',
   name: 'Phantom-X',
-  version: '0.1.1',
+  version: '0.2.0',
   tagline:
     'Supreme Commander’s Phantom-X: everyone starts allied, until some of you secretly become phantoms.',
   features: [
@@ -374,6 +378,10 @@ export const PHANTOM_X: Mod = {
     {
       title: 'Alliances on a panel',
       text: 'Break or offer alliances, vote, volunteer and mark suspects from one panel, with notices when roles are revealed.',
+    },
+    {
+      title: 'The whole story in the replay',
+      text: 'Watch the match back and the panel shows everyone’s role, with a switch to keep the spoilers hidden.',
     },
     {
       title: 'Set it up your way',
