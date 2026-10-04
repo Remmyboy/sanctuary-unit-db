@@ -51,6 +51,19 @@ const str = (v: unknown): string | undefined => {
   return s ? s : undefined;
 };
 
+// The factory roles were plain Air / Land / Naval until October 2026, which read
+// like the Domain filter. Old links still pick the factories.
+const RENAMED_ROLES: Record<string, string> = {
+  Air: 'Air Factory',
+  Land: 'Land Factory',
+  Naval: 'Naval Factory',
+};
+const roleParam = (v: unknown): string | undefined =>
+  str(v)
+    ?.split(',')
+    .map((r) => RENAMED_ROLES[r] ?? r)
+    .join(',');
+
 export const Route = createFileRoute('/')({
   // Data comes from /data/units.json at runtime; there is nothing to render on
   // the (static, prerendered) server side.
@@ -60,7 +73,7 @@ export const Route = createFileRoute('/')({
     faction: str(raw.faction),
     domain: str(raw.domain),
     tier: str(raw.tier),
-    role: str(raw.role),
+    role: roleParam(raw.role),
     status: str(raw.status),
     sort: METRICS[String(raw.sort)] ? (String(raw.sort) as SortKey) : undefined,
     unit: str(raw.unit),
