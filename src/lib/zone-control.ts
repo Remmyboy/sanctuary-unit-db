@@ -1,6 +1,6 @@
 // The rules the Gameplay Mods page explains for Zone Control, copied from the mod's
 // lua/zonecontrol/balance.lua and mod.json (sanctuary-mods, ZoneControl
-// 0.5.0). They are the mod's numbers, not ours: when a release changes one,
+// 0.5.1). They are the mod's numbers, not ours: when a release changes one,
 // change it here with the version in src/lib/mods.ts.
 
 export interface Level {
