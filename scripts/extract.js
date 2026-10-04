@@ -42,12 +42,34 @@ const ROLES = {
   shield: 'Shield',
   plasma: 'Plasma',
   alloy: 'Economy',
-  air: 'Air',
-  land: 'Land',
-  naval: 'Naval',
+  // Only factories wear these. Named for what they are, so the Role chips
+  // can't be mistaken for the Domain filter's Air / Land / Naval.
+  air: 'Air Factory',
+  land: 'Land Factory',
+  naval: 'Naval Factory',
   transmiter: 'Transmitter',
   none: null,
 };
+
+// The icon is wrong for one factory (every T3 Naval Factory wears the air
+// symbol), so a factory's role comes from its *_FACTORY tag, which agrees with
+// its name everywhere.
+const FACTORY_ROLES = {
+  LAND_FACTORY: 'Land Factory',
+  AIR_FACTORY: 'Air Factory',
+  NAVAL_FACTORY: 'Naval Factory',
+};
+
+function roleOf(symbol, tags, id) {
+  const fromIcon = ROLES[symbol] ?? null;
+  const factoryTag = tags.find((tag) => FACTORY_ROLES[tag]);
+  if (!factoryTag) return fromIcon;
+  const role = FACTORY_ROLES[factoryTag];
+  if (fromIcon && fromIcon !== role) {
+    issues.push(`${id} is tagged ${factoryTag} but its icon shows "${symbol}" — role taken from the tag`);
+  }
+  return role;
+}
 
 function main() {
   const gameDir = locateGame();
@@ -402,7 +424,7 @@ function toUnit(t, id, available, models, adjacency, projectiles) {
     faction: FACTIONS[id[1]] ?? 'Unknown',
     domain: DOMAINS[id[2]] ?? 'Unknown',
     tier: resolveTier(tags, id),
-    role: ROLES[general.icon?.symbol] ?? null,
+    role: roleOf(general.icon?.symbol, tags, id),
     icon: {
       shape: general.icon?.shape ?? null,
       symbol: general.icon?.symbol ?? null,

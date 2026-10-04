@@ -165,9 +165,9 @@ export function unitClass(u: Unit): UnitClass {
     case 'Plasma':
       return 'economy';
     // Factories wear the icon of what they build.
-    case 'Air':
-    case 'Land':
-    case 'Naval':
+    case 'Air Factory':
+    case 'Land Factory':
+    case 'Naval Factory':
       return 'factory';
   }
   // A handful of big units have no icon symbol; an armed one is a fighter.
