@@ -51,7 +51,7 @@ export const MODS: Mod[] = [
   {
     id: 'ModManager',
     name: 'Mod Manager',
-    version: '0.12.0',
+    version: '0.13.0',
     tagline:
       'A Mods page in the game menu for switching mods on and off, and a Mods panel in the lobby for the host’s gameplay mods.',
     features: [
@@ -85,7 +85,7 @@ export const MODS: Mod[] = [
   {
     id: 'SanctuaryHud',
     name: 'SanctuaryDB HUD',
-    version: '0.16.0',
+    version: '0.16.1',
     tagline:
       'A mini-map, a proper economy readout, reclaim values, build timers, alerts and post-match stats.',
     features: [
@@ -139,7 +139,7 @@ export const MODS: Mod[] = [
   {
     id: 'EcoManager',
     name: 'Eco Manager',
-    version: '0.9.0',
+    version: '0.9.1',
     tagline: 'See what’s eating your economy, and upgrade extractors without babysitting them.',
     features: [
       {
@@ -167,7 +167,7 @@ export const MODS: Mod[] = [
   {
     id: 'IdleEngineers',
     name: 'Idle Engineers',
-    version: '0.7.0',
+    version: '0.7.1',
     tagline: 'Never lose track of an engineer or factory with nothing to do.',
     features: [
       {
@@ -187,7 +187,7 @@ export const MODS: Mod[] = [
   {
     id: 'BuildHotkeys',
     name: 'Build Hotkeys',
-    version: '0.5.0',
+    version: '0.5.1',
     tagline:
       'One key per kind of unit, the same on every faction, and the game’s own keys wherever you want them.',
     features: [
@@ -225,7 +225,7 @@ export const MODS: Mod[] = [
   {
     id: 'LadderReporter',
     name: 'Ladder Reporter',
-    version: '0.3.5',
+    version: '0.3.6',
     tagline: 'Queue for a ranked 1v1 on the site, and the ladder does the rest.',
     features: [
       {
@@ -245,7 +245,7 @@ export const MODS: Mod[] = [
   {
     id: 'ReplayManager',
     name: 'Replay Manager',
-    version: '0.5.0',
+    version: '0.5.1',
     tagline: 'Watch replays properly: any player’s view, no fog, every economy.',
     features: [
       {
@@ -266,7 +266,7 @@ export const MODS: Mod[] = [
   {
     id: 'CameraUtilities',
     name: 'Camera Utilities',
-    version: '0.2.0',
+    version: '0.2.1',
     tagline: 'A clean picture for screenshots, videos and casting.',
     features: [
       {
@@ -334,7 +334,7 @@ export const managerHref = (m: Mod): string =>
 export const ZONE_CONTROL: Mod = {
   id: 'ZoneControl',
   name: 'Zone Control',
-  version: '0.5.0',
+  version: '0.5.1',
   tagline:
     'Forged Alliance’s Zone Control: no commanders, no building — every zone you hold sends you units.',
   features: [
@@ -359,11 +359,12 @@ export const zoneControlHref = (): string =>
 
 /** Phantom-X is Lua only, with no map: its release's -ModManager.zip is the
  *  whole download, and it plays on any map. Its panel is drawn by the Mod API,
- *  which is why it needs Mod Manager 0.10.0. */
+ *  and since 0.2.1 its host side runs on the API's Lua helpers, which is why
+ *  it needs Mod Manager 0.13.0. Zone Control 0.5.1 needs the same. */
 export const PHANTOM_X: Mod = {
   id: 'PhantomX',
   name: 'Phantom-X',
-  version: '0.2.0',
+  version: '0.2.1',
   tagline:
     'Supreme Commander’s Phantom-X: everyone starts allied, until some of you secretly become phantoms.',
   features: [
@@ -399,7 +400,7 @@ export const PHANTOM_X: Mod = {
 export const UNIT_RESTRICTIONS: Mod = {
   id: 'UnitRestrictions',
   name: 'Unit Restrictions',
-  version: '0.1.0',
+  version: '0.1.1',
   tagline: 'Take units out of the match: a whole section like air, or just one faction’s tank.',
   features: [
     {

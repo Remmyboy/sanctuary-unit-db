@@ -178,7 +178,7 @@ function ZoneControlGuide() {
         <ol className="gm-steps">
           <li>
             Extract the zip into your <code>engine</code> folder. It holds the mod and its map, and lands both
-            where the game looks for them.
+            where the game looks for them. It needs Mod Manager 0.13.0 or later, for every player.
           </li>
           <li>
             Host a lobby and pick the map <strong>{ZONE_CONTROL_MAP}</strong>.
@@ -392,8 +392,8 @@ function PhantomXGuide() {
         </h4>
         <ol className="gm-steps">
           <li>
-            Extract the zip into your <code>engine</code> folder. It needs Mod Manager 0.10.0 or later, for
-            every player, and 0.11.0 to show the roles in replays.
+            Extract the zip into your <code>engine</code> folder. It needs Mod Manager 0.13.0 or later, for
+            every player.
           </li>
           <li>Host a lobby on any map. It&rsquo;s best with three or more players.</li>
           <li>

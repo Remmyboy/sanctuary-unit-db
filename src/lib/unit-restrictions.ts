@@ -1,6 +1,6 @@
 // The options the Unit Restrictions card on /gameplay-mods explains, copied
 // from the mod's mod.json and release notes (sanctuary-mods,
-// UnitRestrictions 0.1.0). When a release changes one, change it here with
+// UnitRestrictions 0.1.1). When a release changes one, change it here with
 // the version in src/lib/mods.ts.
 
 import type { LobbyOption } from './zone-control';
