@@ -48,9 +48,9 @@ export async function saveStats(matchId: string, uploaderId: string, s: StatsUpl
   await sql()`
     insert into match_stats (match_id, uploader_id, format, mod_version, build_id, tick_rate, end_tick, armies, timeline)
     values (${matchId}, ${uploaderId}, ${s.format}, ${s.modVersion}, ${s.buildId}, ${s.tickRate}, ${s.endTick},
-            ${JSON.stringify(s.armies)}::jsonb,
+            ${sql().json(s.armies as never)},
             case when exists (select 1 from match_stats where match_id = ${matchId} and uploader_id <> ${uploaderId})
-                 then null else ${JSON.stringify(s.timeline)}::jsonb end)
+                 then null else ${sql().json(s.timeline as never)}::jsonb end)
     on conflict (match_id, uploader_id) do update set
       format = excluded.format, mod_version = excluded.mod_version, build_id = excluded.build_id,
       tick_rate = excluded.tick_rate, end_tick = excluded.end_tick, armies = excluded.armies,

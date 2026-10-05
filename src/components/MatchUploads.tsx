@@ -127,9 +127,12 @@ const ROWS: Row[] = [
   { label: 'Energy gathered', value: (a) => a.energy.gathered },
   { label: 'Energy spent', value: (a) => a.energy.spent },
   { label: 'Energy wasted', value: (a) => a.energy.wasted, lowerIsBetter: true },
+  // Time the economy throttled spending. The collector counts it per
+  // resource, but the game throttles everything at once, so the two match
+  // to a tick or two; summing them would double it.
   {
     label: 'Time stalled',
-    value: (a, tr) => (a.alloy.stallTicks + a.energy.stallTicks) / tr,
+    value: (a, tr) => Math.max(a.alloy.stallTicks, a.energy.stallTicks) / tr,
     format: (n) => mmss(n),
     lowerIsBetter: true,
   },
@@ -274,8 +277,9 @@ function StatsChart({
   const maxV = Math.max(1, ...lines.flatMap((l) => l.values));
   const x = (s: number) => PAD.l + (s / maxT) * (W - PAD.l - PAD.r);
   const y = (v: number) => H - PAD.b - (v / maxV) * (H - PAD.t - PAD.b);
-  // A tick every 5 minutes, or every minute for a short game.
-  const step = maxT > 900 ? 300 : 60;
+  // Six to fifteen labels: every minute for a short game, then every 2, 5
+  // or 10.
+  const step = maxT > 3600 ? 600 : maxT > 1800 ? 300 : maxT > 600 ? 120 : 60;
   const ticks: number[] = [];
   for (let s = 0; s <= maxT; s += step) ticks.push(s);
 

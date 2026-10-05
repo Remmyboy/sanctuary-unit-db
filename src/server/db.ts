@@ -105,6 +105,9 @@ function guarded(this: unknown, ...args: unknown[]): unknown {
   return (c as unknown as (...a: unknown[]) => unknown)(...args);
 }
 guarded.array = (...a: unknown[]) => (raw().array as (...x: unknown[]) => unknown)(...a);
+// For jsonb parameters. A JSON *string* bound to a ::jsonb parameter is
+// encoded again and stored as a jsonb string, not the object it spells.
+guarded.json = (...a: unknown[]) => (raw().json as (...x: unknown[]) => unknown)(...a);
 guarded.unsafe = (query: string, params?: unknown[]) =>
   guard((raw().unsafe as (q: string, p?: unknown[]) => PromiseLike<unknown>)(query, params), preview(query));
 guarded.end = (opts?: { timeout?: number }) => {
