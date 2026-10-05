@@ -10,6 +10,7 @@
 export const STATS_FORMAT = 1;
 export const STATS_MAX_BYTES = 256 * 1024;
 const MAX_ARMIES = 8;
+// The mod doubles intervalS for a very long game to stay under the size cap.
 const MAX_SAMPLES = 2400; // 3 h 20 min at 5 s
 const MAX_VALUE = 1e12;
 
@@ -146,7 +147,7 @@ function army(v: unknown, i: number, participants: ReadonlySet<string>): StatsAr
 function timeline(v: unknown, steamIds: string[]): StatsTimeline {
   const tl = obj(v, 'timeline');
   const intervalS = int(tl.intervalS, 'timeline.intervalS');
-  if (intervalS < 1 || intervalS > 60) fail('timeline.intervalS');
+  if (intervalS < 1 || intervalS > 300) fail('timeline.intervalS');
   if (!Array.isArray(tl.t) || tl.t.length > MAX_SAMPLES) fail('timeline.t');
   const t = (tl.t as unknown[]).map((x, i) => num(x, `timeline.t[${i}]`));
   const raw = obj(tl.series, 'timeline.series');
