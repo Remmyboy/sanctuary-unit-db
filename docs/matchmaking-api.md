@@ -138,6 +138,19 @@ The 200 answer now also names the match the result went to:
 `{ "outcome": "reported" | "applied" | "disputed", "matchId": "<uuid>" }`.
 That is how a manually hosted game gets the id its uploads need.
 
+A report for a match that is already settled changes nothing, and still
+names the match. With both players running the mod this is the usual case
+for the second report: the loser's concession completes the match at once.
+The match is the one `matchId` names, else one between the two players
+settled in the last two hours:
+
+- completed, same winner → 200 `{ "outcome": "applied", "matchId" }`;
+- completed, the other winner → 409 `{ "error", "matchId" }`. Its ratings
+  are applied, so a client can't reopen it; that is an admin's call;
+- disputed → 200 `{ "outcome": "disputed", "matchId" }`.
+
+Only when there is no such match is the answer 404.
+
 ## After the game: stats and replay uploads
 
 Opt-in on the player's side (LadderReporter `[Upload] Stats` / `Replays`,
