@@ -3822,6 +3822,96 @@ img.unit-icon[data-muted='true'] {
 .hist-date {
   color: inherit;
 }
+a.chip {
+  text-decoration: none;
+}
+/* A table row that opens its match: the whole row is the target. */
+.lb-table tr.row-link {
+  cursor: pointer;
+}
+
+/* Replays: finished games, spoiler-free (routes/replays.tsx). */
+.replays {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 18px 16px 60px;
+}
+.replay-table td {
+  vertical-align: middle;
+}
+.replay-players {
+  font-weight: 600;
+}
+.replay-players .vs {
+  color: var(--text-faint);
+  font-weight: 400;
+}
+.replay-map {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.btn.replay-dl {
+  display: inline-block;
+  padding: 5px 10px;
+  font-size: 11px;
+  text-decoration: none;
+}
+.replay-more {
+  display: block;
+  margin: 16px auto 0;
+}
+/* Phones: each game becomes a card; the headings go, the cells stack. */
+@media (max-width: 640px) {
+  .replay-table thead {
+    display: none;
+  }
+  .replay-table,
+  .replay-table tbody,
+  .replay-table tr,
+  .replay-table td {
+    display: block;
+  }
+  .replay-table tr {
+    position: relative;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .replay-table td {
+    padding: 2px 0;
+    border: 0;
+  }
+  .replay-table td:nth-child(3),
+  .replay-table td:nth-child(4) {
+    display: inline-block;
+    margin-right: 10px;
+    font-size: 12px;
+  }
+  .replay-table td:nth-child(5) {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+  }
+  .replay-table td:nth-child(6) {
+    display: none; /* the row itself opens the game */
+  }
+  .replay-map {
+    max-width: calc(100% - 110px);
+  }
+}
+.spoiler-gate {
+  margin: 22px 0;
+  padding: 18px;
+  text-align: center;
+  background: var(--bg-raised);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+}
+.spoiler-gate p {
+  margin: 0 0 12px;
+  color: var(--text-dim);
+}
 
 /* Profile. */
 .profile {

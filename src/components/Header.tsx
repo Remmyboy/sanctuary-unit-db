@@ -8,7 +8,7 @@ import { SITE_REPO } from '../lib/mods';
 import { AuthChip } from './AuthChip';
 
 // The nav, grouped by what people come for: the game data, making mods, and
-// playing online. The groups sit apart visually so eight links scan as three.
+// playing online. The groups sit apart visually so nine links scan as three.
 const NAV = [
   {
     label: 'Database',
@@ -31,6 +31,7 @@ const NAV = [
       ['/play', 'Play'],
       ['/lobbies', 'Lobbies'],
       ['/ladder', 'Ladder'],
+      ['/replays', 'Replays'],
     ],
   },
 ] as const;

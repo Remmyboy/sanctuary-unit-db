@@ -341,7 +341,7 @@ test('modding ToC is usable on a narrow screen', async ({ page }) => {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
-test('ladder and play pages render their shells with no database', async ({ page }) => {
+test('ladder, play and replays pages render their shells with no database', async ({ page }) => {
   // No database is configured in this test environment, so both pages must
   // render signed-out/empty instead of crashing.
   await page.goto('/ladder');
@@ -352,6 +352,10 @@ test('ladder and play pages render their shells with no database', async ({ page
   await page.goto('/play');
   await expect(page.locator('.queue-card')).toHaveCount(3);
   await expect(page.locator('.play-signin')).toContainText('Sign in through Steam');
+
+  await page.goto('/replays');
+  await expect(page.getByRole('heading', { name: 'Replays', level: 1 })).toBeVisible();
+  await expect(page.locator('.replays .empty')).toContainText("aren't reachable");
 });
 
 test('lobbies page says Steam is unreachable rather than empty with no key', async ({ page }) => {
