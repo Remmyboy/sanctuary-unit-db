@@ -77,6 +77,24 @@ export async function readJson(request: Request): Promise<Record<string, unknown
   }
 }
 
+// readJson with a size cap, for the upload endpoints: a declared length over
+// the cap is refused before reading, and a body without one is measured.
+export async function readJsonCapped(
+  request: Request,
+  maxBytes: number,
+): Promise<{ body: Record<string, unknown> } | { status: 400 | 413 }> {
+  if (Number(request.headers.get('content-length') ?? 0) > maxBytes) return { status: 413 };
+  const text = await request.text().catch(() => null);
+  if (text === null) return { status: 400 };
+  if (Buffer.byteLength(text) > maxBytes) return { status: 413 };
+  try {
+    const body: unknown = JSON.parse(text);
+    return body && typeof body === 'object' ? { body: body as Record<string, unknown> } : { status: 400 };
+  } catch {
+    return { status: 400 };
+  }
+}
+
 // Everything time-driven, in one round trip: overdue auto-confirms and the
 // auto-launch countdowns/timeouts. Called from every poll-shaped entry point.
 export async function sweepAll(): Promise<void> {

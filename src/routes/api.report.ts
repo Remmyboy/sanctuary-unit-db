@@ -36,8 +36,10 @@ const bad = (status: number, message: string) =>
     headers: { 'Content-Type': 'application/json' },
   });
 
-const ok = (outcome: string) =>
-  new Response(JSON.stringify({ outcome }), {
+// The match id lets the mod attach its stats and replay uploads to the game
+// it just reported, which a manually hosted match gives it no other way.
+const ok = (outcome: string, matchId: string) =>
+  new Response(JSON.stringify({ outcome, matchId }), {
     status: 200,
     headers: { 'Content-Type': 'application/json' },
   });
@@ -125,9 +127,9 @@ export const Route = createFileRoute('/api/report')({
             where id = ${match.match_id} and status = 'in_progress'
             returning id`;
           if (updated.length === 0) return bad(409, 'The match changed while reporting — retry.');
-          if (reporterWon) return ok('reported'); // opponent confirms, or the window lapses
+          if (reporterWon) return ok('reported', match.match_id); // opponent confirms, or the window lapses
           await sql()`select apply_match_result(${match.match_id}, ${match.winner_team})`;
-          return ok('applied');
+          return ok('applied', match.match_id);
         }
 
         // Already reported (by the opponent's mod or by hand).
@@ -135,9 +137,9 @@ export const Route = createFileRoute('/api/report')({
           if (match.reported_by !== match.reporter_player_id) {
             // Both sides agree — no reason to wait out the window.
             await sql()`select apply_match_result(${match.match_id}, ${match.winner_team})`;
-            return ok('applied');
+            return ok('applied', match.match_id);
           }
-          return ok('reported'); // same reporter repeating themselves
+          return ok('reported', match.match_id); // same reporter repeating themselves
         }
 
         if (match.reported_by !== match.reporter_player_id) {
@@ -148,7 +150,7 @@ export const Route = createFileRoute('/api/report')({
             insert into disputes (match_id, raised_by, reason)
             values (${match.match_id}, ${match.reporter_player_id},
                     'Auto-reporter contradiction: clients disagreed on the winner.')`;
-          return ok('disputed');
+          return ok('disputed', match.match_id);
         }
         return bad(409, 'Contradicts your own earlier report.');
       },
