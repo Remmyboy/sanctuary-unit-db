@@ -74,6 +74,13 @@ export function ReporterCard() {
             {copied ? 'Copied ✓' : 'Copy'}
           </button>
         </div>
+        <div className="reporter-uploads">
+          <strong>Share your games.</strong> Press <kbd>F8</kbd> in game, open{' '}
+          <strong>Ladder Reporter</strong> and switch on <strong>Upload &rarr; Stats</strong> and{' '}
+          <strong>Replays</strong>. After each ranked game your stats and replay go up to its match page and
+          the <Link to="/replays">Replays</Link> list, for anyone to look through or download. Both are
+          public, and off until you switch them on.
+        </div>
         <p className="hint">
           Want every mod? <a href={EVERYTHING_HREF}>Download everything</a> in one zip instead &mdash; see{' '}
           <Link to="/mods">what&rsquo;s in it</Link>.
