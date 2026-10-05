@@ -96,6 +96,29 @@ export interface MatchView {
   replay: MatchReplayView | null;
 }
 
+// A finished game on the Replays page. Spoiler-free by construction: no
+// outcome, no ratings, and each team's players in name order, so nothing in
+// the row hints at who won.
+export interface ReplayListPlayer {
+  steamId: string;
+  personaName: string;
+}
+
+export interface ReplayListRow {
+  matchId: string;
+  mode: Mode;
+  mapName: string;
+  completedAt: string;
+  teams: ReplayListPlayer[][]; // by team number
+  replay: { sizeBytes: number; fileName: string } | null; // ready to download
+  hasStats: boolean;
+}
+
+export interface ReplayListPage {
+  rows: ReplayListRow[];
+  hasMore: boolean;
+}
+
 export interface LeaderboardRow {
   rank: number;
   steamId: string;
