@@ -225,7 +225,7 @@ export const MODS: Mod[] = [
   {
     id: 'LadderReporter',
     name: 'Ladder Reporter',
-    version: '0.3.6',
+    version: '0.4.0',
     tagline: 'Queue for a ranked 1v1 on the site, and the ladder does the rest.',
     features: [
       {
@@ -237,8 +237,12 @@ export const MODS: Mod[] = [
         text: 'When a ranked 1v1 ends, the result goes straight to the SanctuaryDB ladder.',
       },
       {
+        title: 'Your stats and replay on the match page',
+        text: 'Switch on uploads and every ranked game’s stats and replay land on its ladder page, for anyone to look through or download. Off until you choose.',
+      },
+      {
         title: 'Nothing to set up',
-        text: 'No settings at all. It only ever touches two-player Steam lobbies that match an open ladder game.',
+        text: 'Install it and play ranked. It only ever touches two-player Steam lobbies that match an open ladder game.',
       },
     ],
   },

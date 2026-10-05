@@ -4784,6 +4784,28 @@ html.modding-route {
 .reporter-install .hint a {
   color: var(--accent);
 }
+/* The nudge to switch on stats and replay uploads: off by default in the
+   mod, so it stands out from the dim hints around it. */
+.reporter-uploads {
+  margin: 12px 0 4px;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  background: var(--bg);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+.reporter-uploads a {
+  color: var(--accent);
+}
+.reporter-uploads kbd {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0 4px;
+}
 .reporter-install p code {
   font-family: var(--font-mono);
   font-size: 11.5px;
