@@ -24,9 +24,21 @@ const launching = (m: MatchView): boolean => {
   return !launchProgress(m.mmEvents, m.hostPlayerId, joiner.playerId).started;
 };
 
+// LadderReporter uploads its stats moments after the result and the replay
+// once the player has left the game, so a freshly completed match keeps a
+// slow poll for a while in case they're on their way.
+export const UPLOAD_WAIT_MS = 20 * 60_000;
+
+const awaitingUploads = (m: MatchView, now: number): boolean =>
+  m.status === 'completed' &&
+  m.completedAt !== null &&
+  now - Date.parse(m.completedAt) < UPLOAD_WAIT_MS &&
+  (m.stats === null || m.replay === null || m.replay.uploading);
+
 // Null means stop polling.
-export function pollDelay(m: MatchView | null | undefined): number | null {
+export function pollDelay(m: MatchView | null | undefined, now = Date.now()): number | null {
   if (m === undefined) return FAST_MS; // not loaded yet: keep trying
+  if (m !== null && awaitingUploads(m, now)) return SLOW_MS;
   if (m === null || !isOpen(m)) return null;
   if (m.status === 'in_progress' && (m.mmStatus === 'countdown' || launching(m))) return FAST_MS;
   return SLOW_MS;

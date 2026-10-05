@@ -4,6 +4,7 @@
 
 import { createServerFn } from '@tanstack/react-start';
 import { sql } from './db';
+import { deleteMatchReplay } from './match-uploads';
 import { loadParticipants, toParticipant, toView, type MatchRow } from './match-data';
 import { requireAdmin } from './player';
 import { isMode, type Mode } from '../lib/ladder-modes';
@@ -100,11 +101,13 @@ export const adminMatches = createServerFn({ method: 'POST' })
 
 // Removes a match outright. Completed ones have their recorded rating
 // changes reversed first (see admin_delete_match) — for test games that
-// shouldn't have counted.
+// shouldn't have counted. Its replay goes from R2 first: the row cascade
+// can't reach the bucket.
 export const adminDelete = createServerFn({ method: 'POST' })
   .validator(matchIdInput)
   .handler(async ({ data }): Promise<void> => {
     await requireAdmin();
+    await deleteMatchReplay(data.matchId);
     await sql()`select admin_delete_match(${data.matchId})`;
   });
 

@@ -3646,6 +3646,183 @@ img.unit-icon[data-muted='true'] {
   color: var(--text-dim);
 }
 
+/* After the result: LadderReporter's uploads (components/MatchUploads.tsx). */
+.uploads-hint {
+  font-size: 13px;
+}
+.replay-panel {
+  margin: 18px 0;
+  padding: 12px 14px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.replay-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.replay-warn {
+  margin: 10px 0 0;
+  color: var(--warn);
+  font-size: 13px;
+}
+.replay-help {
+  margin: 10px 0 0;
+  font-size: 12px;
+}
+.replay-help code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  word-break: break-all;
+  color: var(--text);
+}
+.match-stats {
+  margin-top: 22px;
+}
+.ms-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.ms-head h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+}
+.ms-head .dim {
+  font-size: 12px;
+}
+.ms-confirmed {
+  color: var(--good);
+}
+.ms-table-wrap {
+  overflow-x: auto;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.ms-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.ms-table thead th {
+  text-align: right;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border-strong);
+  white-space: nowrap;
+}
+.ms-swatch {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 7px;
+  border-radius: 2px;
+  background: var(--pc);
+  box-shadow: 0 0 6px var(--pc);
+}
+.ms-faction {
+  margin-left: 6px;
+  color: var(--text-faint);
+  font-weight: 500;
+  font-size: 11px;
+}
+.ms-table tbody th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--text-dim);
+  padding: 6px 12px;
+  white-space: nowrap;
+}
+.ms-table tbody td {
+  text-align: right;
+  padding: 6px 12px;
+}
+.ms-table tbody tr + tr > * {
+  border-top: 1px solid var(--border);
+}
+.ms-table tr[data-sub] th {
+  padding-left: 26px;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+.ms-table tr[data-sub] td {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.ms-table td[data-best] {
+  color: var(--text);
+  font-weight: 700;
+}
+@media (max-width: 520px) {
+  .ms-table thead th {
+    white-space: normal;
+    padding: 8px 8px;
+  }
+  .ms-table tbody th,
+  .ms-table tbody td {
+    padding: 6px 8px;
+  }
+  .ms-table tr[data-sub] th {
+    padding-left: 16px;
+  }
+  .ms-faction {
+    display: block;
+    margin: 2px 0 0;
+  }
+}
+.ms-chart-picker {
+  margin: 16px 0 8px;
+}
+.ms-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.ms-line {
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+}
+.ms-grid {
+  stroke: var(--border);
+  stroke-dasharray: 3 4;
+}
+.ms-baseline {
+  stroke: var(--border-strong);
+}
+.ms-axis {
+  fill: var(--text-faint);
+  font-size: 11px;
+}
+.hist-tag {
+  margin-left: 6px;
+  padding: 1px 5px;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  color: var(--text-dim);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.hist-date {
+  color: inherit;
+}
+
 /* Profile. */
 .profile {
   max-width: 760px;

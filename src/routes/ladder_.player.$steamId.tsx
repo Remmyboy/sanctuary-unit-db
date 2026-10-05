@@ -214,7 +214,11 @@ function PlayerPage() {
                     </span>
                   ))}
                 </td>
-                <td>{h.mapName}</td>
+                <td>
+                  {h.mapName}
+                  {h.hasStats && <span className="hist-tag">stats</span>}
+                  {h.hasReplay && <span className="hist-tag">replay</span>}
+                </td>
                 <td>
                   {h.ratingAfter}{' '}
                   <span className={h.ratingDelta >= 0 ? 'delta-up' : 'delta-down'}>
@@ -222,7 +226,11 @@ function PlayerPage() {
                     {h.ratingDelta}
                   </span>
                 </td>
-                <td className="dim">{new Date(h.completedAt).toLocaleDateString()}</td>
+                <td className="dim">
+                  <Link to="/ladder/match/$matchId" params={{ matchId: h.matchId }} className="hist-date">
+                    {new Date(h.completedAt).toLocaleDateString()}
+                  </Link>
+                </td>
               </tr>
             ))}
           </tbody>
