@@ -21,15 +21,18 @@ export const Route = createFileRoute('/replays_/$matchId')({
 const byName = (a: MatchParticipant, b: MatchParticipant) =>
   a.personaName.localeCompare(b.personaName, undefined, { sensitivity: 'base' });
 
+// Keyed by the match, so moving to another game starts it hidden again.
 function ReplayView() {
   const { matchId } = Route.useParams();
+  return <ReplayGame key={matchId} matchId={matchId} />;
+}
+
+function ReplayGame({ matchId }: { matchId: string }) {
   const [match, setMatch] = useState<MatchView | null | undefined>(undefined);
   const [revealed, setRevealed] = useState(false);
 
   useEffect(() => {
     let alive = true;
-    setMatch(undefined);
-    setRevealed(false);
     matchGet({ data: { matchId, mod: null } })
       .then((m) => alive && setMatch(m))
       .catch(() => alive && setMatch(null));
