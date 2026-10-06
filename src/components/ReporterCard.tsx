@@ -33,7 +33,8 @@ export function ReporterCard() {
             </span>
             <strong>Mod Manager</strong> <span className="dim">v{MANAGER.version}</span>
             <p className="dim">
-              What every mod runs on, and a Mods page in the game menu. Already have it? Skip to 2.
+              What every mod runs on, and a Mods page in the game menu that keeps them up to date. Already
+              have it? Skip to 2.
             </p>
           </div>
           <a className="dl-btn" href={standaloneHref(MANAGER)}>

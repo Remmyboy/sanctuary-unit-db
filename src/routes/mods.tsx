@@ -5,6 +5,8 @@
 // Standalone zips each carried an old copy of the loader, so they were
 // dropped (see standaloneHref). The catalogue lives in src/lib/mods.ts,
 // shared with the Play page's download card, so a version bump moves both.
+// Once installed, the Mod Manager updates the rest itself from the game's
+// Mods page, so the rail says so: this page is for the first install.
 // Gameplay mods (Zone Control, Phantom-X, Unit Restrictions) have a page of their own,
 // /gameplay-mods: the host picks them per match, so they install differently.
 
@@ -71,6 +73,15 @@ function ModsPage() {
             <a className="dl-btn" href={EVERYTHING_HREF} download>
               Download everything
             </a>
+          </section>
+
+          <section className="mods-updates" aria-labelledby="mods-updates">
+            <h2 id="mods-updates">Update from the game</h2>
+            <p>
+              Already installed? A red number on <strong>Mods</strong> in the main menu means updates are
+              waiting: open it and hit <strong>Update All</strong>. Settings are kept.
+            </p>
+            <p className="hint">On Mod Manager 0.13.0 or older, download it once more by hand first.</p>
           </section>
 
           <div className="mods-where">
