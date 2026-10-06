@@ -5046,6 +5046,37 @@ html.modding-route {
   white-space: nowrap;
 }
 
+/* Updating happens in the game now, so the rail says so before the install
+   detail: an accent bar, like the Play page's uploads callout. */
+.mods-updates {
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+}
+.mods-updates h2 {
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.mods-updates p {
+  margin: 0 0 8px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+.mods-updates p strong {
+  color: var(--text);
+}
+.mods-updates p.hint {
+  margin: 0;
+  font-size: 12px;
+}
+
 /* Where every zip goes: said once, beside both ways of installing, since the
    answer is the same for all of them. */
 .mods-where h2 {
@@ -5211,6 +5242,13 @@ html.modding-route {
 .mods-remove {
   margin: 0;
   font-size: 12px;
+}
+
+/* A rail taller than the window would hide its foot while it sticks. */
+@media (max-height: 860px) {
+  .mods-aside {
+    position: static;
+  }
 }
 
 @media (max-width: 1000px) {

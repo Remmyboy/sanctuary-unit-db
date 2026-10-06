@@ -51,13 +51,17 @@ export const MODS: Mod[] = [
   {
     id: 'ModManager',
     name: 'Mod Manager',
-    version: '0.13.0',
+    version: '0.14.0',
     tagline:
-      'A Mods page in the game menu for switching mods on and off, and a Mods panel in the lobby for the host’s gameplay mods.',
+      'A Mods page in the game menu for switching mods on and off and keeping them up to date, and a Mods panel in the lobby for the host’s gameplay mods.',
     features: [
       {
         title: 'A switch for every mod',
         text: 'Turn any mod on or off from the menu, or mid-match with F8. It takes effect straight away, with no restart.',
+      },
+      {
+        title: 'Updates in one click',
+        text: 'Open Mods from the main menu and any SanctuaryDB mod with a new release gets an Update button, or hit Update All. It installs and reloads on the spot, and your settings stay.',
       },
       {
         title: 'Settings in the game',
