@@ -78,8 +78,8 @@ function ModsPage() {
           <section className="mods-updates" aria-labelledby="mods-updates">
             <h2 id="mods-updates">Update from the game</h2>
             <p>
-              Already installed? Open <strong>Mods</strong> from the main menu and hit{' '}
-              <strong>Update All</strong>. New releases install on the spot, settings kept.
+              Already installed? A red number on <strong>Mods</strong> in the main menu means updates are
+              waiting: open it and hit <strong>Update All</strong>. Settings are kept.
             </p>
             <p className="hint">On Mod Manager 0.13.0 or older, download it once more by hand first.</p>
           </section>

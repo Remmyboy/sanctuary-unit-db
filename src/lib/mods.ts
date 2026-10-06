@@ -51,7 +51,7 @@ export const MODS: Mod[] = [
   {
     id: 'ModManager',
     name: 'Mod Manager',
-    version: '0.14.0',
+    version: '0.15.0',
     tagline:
       'A Mods page in the game menu for switching mods on and off and keeping them up to date, and a Mods panel in the lobby for the host’s gameplay mods.',
     features: [
@@ -61,7 +61,7 @@ export const MODS: Mod[] = [
       },
       {
         title: 'Updates in one click',
-        text: 'Open Mods from the main menu and any SanctuaryDB mod with a new release gets an Update button, or hit Update All. It installs and reloads on the spot, and your settings stay.',
+        text: 'A red number on the Mods icon in the main menu says when your SanctuaryDB mods have updates. Click Update, or Update All, and they install and reload on the spot, with your settings kept.',
       },
       {
         title: 'Settings in the game',
