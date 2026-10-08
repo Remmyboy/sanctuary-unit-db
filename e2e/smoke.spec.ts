@@ -220,7 +220,10 @@ test('modding docs honor the versioned routing and metadata contract', async ({ 
   await page.goto('/modding');
   await expect(page).toHaveURL(new RegExp(`${startPath}$`));
   await expect(page.getByRole('heading', { name: 'Modding the current playtest' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Modding', exact: true })).toHaveClass(/active/);
+  // Off the nav for now; the docs themselves stay up.
+  await expect(
+    page.getByRole('navigation', { name: 'Site' }).getByRole('link', { name: 'Modding' }),
+  ).toHaveCount(0);
 
   const overviewPath = `/modding/${snapshotId}/lua/overview`;
   const directResponse = await request.get(overviewPath);
