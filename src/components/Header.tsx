@@ -9,7 +9,7 @@ import { AuthChip } from './AuthChip';
 import { parseBalance } from '../lib/balance-patch';
 
 // The nav, grouped by what people come for: the game data, making mods, and
-// playing online. The groups sit apart visually so ten links scan as three.
+// playing online. The groups sit apart visually so nine links scan as three.
 const NAV = [
   {
     label: 'Database',
@@ -24,7 +24,8 @@ const NAV = [
       ['/mods', 'UI Mods'],
       ['/gameplay-mods', 'Gameplay Mods'],
       ['/balance-patch', 'Balance Patch'],
-      ['/modding', 'Modding'],
+      // The /modding docs are off the nav for now (October 2026). The pages
+      // and their routes stay, so links to them still work.
     ],
   },
   {
