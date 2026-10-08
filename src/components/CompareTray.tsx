@@ -5,6 +5,7 @@
 
 import { Link } from '@tanstack/react-router';
 import type { Unit } from '../lib/types';
+import type { Balance } from '../lib/balance-patch';
 import { COMPARE_MAX } from '../lib/compare';
 import { shortName } from '../lib/format';
 import { FACTION_COLOURS, UnitIcon } from './UnitIcon';
@@ -12,12 +13,14 @@ import { FACTION_COLOURS, UnitIcon } from './UnitIcon';
 interface CompareTrayProps {
   units: Unit[];
   picking: boolean;
+  /** Carried through to /compare, so it shows the same numbers. */
+  balance?: Balance;
   iconManifest: Set<string>;
   onRemove: (id: string) => void;
   onClear: () => void;
 }
 
-export function CompareTray({ units, picking, iconManifest, onRemove, onClear }: CompareTrayProps) {
+export function CompareTray({ units, picking, balance, iconManifest, onRemove, onClear }: CompareTrayProps) {
   const ready = units.length >= 2;
   const hint =
     units.length >= COMPARE_MAX
@@ -63,7 +66,11 @@ export function CompareTray({ units, picking, iconManifest, onRemove, onClear }:
           </button>
         )}
         {ready ? (
-          <Link to="/compare" search={{ units: units.map((u) => u.id).join(',') }} className="btn primary">
+          <Link
+            to="/compare"
+            search={{ units: units.map((u) => u.id).join(','), balance }}
+            className="btn primary"
+          >
             Compare {units.length} →
           </Link>
         ) : (

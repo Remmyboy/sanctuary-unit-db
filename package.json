@@ -14,6 +14,7 @@
     "icons": "node scripts/build-icons.js",
     "art": "node scripts/build-art.js",
     "modshots": "node scripts/build-mod-shots.js",
+    "balance-patch": "node scripts/import-balance-patch.js",
     "refresh": "npm run extract && npm run icons && npm run diff",
     "verify": "node scripts/verify.js",
     "db:migrate": "node scripts/db-migrate.js",

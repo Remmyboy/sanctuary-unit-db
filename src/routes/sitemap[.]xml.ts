@@ -6,6 +6,7 @@ const fixedPages = [
   '/calculator',
   '/mods',
   '/gameplay-mods',
+  '/balance-patch',
   '/play',
   '/lobbies',
   '/ladder',

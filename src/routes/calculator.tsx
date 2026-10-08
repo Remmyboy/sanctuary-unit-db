@@ -27,6 +27,8 @@ import { FACTION_COLOURS, FACTION_ORDER, UnitIcon } from '../components/UnitIcon
 import { FactionEmblem } from '../components/FactionEmblem';
 import { GameVersion } from '../components/GameVersion';
 import { PageHead } from '../components/PageHead';
+import { BalanceStrip, BalanceToggle } from '../components/BalanceToggle';
+import { parseBalance, type Balance } from '../lib/balance-patch';
 
 // The whole setup lives in the URL — same params as the pre-framework site
 // (t / p / a / e, plus f for the faction lens), so a build can be shared or
@@ -44,6 +46,8 @@ interface CalcSearch {
   q?: string;
   b?: string;
   s?: string;
+  /** Work from a balance mod's numbers; absent means the game's. */
+  balance?: Balance;
 }
 
 const str = (v: unknown): string | undefined => {
@@ -63,6 +67,7 @@ export const Route = createFileRoute('/calculator')({
     q: str(raw.q),
     b: str(raw.b),
     s: str(raw.s),
+    balance: parseBalance(raw.balance),
   }),
   head: () => ({
     meta: [
@@ -74,7 +79,8 @@ export const Route = createFileRoute('/calculator')({
       },
     ],
   }),
-  loader: () => loadData(),
+  loaderDeps: ({ search }) => ({ balance: search.balance }),
+  loader: ({ deps }) => loadData(deps.balance),
   component: CalculatorPage,
 });
 
@@ -323,6 +329,7 @@ function CalculatorPage() {
         q: packRows(queueRows),
         b: queueMode ? queueBuilder?.id : search.b,
         s: search.s,
+        balance: search.balance,
       },
       replace: true,
     });
@@ -354,6 +361,10 @@ function CalculatorPage() {
         </span>
         <span className="toolbar-controls">
           <GameVersion game={data.meta.game} generatedAt={data.meta.generatedAt} />
+          <BalanceToggle
+            on={!!search.balance}
+            onChange={(on) => patch({ balance: on ? 'remmy' : undefined })}
+          />
           <button type="button" className="linkish" onClick={copyLink}>
             {copied ? 'Copied ✓' : 'Copy link'}
           </button>
@@ -362,13 +373,15 @@ function CalculatorPage() {
             className="linkish"
             onClick={() => {
               setPanel(null);
-              navigate({ search: {}, replace: true });
+              navigate({ search: { balance: search.balance }, replace: true });
             }}
           >
             Reset
           </button>
         </span>
       </div>
+
+      {search.balance && <BalanceStrip meta={data.meta} onOff={() => patch({ balance: undefined })} />}
 
       <main className="calc">
         <section className="calc-col">

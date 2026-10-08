@@ -37,6 +37,16 @@ function main() {
   if (data.meta?.game) notes.push(`Steam build ${data.meta.game.buildId} (${data.meta.game.name})`);
   else notes.push('no Steam build id recorded — the site cannot say whether the data is current');
   if (!exists('data/version.json')) fail('missing data/version.json — re-run `npm run extract`');
+  if (!exists('data/units-balance-patch.json')) {
+    fail('missing data/units-balance-patch.json — re-run `npm run extract`');
+  } else {
+    const patched = read('data/units-balance-patch.json');
+    if (patched.units?.length !== units.length) {
+      fail('data/units-balance-patch.json has a different unit count — re-run `npm run extract`');
+    }
+    const stale = patched.meta?.balancePatch?.stale ?? [];
+    if (stale.length) notes.push(`balance patch: ${stale.length} changes no longer match the game`);
+  }
   if (data.meta?.isDemo) notes.push('source is the demo build — balance values are provisional');
 
   checkIcons(units);
