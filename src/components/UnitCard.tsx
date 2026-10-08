@@ -36,6 +36,9 @@ export function UnitCard({ unit: u, iconManifest, picked, onOpen }: UnitCardProp
                 WIP
               </span>
             )}
+            {u.balance && (
+              <span className="bp-mark" title="Changed by the balance patch" aria-hidden="true" />
+            )}
           </h4>
           <small>{u.displayName}</small>
         </span>

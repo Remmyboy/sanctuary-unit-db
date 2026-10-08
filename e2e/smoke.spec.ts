@@ -156,6 +156,39 @@ test('mods page lists every mod with live download links', async ({ page, reques
   expect(errors).toEqual([]);
 });
 
+test('balance patch page lists every section and the database follows the patch', async ({ page }) => {
+  const errors = collectErrors(page);
+
+  await page.goto('/balance-patch');
+  await expect(page.getByRole('heading', { name: 'Remmy’s Balance Patch', level: 1 })).toBeVisible();
+  await expect(page.locator('.mods-everything .dl-btn').first()).toHaveAttribute(
+    'href',
+    /BalancePatch-[\d.]+\/BalancePatch-[\d.]+-ModManager\.zip$/,
+  );
+  await expect(page.locator('.bp-section')).toHaveCount(9);
+  const engineers = page.locator('#engineers .bp-row').filter({ hasText: 'T1 Engineer' });
+  await expect(engineers).toContainText('750');
+  await expect(engineers).toContainText('300');
+
+  // A unit's link opens it in the database with the patch on.
+  await page.locator('#units .bp-unit', { hasText: 'Puma' }).click();
+  await expect(page).toHaveURL(/[?&]balance=remmy/);
+  await expect(page.locator('.balance-strip')).toBeVisible();
+  await expect(page.locator('.detail h2')).toHaveText('Puma');
+  await expect(page.locator('.detail .bp-changes')).toContainText('health');
+  await expect(page.locator('.detail .statgrid')).toContainText('320');
+
+  // The switch follows to the calculator, and turns off again.
+  await expect(page.getByRole('link', { name: 'Calculator' })).toHaveAttribute('href', /balance=remmy/);
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Balance Patch', exact: true }).click();
+  await expect(page.locator('.balance-strip')).toHaveCount(0);
+  await expect(page.locator('.card .bp-mark')).toHaveCount(0);
+  expect(page.url()).not.toContain('balance=');
+
+  expect(errors).toEqual([]);
+});
+
 test('gameplay mods page sets up each mode and shows the map', async ({ page, request }) => {
   const errors = collectErrors(page);
 
@@ -173,7 +206,7 @@ test('gameplay mods page sets up each mode and shows the map', async ({ page, re
     'href',
     /ModManager-[\d.]+\/ModManager-[\d.]+-Standalone\.zip$/,
   );
-  await expect(page.locator('.mod-entry')).toHaveCount(3);
+  await expect(page.locator('.mod-entry')).toHaveCount(4);
   await expect(page.locator('#ZoneControl .mod-entry-head .dl-btn')).toHaveAttribute(
     'href',
     /ZoneControl-[\d.]+\/ZoneControl-[\d.]+-WithMap\.zip$/,
@@ -185,6 +218,10 @@ test('gameplay mods page sets up each mode and shows the map', async ({ page, re
   await expect(page.locator('#UnitRestrictions .mod-entry-head .dl-btn')).toHaveAttribute(
     'href',
     /UnitRestrictions-[\d.]+\/UnitRestrictions-[\d.]+-ModManager\.zip$/,
+  );
+  await expect(page.locator('#BalancePatch .mod-entry-head .dl-btn')).toHaveAttribute(
+    'href',
+    /BalancePatch-[\d.]+\/BalancePatch-[\d.]+-ModManager\.zip$/,
   );
 
   // The preview is served, not a dead image.

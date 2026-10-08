@@ -26,6 +26,8 @@ import { DetailPanel } from '../components/DetailPanel';
 import { HeaderSearch } from '../components/HeaderSearch';
 import { GameVersion } from '../components/GameVersion';
 import { HeadStat, PageHead } from '../components/PageHead';
+import { BalanceStrip, BalanceToggle } from '../components/BalanceToggle';
+import { parseBalance, type Balance } from '../lib/balance-patch';
 
 // Filters, sort, search, the open unit, the view and the units picked for
 // comparison all live in the URL — same param names and comma-joined encoding
@@ -43,6 +45,8 @@ interface BoardSearch {
   view?: 'compact';
   /** Units picked for comparison, comma-joined ids. */
   compare?: string;
+  /** Show the numbers with a balance mod applied; absent means the game's. */
+  balance?: Balance;
 }
 
 const str = (v: unknown): string | undefined => {
@@ -79,6 +83,7 @@ export const Route = createFileRoute('/')({
     unit: str(raw.unit),
     view: raw.view === 'compact' ? 'compact' : undefined,
     compare: str(raw.compare),
+    balance: parseBalance(raw.balance),
   }),
   head: () => ({
     meta: [
@@ -90,7 +95,8 @@ export const Route = createFileRoute('/')({
       },
     ],
   }),
-  loader: () => loadData(),
+  loaderDeps: ({ search }) => ({ balance: search.balance }),
+  loader: ({ deps }) => loadData(deps.balance),
   component: BoardPage,
 });
 
@@ -172,8 +178,13 @@ function BoardPage() {
     }
   };
 
-  // Reset clears the filters, not the view (a display preference) or the picks.
-  const reset = () => navigate({ search: { view: search.view, compare: search.compare }, replace: true });
+  // Reset clears the filters, not the view (a display preference), the picks
+  // or which numbers are showing.
+  const reset = () =>
+    navigate({
+      search: { view: search.view, compare: search.compare, balance: search.balance },
+      replace: true,
+    });
 
   return (
     <>
@@ -202,6 +213,10 @@ function BoardPage() {
         </span>
         <div className="toolbar-controls">
           <GameVersion game={loaded.data.meta.game} generatedAt={loaded.data.meta.generatedAt} />
+          <BalanceToggle
+            on={!!search.balance}
+            onChange={(on) => patch({ balance: on ? 'remmy' : undefined })}
+          />
           <ViewToggle
             compact={search.view === 'compact'}
             onChange={(c) => patch({ view: c ? 'compact' : undefined })}
@@ -243,6 +258,8 @@ function BoardPage() {
         </div>
       </div>
 
+      {search.balance && <BalanceStrip meta={loaded.data.meta} onOff={() => patch({ balance: undefined })} />}
+
       <main className={`layout${picking || picks.length ? ' has-tray' : ''}`}>
         <FilterSidebar units={loaded.data.units} filters={filters} onToggle={toggle} onReset={reset} />
 
@@ -277,6 +294,7 @@ function BoardPage() {
         <CompareTray
           units={pickedUnits}
           picking={picking}
+          balance={search.balance}
           iconManifest={loaded.iconManifest}
           onRemove={togglePicked}
           onClear={() => setPicks([])}

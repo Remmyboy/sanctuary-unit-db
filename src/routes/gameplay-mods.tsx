@@ -1,5 +1,5 @@
-// The gameplay mods page: Zone Control, Phantom-X and Unit Restrictions, the
-// mods that change the match itself. Unlike the UI mods on /mods, one only runs when the
+// The gameplay mods page: Zone Control, Phantom-X, Unit Restrictions and
+// Remmy's Balance Patch, the mods that change the match itself. Unlike the UI mods on /mods, one only runs when the
 // lobby's host switches it on, and everyone in the match needs the same copy.
 // The Mod Manager is the one step they share, so it comes first; after that
 // each mode is a single card holding everything about it — download, set-up,
@@ -9,12 +9,14 @@
 // Versions and download links come from src/lib/mods.ts; the rules' numbers
 // from src/lib/zone-control.ts, src/lib/phantom-x.ts and
 // src/lib/unit-restrictions.ts, which copy them from each mod's own files. This page replaced /zone-control, which redirects here.
+// The balance patch's card is short: its changes have a page of their own, /balance-patch.
 
 import { Link, createFileRoute } from '@tanstack/react-router';
 import { ModCard } from '../components/ModCard';
 import { CopyPath, StepHead } from '../components/ModInstall';
 import { HeadStat, PageHead } from '../components/PageHead';
 import {
+  BALANCE_PATCH,
   GAMEPLAY_MODS,
   MODS_REPO,
   PHANTOM_X,
@@ -36,7 +38,7 @@ export const Route = createFileRoute('/gameplay-mods')({
       {
         name: 'description',
         content:
-          'Gameplay mods for Sanctuary: Shattered Sun — Forged Alliance’s Zone Control and Phantom-X, rebuilt for Sanctuary, and Unit Restrictions. How to install them, switch them on in a lobby, and how each one plays.',
+          'Gameplay mods for Sanctuary: Shattered Sun — Forged Alliance’s Zone Control and Phantom-X, rebuilt for Sanctuary, Unit Restrictions and Remmy’s Balance Patch. How to install them, switch them on in a lobby, and how each one plays.',
       },
     ],
   }),
@@ -50,6 +52,7 @@ const GUIDES: Record<string, () => React.JSX.Element> = {
   [ZONE_CONTROL.id]: ZoneControlGuide,
   [PHANTOM_X.id]: PhantomXGuide,
   [UNIT_RESTRICTIONS.id]: UnitRestrictionsGuide,
+  [BALANCE_PATCH.id]: BalancePatchGuide,
 };
 
 function GameplayModsPage() {
@@ -61,9 +64,9 @@ function GameplayModsPage() {
         art="ladder"
         aside={<HeadStat value={GAMEPLAY_MODS.length} label="Gameplay mods" />}
       >
-        Forged Alliance classics and lobby rules, rebuilt for Sanctuary. A gameplay mod changes the match
-        itself: the host switches it on in the lobby, everyone playing gets the same rules, and every other
-        lobby stays vanilla.
+        Forged Alliance classics, lobby rules and a balance pass, for Sanctuary. A gameplay mod changes the
+        match itself: the host switches it on in the lobby, everyone playing gets the same rules, and every
+        other lobby stays vanilla.
       </PageHead>
       <div className="toolbar">
         <span className="toolbar-summary">
@@ -105,6 +108,8 @@ function GameplayModsPage() {
               <code>SanctuaryMods\PhantomX\</code>
               <br />
               <code>SanctuaryMods\UnitRestrictions\</code>
+              <br />
+              <code>SanctuaryMods\BalancePatch\</code>
               <br />
               <code>Sanctuary_Data\Maps\Zone_Control_for_FAF_8P_V2\</code> (the map)
             </p>
@@ -559,6 +564,50 @@ function UnitRestrictionsGuide() {
           <a href={sourceHref(UNIT_RESTRICTIONS)} target="_blank" rel="noreferrer">
             The mod&rsquo;s source ↗
           </a>
+        </p>
+      </section>
+    </div>
+  );
+}
+
+function BalancePatchGuide() {
+  return (
+    <div className="gm-guide">
+      <section className="gm-section" aria-labelledby="bp-setup">
+        <h4 id="bp-setup" className="gm-heading">
+          Set it up
+        </h4>
+        <ol className="gm-steps">
+          <li>
+            Extract the zip into your <code>engine</code> folder. Every player in the lobby needs it, and the
+            Mod Manager.
+          </li>
+          <li>Host a lobby on any map.</li>
+          <li>
+            Open <strong>Mods</strong> in the lobby, beside Settings, and switch on{' '}
+            <strong>Balance Patch</strong>. All nine of its sections start on; switch off any you don&rsquo;t
+            want.
+          </li>
+          <li>
+            Start. The game waits until every player has the same copy, and says who&rsquo;s missing it.
+          </li>
+        </ol>
+      </section>
+
+      <section className="gm-section" aria-labelledby="bp-changes">
+        <h4 id="bp-changes" className="gm-heading">
+          What it changes
+        </h4>
+        <p className="mods-step-text">
+          Every change, unit by unit, with the game&rsquo;s number, the patch&rsquo;s, and why it moved.
+        </p>
+        <p className="gm-step-actions">
+          <Link to="/balance-patch" className="gm-more">
+            Every change in {BALANCE_PATCH.name}
+          </Link>
+          <Link to="/" search={{ balance: 'remmy' }} className="gm-more">
+            The unit database with the patch on
+          </Link>
         </p>
       </section>
     </div>

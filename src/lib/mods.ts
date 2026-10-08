@@ -1,4 +1,4 @@
-// The mod catalogue behind /mods, /gameplay-mods and the Play page's download card.
+// The mod catalogue behind /mods, /gameplay-mods, /balance-patch and the Play page's download card.
 //
 // Every mod lives in the open-source sanctuary-mods repo and ships as release
 // assets there, so the version below is the only thing that moves when one is
@@ -430,9 +430,54 @@ export const UNIT_RESTRICTIONS: Mod = {
   ],
 };
 
+/** Remmy's Balance Patch is Lua only too: its release's -ModManager.zip is
+ *  the whole download. Unlike the modes above it changes the units rather
+ *  than the rules, so it has a page of its own, /balance-patch, listing every
+ *  change, and the unit database can show its numbers. The version here must
+ *  match src/lib/balance-patch.json, the change list the site was built from
+ *  (`npm run balance-patch`); a test checks they agree. */
+export const BALANCE_PATCH: Mod = {
+  id: 'BalancePatch',
+  name: 'Remmy’s Balance Patch',
+  version: '0.1.0',
+  tagline:
+    'A community balance pass for Sanctuary: a faster, map-driven early game, bombers, artillery and anti-air that hit moving targets, shields that stop aircraft, and fixes for units that shot the ground.',
+  features: [
+    {
+      title: 'Expanding matters',
+      text: 'Commanders earn less, while T1 extractors and generators make more, so the map is worth taking. Upgrading a factory to T2 takes longer, so rushing T2 off the start doesn’t pay.',
+    },
+    {
+      title: 'Shots that hit moving targets',
+      text: 'Artillery, bombers, anti-air and the EDA and Guardian commanders’ missiles aim where a target is going, not where it was.',
+    },
+    {
+      title: 'Engineers you can raid',
+      text: 'Engineers have less than half their health, so a raid on an expansion pays off.',
+    },
+    {
+      title: 'Land costs alloy, air costs energy',
+      text: 'Land and naval units cost more alloy and less energy for the same total, and Chosen aircraft cost what the other factions’ do.',
+    },
+    {
+      title: 'T2 beats its cost in T1',
+      text: 'The Chosen Jager toned down, the other T2 raiders brought up, and the three T1 tanks and T1 artillery brought level.',
+    },
+    {
+      title: 'Bugs fixed',
+      text: 'One broken bomber no longer freezes other units’ targeting, aircraft can’t fire from inside a shield at what it covers, and the Chosen T2 point defence stops shooting the ground.',
+    },
+    {
+      title: 'Every section is a switch',
+      text: 'Nine lobby options, all on by default. The host can turn off any part of the patch, from the economy to the fixes.',
+    },
+  ],
+};
+
 /** Every gameplay mod on /gameplay-mods, in the order shown. */
 export const GAMEPLAY_MODS: { mod: Mod; href: string; label: string }[] = [
   { mod: ZONE_CONTROL, href: zoneControlHref(), label: 'Download mod + map' },
   { mod: PHANTOM_X, href: managerHref(PHANTOM_X), label: 'Download' },
   { mod: UNIT_RESTRICTIONS, href: managerHref(UNIT_RESTRICTIONS), label: 'Download' },
+  { mod: BALANCE_PATCH, href: managerHref(BALANCE_PATCH), label: 'Download' },
 ];

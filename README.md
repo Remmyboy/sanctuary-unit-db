@@ -38,6 +38,27 @@ manually:
 SANCTUARY_PATH="D:/SteamLibrary/steamapps/common/Sanctuary Shattered Sun Demo" npm run extract
 ```
 
+### Remmy's Balance Patch
+
+The database's **Balance Patch** switch (`?balance=remmy` on `/`, `/calculator`
+and `/compare`) swaps in `public/data/units-balance-patch.json`: the same units
+with the patch's changes applied to the game's templates, and every number
+derived again, so DPS, tiers and build trees follow the patch. `/balance-patch`
+lists every change.
+
+Both come from `src/lib/balance-patch.json`, the change list the mod exports
+(`node BalancePatch/tools/preview.mjs --json` in sanctuary-mods). For a new
+release of the patch:
+
+```bash
+npm run balance-patch -- <path to BalancePatch/balancepatch.json>
+npm run extract
+```
+
+then bump `BALANCE_PATCH.version` in `src/lib/mods.ts` (a test checks the three
+agree). `extract` warns, and leaves the change out, when a change's game value
+no longer matches the install: the game moved on since the patch was made.
+
 ### Maintaining modding snapshots
 
 Each release gets an immutable URL namespace under

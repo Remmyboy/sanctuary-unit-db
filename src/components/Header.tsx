@@ -6,9 +6,10 @@ import { useEffect, useRef } from 'react';
 import { Link, useRouterState } from '@tanstack/react-router';
 import { SITE_REPO } from '../lib/mods';
 import { AuthChip } from './AuthChip';
+import { parseBalance } from '../lib/balance-patch';
 
 // The nav, grouped by what people come for: the game data, making mods, and
-// playing online. The groups sit apart visually so eight links scan as three.
+// playing online. The groups sit apart visually so nine links scan as three.
 const NAV = [
   {
     label: 'Database',
@@ -22,6 +23,7 @@ const NAV = [
     links: [
       ['/mods', 'UI Mods'],
       ['/gameplay-mods', 'Gameplay Mods'],
+      ['/balance-patch', 'Balance Patch'],
       // The /modding docs are off the nav for now (October 2026). The pages
       // and their routes stay, so links to them still work.
     ],
@@ -55,6 +57,11 @@ export function Header() {
   // /compare is part of the Units section but not under its path, so the
   // Units link has to be told to light up there.
   const onCompare = useRouterState({ select: (s) => s.location.pathname === '/compare' });
+  // The database's balance-patch switch follows you between its pages, so
+  // the calculator shows the numbers the board did.
+  const balance = useRouterState({
+    select: (s) => parseBalance((s.location.search as Record<string, unknown>).balance),
+  });
 
   // Sticky sidebars and column headers sit below the bar, whose height depends
   // on the viewport (it wraps when narrow), so publish the measured height
@@ -92,6 +99,7 @@ export function Header() {
               <Link
                 key={to}
                 to={to}
+                search={group.label === 'Database' && balance ? { balance } : undefined}
                 className={to === '/' && onCompare ? 'navlink active' : 'navlink'}
                 activeOptions={{ exact: to === '/', includeSearch: false }}
                 activeProps={{ className: 'navlink active' }}

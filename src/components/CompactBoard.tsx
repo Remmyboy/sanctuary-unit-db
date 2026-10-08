@@ -159,6 +159,7 @@ function Tile({
       onClick={() => onOpen(u.id)}
     >
       {picked !== undefined && <span className="pick-mark" aria-hidden="true" />}
+      {u.balance && <span className="bp-mark" aria-hidden="true" />}
       {hasPreview ? (
         <>
           <img className="tile-render" src={`/previews/${u.id}.png`} alt="" loading="lazy" decoding="async" />
@@ -188,6 +189,7 @@ function Readout({ unit: u }: { unit: Unit | null }) {
       <strong>{u.name ?? shortName(u)}</strong>
       <span className="creadout-sub">{u.displayName}</span>
       {u.status === 'in-progress' && <span className="wip">WIP</span>}
+      {u.balance && <span className="bp-mark" title="Changed by the balance patch" aria-hidden="true" />}
       <span className="creadout-stats">
         <Stat label="Alloy" value={fmt(u.cost.alloys)} cls="alloy-val" />
         <Stat label="Energy" value={fmt(u.cost.energy)} cls="energy-val" />

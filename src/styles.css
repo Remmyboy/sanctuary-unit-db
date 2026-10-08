@@ -6751,3 +6751,367 @@ html.modding-route {
     opacity: 1;
   }
 }
+
+/* ---------------- Remmy's Balance Patch ---------------- */
+
+/* Its own colour, apart from the accent, so a patched number never reads as
+   a selection or a live-build signal. */
+:root {
+  --patch: #b896ff;
+  --patch-soft: color-mix(in srgb, var(--patch) 14%, transparent);
+}
+
+/* The toolbar switch: the Compare button's shape, lit in the patch's colour. */
+.balance-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--bg-sunken);
+  color: var(--text-dim);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.balance-toggle:hover {
+  color: var(--text);
+  border-color: var(--patch);
+}
+.balance-toggle[aria-pressed='true'] {
+  color: #12091f;
+  background: var(--patch);
+  border-color: var(--patch);
+}
+.balance-toggle:focus-visible {
+  outline: 2px solid var(--patch);
+  outline-offset: 1px;
+}
+.balance-toggle svg {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.3;
+  stroke-linejoin: round;
+}
+
+/* Under the toolbar while the patch is on: whose numbers these are. */
+.balance-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 18px;
+  padding: 7px 20px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  background: var(--patch-soft);
+  border-bottom: 1px solid color-mix(in srgb, var(--patch) 35%, transparent);
+}
+.balance-strip strong {
+  color: var(--patch);
+  font-weight: 600;
+}
+.balance-strip-links {
+  display: inline-flex;
+  gap: 16px;
+  white-space: nowrap;
+}
+.balance-strip-links a,
+.balance-strip-links .linkish {
+  color: var(--patch);
+  text-decoration: none;
+  font-size: 12.5px;
+}
+.balance-strip-links a:hover,
+.balance-strip-links .linkish:hover {
+  text-decoration: underline;
+}
+
+/* A patched unit: a small diamond, on cards, tiles and wherever its name is. */
+.bp-mark {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-left: 7px;
+  vertical-align: 2px;
+  background: var(--patch);
+  transform: rotate(45deg);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--patch) 25%, transparent);
+}
+.tile > .bp-mark {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  margin: 0;
+  width: 6px;
+  height: 6px;
+  pointer-events: none;
+}
+.balance-strip .bp-mark {
+  margin: 0 2px 0 4px;
+}
+
+/* A change: label, the game's value struck through, the patch's lit. */
+.bp-changes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.bp-changes li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+.bp-label {
+  color: var(--text-dim);
+}
+.bp-vals {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 6px;
+  font-variant-numeric: tabular-nums;
+}
+.bp-before {
+  color: var(--text-faint);
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, var(--text-faint) 70%, transparent);
+}
+.bp-arrow {
+  color: var(--text-faint);
+}
+.bp-after {
+  color: var(--text);
+  font-weight: 600;
+}
+.bp-pct {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+.bp-changes-detail li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0 10px;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--border);
+}
+.bp-changes-detail .bp-section-tag {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  color: var(--patch);
+  opacity: 0.8;
+}
+
+/* The patch's page. */
+.bp-features {
+  margin-top: 4px;
+}
+.bp-db {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+  margin-top: 22px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--patch) 40%, var(--border));
+  border-radius: var(--radius);
+  background: var(--patch-soft);
+}
+.bp-db p {
+  flex: 1 1 320px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-dim);
+}
+.bp-db strong {
+  color: var(--text);
+  font-weight: 600;
+}
+.bp-db em {
+  font-style: normal;
+  color: var(--patch);
+}
+.bp-page .mods-everything .dl-btn.ghost {
+  margin-top: -4px;
+}
+.bp-toc h2 {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.bp-toc ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+}
+.bp-toc li + li {
+  border-top: 1px solid var(--border);
+}
+.bp-toc a {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 12px;
+  font-size: 13px;
+  color: var(--text);
+  text-decoration: none;
+}
+.bp-toc a:hover {
+  color: var(--patch);
+}
+.bp-toc a span {
+  font-size: 11.5px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+.bp-legend {
+  margin: 32px 0 0;
+  font-size: 12.5px;
+}
+.bp-section {
+  scroll-margin-top: calc(var(--header-h) + 36px + 16px);
+}
+.bp-section .gm-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.bp-count {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-faint);
+}
+.bp-desc {
+  max-width: 80ch;
+  margin: 0 0 14px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+.bp-rules {
+  margin-bottom: 16px;
+}
+.bp-rows {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+}
+.bp-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 2fr) minmax(0, 3fr);
+  gap: 6px 20px;
+  padding: 9px 14px;
+}
+.bp-row + .bp-row {
+  border-top: 1px solid var(--border);
+}
+.bp-who {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.bp-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.bp-units {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+}
+.bp-unit {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-dim);
+  text-decoration: none;
+}
+.bp-unit .faction-emblem {
+  width: 13px;
+  height: 13px;
+}
+.bp-unit:hover {
+  color: var(--fc);
+  text-decoration: underline;
+}
+.bp-why {
+  margin-top: 12px;
+  font-size: 13px;
+}
+.bp-why summary {
+  cursor: pointer;
+  width: max-content;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--patch);
+}
+.bp-why ul {
+  max-width: 80ch;
+  margin: 10px 0 0;
+  padding-left: 20px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+.bp-why li + li {
+  margin-top: 6px;
+}
+.bp-foot {
+  margin-top: 36px;
+  font-size: 13px;
+  color: var(--text-faint);
+}
+
+/* On a phone the switch drops to its icon, like Compare beside it; the strip
+   under the toolbar still says the patch is on. */
+@media (max-width: 760px) {
+  .balance-toggle span {
+    display: none;
+  }
+  .balance-toggle {
+    padding: 3px 6px;
+  }
+  .toolbar-controls:has(.balance-toggle) {
+    gap: 10px;
+  }
+}
+
+@media (max-width: 620px) {
+  .bp-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .balance-strip {
+    padding: 7px 14px;
+  }
+}
