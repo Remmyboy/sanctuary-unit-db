@@ -9,7 +9,7 @@
   "version": "0.0.1.20",
   "steamBuild": "25474094"
  },
- "generated": "2026-10-08T17:46:39.935Z",
+ "generated": "2026-10-08T20:25:46.338Z",
  "sections": [
   {
    "key": "fixes",
@@ -19,7 +19,7 @@
   {
    "key": "economy",
    "label": "Economy",
-   "description": "Commanders make 2 alloys and 30 energy a second (were 5 and 50) and T1 extractors 1.5 alloys (were 1), so expanding matters and T2 off the commander alone takes longer. T2 and T3 extractors and generators give more per cost than T1; T1 generators have less health."
+   "description": "Commanders make 3 alloys and 40 energy a second (were 5 and 50), T1 extractors make 2 alloys (were 1) and cost 400 energy (were 500), and T1 generators make 15 energy (were 10), so expanding matters; upgrading a factory to T2 takes longer (same cost), so rushing T2 at the start does too. T2 and T3 extractors and generators give more per cost than T1; T1 generators have less health."
   },
   {
    "key": "costs",
@@ -282,14 +282,14 @@
     "energy": 50
    },
    "after": {
-    "alloys": 2,
-    "energy": 30
+    "alloys": 3,
+    "energy": 40
    },
    "sections": [
     "economy"
    ],
    "why": [
-    "Less commander income, so going straight to T2 off the commander alone takes longer and expanding matters more."
+    "Less commander income, so expanding matters more: the commander makes 3 alloys and 40 energy, and each T1 extractor 2. Lower (2 and 30 was tried) and the commander couldn't pay for its own building (5 and 50 a second), so factory-first openings stalled to about 55-70% speed from 1:00 to 3:00. At 3 and 40, with the cheaper extractors and stronger generators, no opening stalls and the T1 army at 5:00 is a little bigger than the game's (in a build-order simulation)."
    ]
   },
   {
@@ -305,14 +305,14 @@
     "energy": 50
    },
    "after": {
-    "alloys": 2,
-    "energy": 30
+    "alloys": 3,
+    "energy": 40
    },
    "sections": [
     "economy"
    ],
    "why": [
-    "Less commander income, so going straight to T2 off the commander alone takes longer and expanding matters more."
+    "Less commander income, so expanding matters more: the commander makes 3 alloys and 40 energy, and each T1 extractor 2. Lower (2 and 30 was tried) and the commander couldn't pay for its own building (5 and 50 a second), so factory-first openings stalled to about 55-70% speed from 1:00 to 3:00. At 3 and 40, with the cheaper extractors and stronger generators, no opening stalls and the T1 army at 5:00 is a little bigger than the game's (in a build-order simulation)."
    ]
   },
   {
@@ -328,14 +328,167 @@
     "energy": 50
    },
    "after": {
-    "alloys": 2,
-    "energy": 30
+    "alloys": 3,
+    "energy": 40
    },
    "sections": [
     "economy"
    ],
    "why": [
-    "Less commander income, so going straight to T2 off the commander alone takes longer and expanding matters more."
+    "Less commander income, so expanding matters more: the commander makes 3 alloys and 40 energy, and each T1 extractor 2. Lower (2 and 30 was tried) and the commander couldn't pay for its own building (5 and 50 a second), so factory-first openings stalled to about 55-70% speed from 1:00 to 3:00. At 3 and 40, with the cheaper extractors and stronger generators, no opening stalls and the T1 army at 5:00 is a little bigger than the game's (in a build-order simulation)."
+   ]
+  },
+  {
+   "kind": "unit",
+   "id": "ucs2511",
+   "name": null,
+   "displayName": "Tier 2: Land Factory",
+   "faction": "Chosen",
+   "field": "economy.buildTime",
+   "label": "build time",
+   "before": 800,
+   "after": 1100,
+   "sections": [
+    "economy"
+   ],
+   "why": [
+    "Upgrading a factory to T2 takes longer (build time 800 to 1100, same cost), so going straight to T2 at the start takes longer: the fastest T2 land factory comes at about 2:20 instead of 1:50 (simulated), without starving the T1 opening."
+   ]
+  },
+  {
+   "kind": "unit",
+   "id": "ucs2512",
+   "name": null,
+   "displayName": "Tier 2: Air Factory",
+   "faction": "Chosen",
+   "field": "economy.buildTime",
+   "label": "build time",
+   "before": 800,
+   "after": 1100,
+   "sections": [
+    "economy"
+   ],
+   "why": [
+    "Upgrading a factory to T2 takes longer (build time 800 to 1100, same cost), so going straight to T2 at the start takes longer: the fastest T2 land factory comes at about 2:20 instead of 1:50 (simulated), without starving the T1 opening."
+   ]
+  },
+  {
+   "kind": "unit",
+   "id": "ucs2513",
+   "name": null,
+   "displayName": "Tier 2: Naval Factory",
+   "faction": "Chosen",
+   "field": "economy.buildTime",
+   "label": "build time",
+   "before": 800,
+   "after": 1100,
+   "sections": [
+    "economy"
+   ],
+   "why": [
+    "Upgrading a factory to T2 takes longer (build time 800 to 1100, same cost), so going straight to T2 at the start takes longer: the fastest T2 land factory comes at about 2:20 instead of 1:50 (simulated), without starving the T1 opening."
+   ]
+  },
+  {
+   "kind": "unit",
+   "id": "ues2511",
+   "name": null,
+   "displayName": "Tier 2: Land Factory",
+   "faction": "EDA",
+   "field": "economy.buildTime",
+   "label": "build time",
+   "before": 800,
+   "after": 1100,
+   "sections": [
+    "economy"
+   ],
+   "why": [
+    "Upgrading a factory to T2 takes longer (build time 800 to 1100, same cost), so going straight to T2 at the start takes longer: the fastest T2 land factory comes at about 2:20 instead of 1:50 (simulated), without starving the T1 opening."
+   ]
+  },
+  {
+   "kind": "unit",
+   "id": "ues2512",
+   "name": null,
+   "displayName": "Tier 2: Air Factory",
+   "faction": "EDA",
+   "field": "economy.buildTime",
+   "label": "build time",
+   "before": 800,
+   "after": 1100,
+   "sections": [
+    "economy"
+   ],
+   "why": [
+    "Upgrading a factory to T2 takes longer (build time 800 to 1100, same cost), so going straight to T2 at the start takes longer: the fastest T2 land factory comes at about 2:20 instead of 1:50 (simulated), without starving the T1 opening."
+   ]
+  },
+  {
+   "kind": "unit",
+   "id": "ues2513",
+   "name": null,
+   "displayName": "Tier 2: Naval Factory",
+   "faction": "EDA",
+   "field": "economy.buildTime",
+   "label": "build time",
+   "before": 800,
+   "after": 1100,
+   "sections": [
+    "economy"
+   ],
+   "why": [
+    "Upgrading a factory to T2 takes longer (build time 800 to 1100, same cost), so going straight to T2 at the start takes longer: the fastest T2 land factory comes at about 2:20 instead of 1:50 (simulated), without starving the T1 opening."
+   ]
+  },
+  {
+   "kind": "unit",
+   "id": "ugs2511",
+   "name": null,
+   "displayName": "Tier 2: Land Factory",
+   "faction": "Guardian",
+   "field": "economy.buildTime",
+   "label": "build time",
+   "before": 800,
+   "after": 1100,
+   "sections": [
+    "economy"
+   ],
+   "why": [
+    "Upgrading a factory to T2 takes longer (build time 800 to 1100, same cost), so going straight to T2 at the start takes longer: the fastest T2 land factory comes at about 2:20 instead of 1:50 (simulated), without starving the T1 opening."
+   ]
+  },
+  {
+   "kind": "unit",
+   "id": "ugs2512",
+   "name": null,
+   "displayName": "Tier 2: Air Factory",
+   "faction": "Guardian",
+   "field": "economy.buildTime",
+   "label": "build time",
+   "before": 800,
+   "after": 1100,
+   "sections": [
+    "economy"
+   ],
+   "why": [
+    "Upgrading a factory to T2 takes longer (build time 800 to 1100, same cost), so going straight to T2 at the start takes longer: the fastest T2 land factory comes at about 2:20 instead of 1:50 (simulated), without starving the T1 opening."
+   ]
+  },
+  {
+   "kind": "unit",
+   "id": "ugs2513",
+   "name": null,
+   "displayName": "Tier 2: Naval Factory",
+   "faction": "Guardian",
+   "field": "economy.buildTime",
+   "label": "build time",
+   "before": 800,
+   "after": 1100,
+   "sections": [
+    "economy"
+   ],
+   "why": [
+    "Upgrading a factory to T2 takes longer (build time 800 to 1100, same cost), so going straight to T2 at the start takes longer: the fastest T2 land factory comes at about 2:20 instead of 1:50 (simulated), without starving the T1 opening."
    ]
   },
   {
@@ -347,12 +500,29 @@
    "field": "economy.production.alloys",
    "label": "alloys/s",
    "before": 1,
-   "after": 1.5,
+   "after": 2,
    "sections": [
     "economy"
    ],
    "why": [
-    "T1 extractors make up the commander's lost alloy income, but only where you have taken the map."
+    "T1 extractors make up the commander's lost alloy income, but only where you have taken the map: 2 alloys a second (the game's panels already showed 1.5 as 2), and 400 energy to build instead of 500."
+   ]
+  },
+  {
+   "kind": "unit",
+   "id": "ucs1601",
+   "name": null,
+   "displayName": "Tier 1: Alloy Extractor",
+   "faction": "Chosen",
+   "field": "economy.cost.energy",
+   "label": "energy",
+   "before": 500,
+   "after": 400,
+   "sections": [
+    "economy"
+   ],
+   "why": [
+    "T1 extractors make up the commander's lost alloy income, but only where you have taken the map: 2 alloys a second (the game's panels already showed 1.5 as 2), and 400 energy to build instead of 500."
    ]
   },
   {
@@ -364,12 +534,29 @@
    "field": "economy.production.alloys",
    "label": "alloys/s",
    "before": 1,
-   "after": 1.5,
+   "after": 2,
    "sections": [
     "economy"
    ],
    "why": [
-    "T1 extractors make up the commander's lost alloy income, but only where you have taken the map."
+    "T1 extractors make up the commander's lost alloy income, but only where you have taken the map: 2 alloys a second (the game's panels already showed 1.5 as 2), and 400 energy to build instead of 500."
+   ]
+  },
+  {
+   "kind": "unit",
+   "id": "ues1601",
+   "name": null,
+   "displayName": "Tier 1: Alloy Extractor",
+   "faction": "EDA",
+   "field": "economy.cost.energy",
+   "label": "energy",
+   "before": 500,
+   "after": 400,
+   "sections": [
+    "economy"
+   ],
+   "why": [
+    "T1 extractors make up the commander's lost alloy income, but only where you have taken the map: 2 alloys a second (the game's panels already showed 1.5 as 2), and 400 energy to build instead of 500."
    ]
   },
   {
@@ -381,12 +568,29 @@
    "field": "economy.production.alloys",
    "label": "alloys/s",
    "before": 1,
-   "after": 1.5,
+   "after": 2,
    "sections": [
     "economy"
    ],
    "why": [
-    "T1 extractors make up the commander's lost alloy income, but only where you have taken the map."
+    "T1 extractors make up the commander's lost alloy income, but only where you have taken the map: 2 alloys a second (the game's panels already showed 1.5 as 2), and 400 energy to build instead of 500."
+   ]
+  },
+  {
+   "kind": "unit",
+   "id": "ugs1601",
+   "name": null,
+   "displayName": "Tier 1: Alloy Extractor",
+   "faction": "Guardian",
+   "field": "economy.cost.energy",
+   "label": "energy",
+   "before": 500,
+   "after": 400,
+   "sections": [
+    "economy"
+   ],
+   "why": [
+    "T1 extractors make up the commander's lost alloy income, but only where you have taken the map: 2 alloys a second (the game's panels already showed 1.5 as 2), and 400 energy to build instead of 500."
    ]
   },
   {
@@ -403,7 +607,7 @@
     "economy"
    ],
    "why": [
-    "T2 extractors pay back their upgrade faster than before (about 270 s against 400 s) instead of being the worse deal."
+    "T2 extractors pay back their upgrade faster than before (about 300 s against 400 s) instead of being the worse deal."
    ]
   },
   {
@@ -420,7 +624,7 @@
     "economy"
    ],
    "why": [
-    "T2 extractors pay back their upgrade faster than before (about 270 s against 400 s) instead of being the worse deal."
+    "T2 extractors pay back their upgrade faster than before (about 300 s against 400 s) instead of being the worse deal."
    ]
   },
   {
@@ -437,7 +641,7 @@
     "economy"
    ],
    "why": [
-    "T2 extractors pay back their upgrade faster than before (about 270 s against 400 s) instead of being the worse deal."
+    "T2 extractors pay back their upgrade faster than before (about 300 s against 400 s) instead of being the worse deal."
    ]
   },
   {
@@ -493,6 +697,57 @@
   },
   {
    "kind": "unit",
+   "id": "ucs1611",
+   "name": null,
+   "displayName": "Tier 1: Energy Generator",
+   "faction": "Chosen",
+   "field": "economy.production.energy",
+   "label": "energy/s",
+   "before": 10,
+   "after": 15,
+   "sections": [
+    "economy"
+   ],
+   "why": [
+    "T1 generators give 15 energy a second (were 10), so early power comes quicker."
+   ]
+  },
+  {
+   "kind": "unit",
+   "id": "ues1611",
+   "name": null,
+   "displayName": "Tier 1: Energy Generator",
+   "faction": "EDA",
+   "field": "economy.production.energy",
+   "label": "energy/s",
+   "before": 10,
+   "after": 15,
+   "sections": [
+    "economy"
+   ],
+   "why": [
+    "T1 generators give 15 energy a second (were 10), so early power comes quicker."
+   ]
+  },
+  {
+   "kind": "unit",
+   "id": "ugs1611",
+   "name": null,
+   "displayName": "Tier 1: Energy Generator",
+   "faction": "Guardian",
+   "field": "economy.production.energy",
+   "label": "energy/s",
+   "before": 10,
+   "after": 15,
+   "sections": [
+    "economy"
+   ],
+   "why": [
+    "T1 generators give 15 energy a second (were 10), so early power comes quicker."
+   ]
+  },
+  {
+   "kind": "unit",
    "id": "ucs2611",
    "name": null,
    "displayName": "Tier 2: Energy Generator",
@@ -500,12 +755,12 @@
    "field": "economy.production.energy",
    "label": "energy/s",
    "before": 200,
-   "after": 300,
+   "after": 400,
    "sections": [
     "economy"
    ],
    "why": [
-    "T2 generators give 1.5x the energy per cost of T1 (were exactly equal)."
+    "T2 generators give about 1.33x the energy per cost of T1 (were exactly equal): 400 a second."
    ]
   },
   {
@@ -517,12 +772,12 @@
    "field": "economy.production.energy",
    "label": "energy/s",
    "before": 200,
-   "after": 300,
+   "after": 400,
    "sections": [
     "economy"
    ],
    "why": [
-    "T2 generators give 1.5x the energy per cost of T1 (were exactly equal)."
+    "T2 generators give about 1.33x the energy per cost of T1 (were exactly equal): 400 a second."
    ]
   },
   {
@@ -534,12 +789,12 @@
    "field": "economy.production.energy",
    "label": "energy/s",
    "before": 200,
-   "after": 300,
+   "after": 400,
    "sections": [
     "economy"
    ],
    "why": [
-    "T2 generators give 1.5x the energy per cost of T1 (were exactly equal)."
+    "T2 generators give about 1.33x the energy per cost of T1 (were exactly equal): 400 a second."
    ]
   },
   {
@@ -551,12 +806,12 @@
    "field": "economy.production.energy",
    "label": "energy/s",
    "before": 1000,
-   "after": 2000,
+   "after": 2700,
    "sections": [
     "economy"
    ],
    "why": [
-    "T3 generators give 2x the energy per cost of T1 (were exactly equal)."
+    "T3 generators give 1.8x the energy per cost of T1 (were exactly equal): 2700 a second."
    ]
   },
   {
@@ -568,12 +823,12 @@
    "field": "economy.production.energy",
    "label": "energy/s",
    "before": 1000,
-   "after": 2000,
+   "after": 2700,
    "sections": [
     "economy"
    ],
    "why": [
-    "T3 generators give 2x the energy per cost of T1 (were exactly equal)."
+    "T3 generators give 1.8x the energy per cost of T1 (were exactly equal): 2700 a second."
    ]
   },
   {
@@ -585,12 +840,12 @@
    "field": "economy.production.energy",
    "label": "energy/s",
    "before": 1000,
-   "after": 2000,
+   "after": 2700,
    "sections": [
     "economy"
    ],
    "why": [
-    "T3 generators give 2x the energy per cost of T1 (were exactly equal)."
+    "T3 generators give 1.8x the energy per cost of T1 (were exactly equal): 2700 a second."
    ]
   },
   {

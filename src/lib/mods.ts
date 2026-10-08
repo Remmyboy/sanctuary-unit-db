@@ -441,11 +441,11 @@ export const BALANCE_PATCH: Mod = {
   name: 'Remmy’s Balance Patch',
   version: '0.1.0',
   tagline:
-    'A community balance pass, measured in game: teching up pays, raids work, and shots land on things that move.',
+    'A community balance pass for Sanctuary: a faster, map-driven early game, bombers, artillery and anti-air that hit moving targets, shields that stop aircraft, and fixes for units that shot the ground.',
   features: [
     {
       title: 'Expanding matters',
-      text: 'Commanders earn less and T1 extractors more, so the map is worth taking. T2 and T3 extractors and generators pay back faster than T1.',
+      text: 'Commanders earn less, while T1 extractors and generators make more, so the map is worth taking. Upgrading a factory to T2 takes longer, so rushing T2 off the start doesn’t pay.',
     },
     {
       title: 'Shots that hit moving targets',

@@ -45,7 +45,7 @@ describe('the patched units', () => {
     // ticks of the game's 0.1s countdown, so the DPS falls rather than holding.
     expect(unit(base, 'uel0000').dps).toBe(100);
     expect(unit(patched, 'uel0000').dps).toBe(90.91);
-    expect(unit(patched, 'uel0000').production).toEqual({ alloys: 2, energy: 30 });
+    expect(unit(patched, 'uel0000').production).toEqual({ alloys: 3, energy: 40 });
   });
 
   it('moves the TALEN to T3 with its tags', () => {

@@ -18,6 +18,7 @@ import {
   managerHref,
   mod,
   releaseNotes,
+  releaseTag,
   sourceHref,
   standaloneHref,
 } from '../lib/mods';
@@ -182,7 +183,11 @@ function BalancePatchPage() {
               Release notes ↗
             </a>{' '}
             ·{' '}
-            <a href={`${MODS_REPO}/blob/main/BalancePatch/CHANGELOG.md`} target="_blank" rel="noreferrer">
+            <a
+              href={`${MODS_REPO}/blob/${releaseTag(BALANCE_PATCH)}/BalancePatch/CHANGELOG.md`}
+              target="_blank"
+              rel="noreferrer"
+            >
               The full changelog ↗
             </a>
           </p>
