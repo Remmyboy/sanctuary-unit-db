@@ -165,8 +165,8 @@ test('balance patch page lists every section and the database follows the patch'
     'href',
     /BalancePatch-[\d.]+\/BalancePatch-[\d.]+-ModManager\.zip$/,
   );
-  await expect(page.locator('.bp-section')).toHaveCount(9);
-  const engineers = page.locator('#engineers .bp-row').filter({ hasText: 'T1 Engineer' });
+  await expect(page.locator('.bp-section')).toHaveCount(7);
+  const engineers = page.locator('#economy .bp-row').filter({ hasText: 'T1 Engineer' });
   await expect(engineers).toContainText('750');
   await expect(engineers).toContainText('300');
 

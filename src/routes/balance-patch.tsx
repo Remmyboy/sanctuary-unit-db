@@ -62,8 +62,8 @@ function BalancePatchPage() {
           </>
         }
       >
-        {BALANCE_PATCH.tagline} Below is every change it makes, with the game&rsquo;s number, the
-        patch&rsquo;s and why.
+        {BALANCE_PATCH.tagline} Everything on this page is against the unmodded game: the game&rsquo;s number,
+        the patch&rsquo;s, and why it moved.
       </PageHead>
       <div className="toolbar">
         <span className="toolbar-summary">
@@ -83,7 +83,7 @@ function BalancePatchPage() {
               <h2 id="bp-get">Balance Patch {BALANCE_PATCH.version}</h2>
               <p>
                 A gameplay mod: the lobby&rsquo;s host switches it on, and everyone in the match needs it and
-                the <strong>Mod Manager</strong>.
+                the <strong>Mod Manager</strong> 0.13.0 or later.
               </p>
             </div>
             <a className="dl-btn" href={managerHref(BALANCE_PATCH)}>
@@ -125,6 +125,7 @@ function BalancePatchPage() {
             <h2 id="bp-what" className="gm-heading">
               What it does
             </h2>
+            <p className="bp-desc">Numbers in brackets are the unmodded game&rsquo;s.</p>
             <ul className="mod-features bp-features">
               {BALANCE_PATCH.features.map((f) => (
                 <li key={f.title}>
@@ -151,22 +152,50 @@ function BalancePatchPage() {
             </h2>
             <ol className="gm-steps">
               <li>
+                Delete any older <code>SanctuaryMods\BalancePatch\</code> folder first: a leftover file stops
+                lobbies from matching.
+              </li>
+              <li>
                 Extract the zip into your <code>engine</code> folder, with the{' '}
                 <Link to="/gameplay-mods" className="gm-more">
                   Mod Manager
-                </Link>
-                . Every player in the lobby needs both.
+                </Link>{' '}
+                0.13.0 or later. Every player in the lobby needs both.
               </li>
               <li>Host a lobby on any map.</li>
               <li>
                 Open <strong>Mods</strong> in the lobby, beside Settings, and switch on{' '}
-                <strong>Balance Patch</strong>. Its nine sections below are its options: all start on, and the
-                host can switch off any of them.
+                <strong>Balance Patch</strong>. Its {PATCH_SECTIONS.length} sections below are its options:
+                all start on, and the host can switch off any of them.
               </li>
               <li>
                 Start. The game waits until every player has the same copy, and says who&rsquo;s missing it.
               </li>
             </ol>
+          </section>
+
+          <section className="gm-section" aria-labelledby="bp-know">
+            <h2 id="bp-know" className="gm-heading">
+              Good to know
+            </h2>
+            <ul className="mod-features gm-rules">
+              <li>
+                <strong>A playtest build</strong>
+                The economy&rsquo;s numbers come from a simulation and a few real games, so expect them to
+                move. Note when you first upgrade an extractor and a factory, and send replays: they help
+                most.
+              </li>
+              <li>
+                <strong>Five units still deal no damage</strong>
+                The Guardian T1 and T3 bombers, the Chosen T3 bomber, the EDA T2 raider and the TALEN: their
+                models lack the weapon bones. The patch stops them freezing everyone else&rsquo;s targeting.
+              </li>
+              <li>
+                <strong>Not in the lists below</strong>
+                Reclaim speed, how long wrecks last and full starting storage are game rules rather than unit
+                numbers, so they&rsquo;re in the Economy section&rsquo;s summary.
+              </li>
+            </ul>
           </section>
 
           <p className="bp-legend hint">
@@ -277,7 +306,10 @@ function Row({ row: r }: { row: PatchRow }) {
 function Change({ change: c }: { change: ChangeText }) {
   return (
     <li>
-      <span className="bp-label">{c.label}</span>
+      <span className="bp-label">
+        {c.label}
+        {c.count ? <span className="bp-count-n"> ×{c.count}</span> : null}
+      </span>
       <span className="bp-vals">
         <span className="bp-before">{c.before}</span>
         <span className="bp-arrow" aria-label="becomes">

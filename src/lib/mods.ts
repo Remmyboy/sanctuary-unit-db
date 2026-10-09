@@ -431,33 +431,51 @@ export const UNIT_RESTRICTIONS: Mod = {
 };
 
 /** Remmy's Balance Patch is Lua only too: its release's -ModManager.zip is
- *  the whole download. Unlike the modes above it changes the units rather
- *  than the rules, so it has a page of its own, /balance-patch, listing every
- *  change, and the unit database can show its numbers. The version here must
- *  match src/lib/balance-patch.json, the change list the site was built from
- *  (`npm run balance-patch`); a test checks they agree. */
+ *  the whole download, and it needs Mod Manager 0.13.0. Unlike the modes
+ *  above it changes the units rather than the rules, so it has a page of its
+ *  own, /balance-patch, listing every change against the game, and the unit
+ *  database can show its numbers. The version here must match
+ *  src/lib/balance-patch.json, the change list the site was built from
+ *  (`npm run balance-patch`); a test checks they agree. The features compare
+ *  with the game, not with the last release: (150) means the game's 150. */
 export const BALANCE_PATCH: Mod = {
   id: 'BalancePatch',
   name: 'Remmy’s Balance Patch',
-  version: '0.1.0',
+  version: '0.2.5',
   tagline:
     'A community balance pass for Sanctuary: a faster, map-driven early game, bombers, artillery and anti-air that hit moving targets, shields that stop aircraft, and fixes for units that shot the ground.',
   features: [
     {
-      title: 'Expanding matters',
-      text: 'Commanders earn less, while T1 extractors and generators make more, so the map is worth taking. Upgrading a factory to T2 takes longer, so rushing T2 off the start doesn’t pay.',
+      title: 'An economy built on the map',
+      text: 'Commanders make 3 alloy and 30 energy a second (the game’s 5 and 50) and start with full storage, so income comes from taking the map. Extractors make 1 / 5 / 15 alloy (1 / 4 / 10), generators 20 / 600 / 2,500 energy (10 / 200 / 1,000).',
+    },
+    {
+      title: 'Paced for 256 and 512 maps',
+      text: 'Numbers chosen in an economy simulation that follows the game’s own rules: a 256 map over in 5–15 minutes, a 512 in 20–30, and nobody on T2 before about 7. Factories cost 200 alloy (150); the T2 upgrade 1,500 (500) and T3 4,000 (2,000).',
+    },
+    {
+      title: 'T4s that end games',
+      text: '10,000–25,000 alloy (the game’s 3,400–11,100), with health and damage to beat a T3 tank by about 10% per alloy. They move at 2.5–3.5 (2), brawlers fastest, and the Centaur’s railgun reaches 80 (40).',
+    },
+    {
+      title: 'T3 tanks that keep up',
+      text: 'The Kodiak, Glaive and Auger cost 30% less and move at 3.3 like a T1 tank (2.5–2.7), with guns that track much faster. The Guardian Nitro is quicker still, at 4.5, but fragile.',
     },
     {
       title: 'Shots that hit moving targets',
       text: 'Artillery, bombers, anti-air and the EDA and Guardian commanders’ missiles aim where a target is going, not where it was.',
     },
     {
-      title: 'Engineers you can raid',
-      text: 'Engineers have less than half their health, so a raid on an expansion pays off.',
+      title: 'Reclaim worth fighting over',
+      text: 'Wrecks reclaim three times as fast and last 6 minutes (3), so a won fight pays for the next one.',
     },
     {
-      title: 'Land costs alloy, air costs energy',
-      text: 'Land and naval units cost more alloy and less energy for the same total, and Chosen aircraft cost what the other factions’ do.',
+      title: 'Radar at a price',
+      text: 'T2 radar runs on 250 energy a second (150). T3 radar costs 2,800 alloy and 1,400 energy a second (700 and 350), and the EDA and Chosen ones see 750 and 850 (450 and 550).',
+    },
+    {
+      title: 'Raids that work',
+      text: 'Engineers have less than half their health. Land and naval units cost 6 energy per alloy (10), and Chosen aircraft cost what the other factions’ do.',
     },
     {
       title: 'T2 beats its cost in T1',
@@ -469,7 +487,7 @@ export const BALANCE_PATCH: Mod = {
     },
     {
       title: 'Every section is a switch',
-      text: 'Nine lobby options, all on by default. The host can turn off any part of the patch, from the economy to the fixes.',
+      text: 'Seven lobby options, all on by default. The host can turn off any part of the patch, from the economy to the fixes.',
     },
   ],
 };

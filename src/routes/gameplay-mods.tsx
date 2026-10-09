@@ -579,13 +579,13 @@ function BalancePatchGuide() {
         </h4>
         <ol className="gm-steps">
           <li>
-            Extract the zip into your <code>engine</code> folder. Every player in the lobby needs it, and the
-            Mod Manager.
+            Delete any older <code>SanctuaryMods\BalancePatch\</code> folder, then extract the zip into your{' '}
+            <code>engine</code> folder. It needs Mod Manager 0.13.0 or later, for every player in the lobby.
           </li>
           <li>Host a lobby on any map.</li>
           <li>
             Open <strong>Mods</strong> in the lobby, beside Settings, and switch on{' '}
-            <strong>Balance Patch</strong>. All nine of its sections start on; switch off any you don&rsquo;t
+            <strong>Balance Patch</strong>. All seven of its sections start on; switch off any you don&rsquo;t
             want.
           </li>
           <li>
@@ -599,7 +599,8 @@ function BalancePatchGuide() {
           What it changes
         </h4>
         <p className="mods-step-text">
-          Every change, unit by unit, with the game&rsquo;s number, the patch&rsquo;s, and why it moved.
+          Every change against the unmodded game, unit by unit: the game&rsquo;s number, the patch&rsquo;s,
+          and why it moved.
         </p>
         <p className="gm-step-actions">
           <Link to="/balance-patch" className="gm-more">

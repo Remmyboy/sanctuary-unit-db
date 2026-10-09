@@ -7115,3 +7115,10 @@ html.modding-route {
     padding: 7px 14px;
   }
 }
+
+/* "×3": the same change on several of a unit's weapons. */
+.bp-count-n {
+  color: var(--text-faint);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}

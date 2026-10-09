@@ -33,9 +33,18 @@ const LABELS: Record<string, string> = {
   energy: 'energy cost',
   'alloys/s': 'alloy/s',
   name: 'label',
+  'economy.maintenanceConsumption.energy': 'upkeep energy/s',
+  'intel.radarRadius': 'radar range',
 };
 
-export const changeLabel = (label: string): string => LABELS[label] ?? label;
+// Some labels end in the template's own name for a gun's turn rates.
+const WORDS: [RegExp, string][] = [
+  [/\byawSpeed$/, 'gun turn rate (deg/s)'],
+  [/\bpitchSpeed$/, 'gun elevation rate (deg/s)'],
+];
+
+export const changeLabel = (label: string): string =>
+  LABELS[label] ?? WORDS.reduce((l, [from, to]) => l.replace(from, to), label);
 
 /** One value as a change list prints it. */
 export function formatValue(v: BalanceValue, label = ''): string {
@@ -56,6 +65,19 @@ export interface ChangeText {
   after: string;
   /** Percent change, for numbers that both exist and aren't zero to start with. */
   percent: number | null;
+  /** How many of the unit's weapons change this way, when more than one. */
+  count?: number;
+}
+
+/** Lines that read the same (a T4's three guns turning faster) as one, with a count. */
+export function collapseTexts(texts: ChangeText[]): ChangeText[] {
+  const out: ChangeText[] = [];
+  for (const t of texts) {
+    const same = out.find((o) => o.label === t.label && o.before === t.before && o.after === t.after);
+    if (same) same.count = (same.count ?? 1) + 1;
+    else out.push({ ...t });
+  }
+  return out;
 }
 
 /** A change in words. A list (tags, what a weapon targets) shows only what

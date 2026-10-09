@@ -6,6 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseLuaTable } from './lua-parser.js';
 import { locateGame, contentRoot, steamBuild } from './locate-game.js';
+import { netChanges } from '../src/lib/balance-net.ts';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const OUT_FILE = path.join(here, '..', 'public', 'data', 'units.json');
@@ -205,42 +206,41 @@ balance patch: made for build ${patch.game.steamBuild}, this install is ${build}
   };
 
   const patchedProjectiles = new Map(projectiles);
-  // What changed on each unit, its own fields first, then its shots'.
-  const own = new Map();
-  const shots = new Map();
-  const note = (list, id, c, label) =>
-    list.set(id, [
-      ...(list.get(id) ?? []),
-      { label, before: c.before, after: c.after, sections: c.sections },
-    ]);
-
+  const appliedShots = [];
+  const shotName = new Map();
   for (const c of patch.changes.filter((c) => c.kind === 'projectile')) {
     const tp = structuredClone(patchedProjectiles.get(c.id));
     if (!tp || !apply(tp, c)) continue;
     patchedProjectiles.set(c.id, tp);
-    // Shown on every unit that fires it.
-    const shot = /missile/i.test(tp.general?.name ?? '') ? 'missile' : 'shell';
-    for (const [id, t] of templates) {
-      if ((t.weapons ?? []).some((w) => w.projectileTemplate === c.id))
-        note(shots, id, c, `${shot} ${c.label}`);
-    }
+    appliedShots.push(c);
+    shotName.set(c.id, /missile/i.test(tp.general?.name ?? '') ? 'missile' : 'shell');
   }
 
   const patched = new Map();
+  const appliedUnits = [];
   for (const c of patch.changes.filter((c) => c.kind === 'unit')) {
     if (!templates.has(c.id)) {
       stale.push(`${c.id}: no such unit in this install`);
       continue;
     }
     if (!patched.has(c.id)) patched.set(c.id, structuredClone(templates.get(c.id)));
-    if (apply(patched.get(c.id), c) && !HIDDEN_FIELDS.has(c.field)) note(own, c.id, c, c.label);
+    if (apply(patched.get(c.id), c)) appliedUnits.push(c);
   }
-  const byUnit = new Map(
-    [...new Set([...own.keys(), ...shots.keys()])].map((id) => [
-      id,
-      [...(own.get(id) ?? []), ...(shots.get(id) ?? [])],
-    ]),
-  );
+
+  // What changed on each unit against the game, one net change per field
+  // (see src/lib/balance-net.ts): its own fields first, then its shots',
+  // which show on every unit that fires them.
+  const entry = (c, label) => ({ label, before: c.before, after: c.after, sections: c.sections });
+  const byUnit = new Map();
+  const add = (id, e) => byUnit.set(id, [...(byUnit.get(id) ?? []), e]);
+  for (const c of netChanges(appliedUnits.filter((c) => !HIDDEN_FIELDS.has(c.field))))
+    add(c.id, entry(c, c.label));
+  for (const c of netChanges(appliedShots)) {
+    for (const [id, t] of templates) {
+      if ((t.weapons ?? []).some((w) => w.projectileTemplate === c.id))
+        add(id, entry(c, `${shotName.get(c.id)} ${c.label}`));
+    }
+  }
 
   // The base run already reported the game's own data faults; re-deriving the
   // same units would only repeat them.
