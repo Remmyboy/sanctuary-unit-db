@@ -4,7 +4,7 @@
 // patch is on — so a screenshot of a patched unit can't pass for the game's.
 
 import { Link } from '@tanstack/react-router';
-import { BALANCE_PATCH_NAME, describeChange } from '../lib/balance-patch';
+import { BALANCE_PATCH_NAME, collapseTexts, describeChange } from '../lib/balance-patch';
 import type { BalanceChange, UnitsMeta } from '../lib/types';
 
 export function BalanceToggle({ on, onChange }: { on: boolean; onChange: (on: boolean) => void }) {
@@ -44,27 +44,40 @@ export function BalanceStrip({ meta, onOff }: { meta: UnitsMeta; onOff: () => vo
   );
 }
 
+// Each change with its sections in words; changes that read the same within
+// the same sections (a T4's three guns) collapse into one line.
+function lines(changes: BalanceChange[], sections: Map<string, string>) {
+  const tagged = changes.map((c) => ({
+    tag: c.sections.map((s) => sections.get(s) ?? s).join(', '),
+    text: describeChange(c),
+  }));
+  const tags = [...new Set(tagged.map((t) => t.tag))];
+  return tags.flatMap((tag) =>
+    collapseTexts(tagged.filter((t) => t.tag === tag).map((t) => t.text)).map((text) => ({ tag, text })),
+  );
+}
+
 /** A patched unit's changes, in its detail panel. */
 export function BalanceChanges({ changes, meta }: { changes: BalanceChange[]; meta: UnitsMeta }) {
   const sections = new Map((meta.balancePatch?.sections ?? []).map((s) => [s.key, s.label]));
   return (
     <ul className="bp-changes bp-changes-detail">
-      {changes.map((c, i) => {
-        const t = describeChange(c);
-        return (
-          <li key={i}>
-            <span className="bp-label">{t.label}</span>
-            <span className="bp-vals">
-              <span className="bp-before">{t.before}</span>
-              <span className="bp-arrow" aria-label="becomes">
-                →
-              </span>
-              <span className="bp-after">{t.after}</span>
+      {lines(changes, sections).map(({ text: t, tag }, i) => (
+        <li key={i}>
+          <span className="bp-label">
+            {t.label}
+            {t.count ? <span className="bp-count-n"> ×{t.count}</span> : null}
+          </span>
+          <span className="bp-vals">
+            <span className="bp-before">{t.before}</span>
+            <span className="bp-arrow" aria-label="becomes">
+              →
             </span>
-            <span className="bp-section-tag">{c.sections.map((s) => sections.get(s) ?? s).join(', ')}</span>
-          </li>
-        );
-      })}
+            <span className="bp-after">{t.after}</span>
+          </span>
+          <span className="bp-section-tag">{tag}</span>
+        </li>
+      ))}
     </ul>
   );
 }

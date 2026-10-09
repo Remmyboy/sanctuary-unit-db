@@ -9,7 +9,8 @@
 
 import PATCH from './balance-patch.json';
 import type { BalanceValue, Faction } from './types';
-import { HIDDEN_FIELDS, describeChange, type ChangeText } from './balance-patch';
+import { HIDDEN_FIELDS, collapseTexts, describeChange, type ChangeText } from './balance-patch';
+import { netChanges } from './balance-net';
 
 interface PatchChange {
   kind: 'unit' | 'projectile';
@@ -25,7 +26,9 @@ interface PatchChange {
   why: string[];
 }
 
-const changes = PATCH.changes as PatchChange[];
+// Against the unmodded game: a field the patch changes twice shows once,
+// from the game's value to the final one (see balance-net.ts).
+const changes = netChanges((PATCH.changes as PatchChange[]).filter((c) => !HIDDEN_FIELDS.has(c.field)));
 
 export const PATCH_MOD = PATCH.mod;
 export const PATCH_GAME = PATCH.game;
@@ -107,7 +110,7 @@ function buildSections(): PatchSection[] {
   const notes = PATCH.notes.map(parseNote).filter((n) => n != null);
 
   return PATCH.sections.map(({ key, label, description }) => {
-    const mine = changes.filter((c) => c.sections.includes(key) && !HIDDEN_FIELDS.has(c.field));
+    const mine = changes.filter((c) => c.sections.includes(key));
 
     // Each unit's (or projectile's) changes in this section, in the export's order.
     const byThing = new Map<string, PatchChange[]>();
@@ -121,7 +124,7 @@ function buildSections(): PatchSection[] {
       const title = projectile
         ? (PROJECTILE_NAMES[id] ?? `Projectile ${id}`)
         : shortTitle(first.displayName ?? id);
-      const texts = list.map(describeChange);
+      const texts = collapseTexts(list.map(describeChange));
       const key = `${title}|${JSON.stringify(texts)}`;
       const unit: PatchUnit = { id, name: first.name, faction: FACTION[first.faction ?? ''] ?? 'Unknown' };
       const row = rows.get(key);
@@ -152,5 +155,5 @@ export const PATCH_SECTIONS = buildSections();
 /** Every unit the patch changes, in any section. */
 export const PATCH_UNIT_COUNT = new Set(changes.filter((c) => c.kind === 'unit').map((c) => c.id)).size;
 
-/** Changes as the page lists them (spawn health folded into health). */
-export const PATCH_CHANGE_COUNT = changes.filter((c) => !HIDDEN_FIELDS.has(c.field)).length;
+/** Changes as the page lists them: one per field, spawn health folded into health. */
+export const PATCH_CHANGE_COUNT = changes.length;
