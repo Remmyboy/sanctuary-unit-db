@@ -38,6 +38,12 @@ export const PATCH_GAME = PATCH.game;
 export const PROJECTILE_NAMES: Record<string, string> = {
   pei141: 'EDA and Guardian commander missile',
   pca341: 'Chosen T3 anti-air missile',
+  pea341: 'EDA anti-air missile',
+  pea131: 'EDA T1 anti-air shell',
+  pca111: 'Chosen T1 anti-air shell',
+  pca211: 'Chosen T2 anti-air shell',
+  pca311: 'Chosen T3 fighter shell',
+  pga211: 'Guardian T2 anti-air shell',
 };
 
 // The export spells the third faction out; the site calls it Guard.
