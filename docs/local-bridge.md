@@ -124,6 +124,11 @@ manual rather than failing the match).
 `failed` or `manual`) is what today's heartbeat reply with `match: null`
 was: the mod drops back to idle.
 
+### `POST /watch` (LadderReporter 0.5)
+
+`{ "stream": "<id>" }`: watch a live game in the game's replay player. See
+[live-replays.md](live-replays.md).
+
 ### CORS and origin
 
 Browsers treat `https://www.sanctuarydb.net` → `http://127.0.0.1` as a
