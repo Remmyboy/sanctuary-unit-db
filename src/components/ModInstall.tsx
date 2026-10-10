@@ -1,6 +1,7 @@
 // Install furniture shared by /mods and /gameplay-mods: the numbered step
-// heading, and the engine path (or any one-liner) with a copy button. Both pages install into
-// the same folder the same way, so they say it the same way.
+// heading, the engine path with a copy button, and the Linux launch options.
+// Both pages install into the same folder the same way, so they say it the
+// same way.
 
 import { useState, type ReactNode } from 'react';
 import { copyText } from '../lib/clipboard';
@@ -41,4 +42,17 @@ export function CopyPath({ text = ENGINE_PATH }: { text?: string }) {
 
 /** Proton runs Sanctuary under Wine, which loads its own winhttp.dll ahead of
  *  the loader's; this override makes it take the one in the engine folder. */
-export const LINUX_LAUNCH_OPTIONS = 'WINEDLLOVERRIDES="winhttp=n,b" %command%';
+const LINUX_LAUNCH_OPTIONS = 'WINEDLLOVERRIDES="winhttp=n,b" %command%';
+
+export function LinuxLaunchOptions() {
+  return (
+    <div className="mods-where">
+      <h2>On Linux?</h2>
+      <p>
+        Set the launch options. In Steam, go to <strong>Sanctuary</strong> &rarr; <strong>Properties</strong>{' '}
+        &rarr; <strong>General</strong> &rarr; <strong>Launch Options</strong> and enter:
+      </p>
+      <CopyPath text={LINUX_LAUNCH_OPTIONS} />
+    </div>
+  );
+}
