@@ -49,6 +49,20 @@
   --sidebar: 212px;
   /* Overwritten at runtime by Header.tsx once the header is measured. */
   --header-h: 56px;
+  /* Stacking, low to high. The lifts order layers inside one component (a
+     masthead's art and text, the drawer's stage, a peer strip's dots); the
+     rest are the page's sticky and floating strips. The detail drawer is a
+     modal <dialog> in the top layer, above all of them. */
+  --z-behind: -1;
+  --z-base: 0;
+  --z-lift-1: 1;
+  --z-lift-2: 2;
+  --z-lift-3: 3;
+  --z-table-head: 5;
+  --z-board-head: 10;
+  --z-toolbar: 15;
+  --z-topbar: 20;
+  --z-tray: 25;
 }
 
 * {
@@ -78,7 +92,7 @@ body::before {
   content: '';
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: var(--z-behind);
   pointer-events: none;
   background:
     radial-gradient(
@@ -128,6 +142,11 @@ a {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+  /* A rule of its own: a browser that didn't know ::backdrop would drop the
+     whole selector list above along with it. */
+  ::backdrop {
+    animation-duration: 0.01ms !important;
+  }
 }
 
 /* ---------- top bar ---------- */
@@ -143,7 +162,7 @@ a {
   backdrop-filter: blur(14px) saturate(140%);
   position: sticky;
   top: 0;
-  z-index: 20;
+  z-index: var(--z-topbar);
 }
 /* A hairline of accent light along the bottom edge, brightest in the middle. */
 .topbar::after {
@@ -282,7 +301,7 @@ a {
     center / contain no-repeat;
   opacity: 0.22;
   pointer-events: none;
-  z-index: 1;
+  z-index: var(--z-lift-1);
 }
 /* A panel anchored right, as tall as the masthead and as wide as the band's
    own ratio (--art-ratio, from src/lib/art.ts), so the whole band always
@@ -295,7 +314,7 @@ a {
   position: absolute;
   top: 0;
   right: 0;
-  z-index: 0;
+  z-index: var(--z-base);
   height: 100%;
   max-width: 100%;
   aspect-ratio: var(--art-ratio, 16 / 3);
@@ -310,7 +329,7 @@ a {
   content: '';
   position: absolute;
   inset: 0;
-  z-index: 0;
+  z-index: var(--z-base);
   background:
     linear-gradient(
       90deg,
@@ -324,7 +343,7 @@ a {
 }
 .page-head-inner {
   position: relative;
-  z-index: 2;
+  z-index: var(--z-lift-2);
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
@@ -563,7 +582,7 @@ a {
   font-variant-numeric: tabular-nums;
   position: sticky;
   top: var(--header-h);
-  z-index: 15;
+  z-index: var(--z-toolbar);
   background: color-mix(in srgb, var(--bg) 94%, transparent);
   backdrop-filter: blur(12px);
 }
@@ -688,7 +707,7 @@ img.unit-icon[data-muted='true'] {
 .col-heads {
   position: sticky;
   top: calc(var(--header-h) + 36px);
-  z-index: 10;
+  z-index: var(--z-board-head);
   background: color-mix(in srgb, var(--bg) 94%, transparent);
   backdrop-filter: blur(12px);
   padding: 8px 0;
@@ -763,7 +782,7 @@ img.unit-icon[data-muted='true'] {
   height: 1px;
   background: linear-gradient(90deg, var(--border-strong), transparent);
 }
-.col-heads + div .domain-head {
+.col-heads + .domain-head {
   margin-top: 10px;
 }
 
@@ -845,7 +864,7 @@ img.unit-icon[data-muted='true'] {
 .creadout {
   position: sticky;
   top: calc(var(--header-h) + 36px);
-  z-index: 10;
+  z-index: var(--z-board-head);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -916,8 +935,7 @@ img.unit-icon[data-muted='true'] {
   align-items: flex-start;
   gap: 12px 26px;
 }
-.cblocks > .domain-head,
-.cblocks > * > .domain-head {
+.cblocks > .domain-head {
   flex-basis: 100%;
   margin: 14px 0 0;
 }
@@ -966,7 +984,7 @@ img.unit-icon[data-muted='true'] {
 }
 .tile:hover,
 .tile:focus-visible {
-  z-index: 1;
+  z-index: var(--z-lift-1);
   outline: none;
   border-color: var(--fc);
   box-shadow:
@@ -1124,7 +1142,8 @@ img.unit-icon[data-muted='true'] {
   border: 1px solid color-mix(in srgb, var(--fc) 30%, var(--border));
   clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
 }
-.card h4 {
+.card .card-name {
+  display: block;
   margin: 0;
   font-family: var(--font-display);
   font-size: 15px;
@@ -1250,27 +1269,34 @@ img.unit-icon[data-muted='true'] {
 
 /* ---------- detail panel ---------- */
 
-.scrim {
-  position: fixed;
-  inset: 0;
-  background: rgba(2, 4, 8, 0.62);
-  z-index: 30;
-  animation: fade-in 0.2s ease;
-}
-
+/* A modal <dialog> pinned to the right edge. It sits in the top layer, so it
+   needs no z-index; the rest undoes the browser's centred-dialog defaults
+   (auto margins, fit-content size, max sizes, border, Canvas colours). */
 .detail {
   position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0 0 0 auto;
   width: min(480px, 100vw);
+  height: auto;
+  max-width: none;
+  max-height: none;
+  margin: 0;
   overflow-y: auto;
   background: var(--bg-raised);
+  color: inherit;
+  border: 0;
   border-left: 1px solid color-mix(in srgb, var(--fc, var(--accent)) 35%, var(--border));
   box-shadow: -24px 0 60px -20px rgba(0, 0, 0, 0.7);
-  z-index: 40;
   padding: 0 22px 60px;
   animation: slide-in 0.28s var(--ease);
+}
+/* It takes focus itself on opening (DetailPanel.tsx); the controls inside
+   carry the focus rings. */
+.detail:focus-visible {
+  outline: none;
+}
+.detail::backdrop {
+  background: rgba(2, 4, 8, 0.62);
+  animation: fade-in 0.2s ease;
 }
 @keyframes slide-in {
   from {
@@ -1330,7 +1356,7 @@ img.unit-icon[data-muted='true'] {
 }
 .detail-render {
   position: relative;
-  z-index: 1;
+  z-index: var(--z-lift-1);
   display: block;
   width: 150px;
   height: 150px;
@@ -1354,7 +1380,7 @@ img.unit-icon[data-muted='true'] {
 }
 .detail-stage > .unit-icon {
   position: relative;
-  z-index: 1;
+  z-index: var(--z-lift-1);
 }
 
 .detail-head {
@@ -1387,7 +1413,7 @@ img.unit-icon[data-muted='true'] {
 }
 .detail-close {
   position: absolute;
-  z-index: 2;
+  z-index: var(--z-lift-2);
   top: 12px;
   right: 12px;
   display: grid;
@@ -1513,6 +1539,25 @@ img.unit-icon[data-muted='true'] {
   font-variant-numeric: tabular-nums;
 }
 
+/* Spacing within a detail section: a block that follows another, a heading
+   that opens a second group, and the hint that closes the section (whose own
+   margin spaces it from the next). */
+.section .then {
+  margin-top: 8px;
+}
+.section > h3.then-group {
+  margin-top: 16px;
+}
+.section .hint.footnote {
+  margin: 8px 0 0;
+}
+
+/* The faction badge wears the faction's colour, its border at 40%. */
+.badge.badge-faction {
+  color: var(--fc);
+  border-color: color-mix(in srgb, var(--fc) 40%, transparent);
+}
+
 /* One block per distinct weapon — reads better than a wide table in a narrow
    panel, and scales to the four-weapon maximum without horizontal scroll. */
 .weapon {
@@ -1624,9 +1669,10 @@ img.unit-icon[data-muted='true'] {
   cursor: pointer;
   transition: transform 0.12s var(--ease);
 }
-.peer-dot:hover {
+.peer-dot:hover,
+.peer-dot:focus-visible {
   transform: scale(1.6);
-  z-index: 3;
+  z-index: var(--z-lift-3);
 }
 .peer-dot.self {
   width: 11px;
@@ -1638,7 +1684,7 @@ img.unit-icon[data-muted='true'] {
     0 0 0 3.5px var(--text);
   cursor: default;
   pointer-events: none;
-  z-index: 2;
+  z-index: var(--z-lift-2);
 }
 .peer-val {
   text-align: right;
@@ -2040,14 +2086,20 @@ img.unit-icon[data-muted='true'] {
 }
 .fac-chip,
 .builder-chip {
-  padding: 6px 12px;
   border: 1px solid var(--border-strong);
   border-radius: 4px;
-  background: color-mix(in srgb, var(--bg-sunken) 60%, transparent);
   color: var(--text-dim);
   cursor: pointer;
   font-size: 12px;
   white-space: nowrap;
+}
+.fac-chip {
+  padding: 6px 12px;
+  background: color-mix(in srgb, var(--bg-sunken) 60%, transparent);
+}
+.builder-chip {
+  padding: 6px 11px;
+  background: var(--bg-raised);
 }
 .fac-chip:hover {
   background: var(--bg-hover);
@@ -2058,10 +2110,6 @@ img.unit-icon[data-muted='true'] {
   height: 12px;
   margin-right: 7px;
   vertical-align: -2px;
-}
-.builder-chip {
-  padding: 6px 11px;
-  background: var(--bg-raised);
 }
 .builder-chip:hover {
   border-color: var(--accent);
@@ -3584,12 +3632,6 @@ img.unit-icon[data-muted='true'] {
   border-color: var(--accent);
   color: var(--accent);
 }
-.match-vs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 18px;
-}
 .match-player {
   display: flex;
   align-items: center;
@@ -4004,7 +4046,6 @@ a.chip {
     border-right: 0;
     border-bottom: 1px solid var(--border);
   }
-  .match-vs,
   .match-teams,
   .queue-grid,
   .play-extras {
@@ -4231,6 +4272,9 @@ html.modding-route {
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
+.docs-nav-group > p {
+  padding: 0 8px 5px;
+}
 .docs-version-control select {
   width: 100%;
   padding: 7px 28px 7px 9px;
@@ -4247,9 +4291,6 @@ html.modding-route {
 .docs-nav-group {
   display: grid;
   gap: 3px;
-}
-.docs-nav-group > p {
-  padding: 0 8px 5px;
 }
 .docs-nav-group a {
   display: grid;
@@ -4526,15 +4567,14 @@ html.modding-route {
 .docs-options > div:last-child {
   border-bottom: 0;
 }
-.docs-options dt,
-.docs-options dd {
+.docs-options dt {
   margin: 0;
   padding: 9px 10px;
-}
-.docs-options dt {
   background: var(--bg-raised);
 }
 .docs-options dd {
+  margin: 0;
+  padding: 9px 10px;
   font-size: 12px;
 }
 .docs-file-layout > div {
@@ -5681,11 +5721,16 @@ html.modding-route {
   border-collapse: collapse;
   font-size: 13px;
 }
-.gm-table th,
+.gm-table th {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
 .gm-table td {
   padding: 8px 12px;
   text-align: left;
   border-bottom: 1px solid var(--border);
+  color: var(--text-dim);
 }
 .gm-table tbody tr:last-child > * {
   border-bottom: none;
@@ -5704,9 +5749,6 @@ html.modding-route {
   font-family: var(--font-display);
   font-weight: 700;
   color: var(--text);
-}
-.gm-table td {
-  color: var(--text-dim);
 }
 .gm-table td.num {
   font-variant-numeric: tabular-nums;
@@ -5977,7 +6019,7 @@ html.modding-route {
   position: absolute;
   top: 6px;
   right: 6px;
-  z-index: 2;
+  z-index: var(--z-lift-2);
   width: 16px;
   height: 16px;
   border: 1px solid var(--border-strong);
@@ -6016,7 +6058,7 @@ html.modding-route {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 25;
+  z-index: var(--z-tray);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -6132,7 +6174,7 @@ html.modding-route {
 .compare-table thead th {
   position: sticky;
   top: calc(var(--header-h) + 36px);
-  z-index: 5;
+  z-index: var(--z-table-head);
   background: color-mix(in srgb, var(--bg) 94%, transparent);
   backdrop-filter: blur(12px);
 }
@@ -6509,7 +6551,7 @@ html.modding-route {
   .compare-table th:first-child {
     position: sticky;
     left: 0;
-    z-index: 2;
+    z-index: var(--z-lift-2);
     width: 118px;
     min-width: 118px;
     background: var(--bg);

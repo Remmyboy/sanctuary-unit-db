@@ -8,7 +8,8 @@ import type { Unit } from '../lib/types';
 import type { Balance } from '../lib/balance-patch';
 import { COMPARE_MAX } from '../lib/compare';
 import { shortName } from '../lib/format';
-import { FACTION_COLOURS, UnitIcon } from './UnitIcon';
+import { UnitIcon } from './UnitIcon';
+import { FACTION_COLOURS } from '../lib/faction-colours';
 
 interface CompareTrayProps {
   units: Unit[];

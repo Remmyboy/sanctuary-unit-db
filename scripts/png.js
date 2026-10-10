@@ -1,4 +1,5 @@
-// A minimal 8-bit PNG reader/writer, used by build-art.js and ladder-previews.js.
+// A minimal 8-bit PNG reader/writer, used by build-art.js, build-icons.js and
+// ladder-previews.js.
 //
 // Map previews and ffmpeg frames come out barely compressed. Decoding and
 // re-encoding them with a proper filter and deflate is pixel-for-pixel lossless
@@ -86,16 +87,44 @@ function paeth(a, b, c) {
   return pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
 }
 
-export function encodePng({ width, height, channels, colorType, pixels }) {
+/**
+ * Encode flat 8-bit samples.
+ *
+ * `filter` picks the per-scanline filter:
+ *  - 'sub' (default): Filter 1 on every row. Costs nothing to compute and
+ *    compresses terrain far better than storing raw scanlines, which is what
+ *    map previews and ffmpeg frames arrive as.
+ *  - 'none-or-up': per row, None or Up, whichever has the smaller sum of
+ *    absolute signed bytes. The strategic icons are flat colour, so Up
+ *    collapses most rows to zeros and deflate does the rest.
+ */
+export function encodePng({ width, height, channels, colorType, pixels }, { filter = 'sub' } = {}) {
   const stride = width * channels;
-  // Filter 1 (Sub) costs nothing to compute and compresses terrain far better
-  // than storing raw scanlines, which is what these files arrive as.
   const raw = Buffer.alloc((stride + 1) * height);
   for (let y = 0; y < height; y++) {
-    raw[y * (stride + 1)] = 1;
     const row = pixels.subarray(y * stride, (y + 1) * stride);
     const dst = raw.subarray(y * (stride + 1) + 1, (y + 1) * (stride + 1));
-    for (let i = 0; i < stride; i++) dst[i] = (row[i] - (i >= channels ? row[i - channels] : 0)) & 0xff;
+    if (filter === 'sub') {
+      raw[y * (stride + 1)] = 1;
+      for (let i = 0; i < stride; i++) dst[i] = (row[i] - (i >= channels ? row[i - channels] : 0)) & 0xff;
+    } else if (filter === 'none-or-up') {
+      const prior = y > 0 ? pixels.subarray((y - 1) * stride, y * stride) : null;
+      let noneScore = 0;
+      let upScore = 0;
+      for (let i = 0; i < stride; i++) {
+        noneScore += Math.abs((row[i] << 24) >> 24);
+        upScore += Math.abs((((row[i] - (prior ? prior[i] : 0)) & 0xff) << 24) >> 24);
+      }
+      if (prior && upScore < noneScore) {
+        raw[y * (stride + 1)] = 2;
+        for (let i = 0; i < stride; i++) dst[i] = (row[i] - prior[i]) & 0xff;
+      } else {
+        raw[y * (stride + 1)] = 0;
+        row.copy(dst);
+      }
+    } else {
+      throw new Error(`unknown filter strategy ${filter}`);
+    }
   }
 
   const ihdr = Buffer.alloc(13);

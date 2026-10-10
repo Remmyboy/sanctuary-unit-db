@@ -1,9 +1,11 @@
 // Ladder rating maths. Plain Elo: a dozens-sized player pool can't feed
 // Glicko-2's rating periods, and Elo is explainable to players in a sentence.
 //
-// Results are applied inside the database (supabase/migrations/0003_results.sql
-// transcribes these constants) so finalisation is atomic; this module is the
-// pinned reference the tests exercise. Change both together.
+// Results are applied inside the database (apply_match_result, live in
+// supabase/migrations/0006_drop_legacy_ratings.sql, transcribes these
+// constants) so finalisation is atomic; this module is the pinned reference
+// the tests exercise, and supabase/migrations.test.ts runs the SQL against it.
+// Change both together.
 
 export const START_RATING = 1000;
 export const RATING_FLOOR = 100;

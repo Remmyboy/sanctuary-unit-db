@@ -35,6 +35,9 @@ export const isStorage = (u: Unit) =>
 
 /* ---------------- maths ---------------- */
 
+const assistPowerOf = (assists: CountedRow[], byId: Map<string, Unit>): number =>
+  assists.reduce((sum, row) => sum + (byId.get(row.id)?.buildPower ?? 0) * row.count, 0);
+
 export interface BuildResult {
   target: Unit;
   primary: Unit;
@@ -53,7 +56,7 @@ export function buildResult(
 ): BuildResult | null {
   if (!target || !primary) return null;
 
-  const assistPower = assists.reduce((sum, row) => sum + (byId.get(row.id)?.buildPower ?? 0) * row.count, 0);
+  const assistPower = assistPowerOf(assists, byId);
   const total = (primary.buildPower ?? 0) + assistPower;
   if (total <= 0) return null;
 
@@ -95,6 +98,18 @@ export function economyResult(economy: CountedRow[], byId: Map<string, Unit>): E
   return { ...t, alloysNet: t.alloysIn - t.alloysOut, energyNet: t.energyIn - t.energyOut };
 }
 
+// A build at a steady income. When it draws more of a resource per second than
+// the economy nets, it stalls in proportion: drawing twice the net takes twice
+// as long. `stretch` is the worst of the two ratios, Infinity when a resource
+// has no net income at all; at or under 1 the build runs at full speed.
+export function incomeLimited(build: BuildResult, econ: EconomyResult): { stretch: number; seconds: number } {
+  const stretch = Math.max(
+    econ.alloysNet > 0 ? build.alloysPerSec / econ.alloysNet : Infinity,
+    econ.energyNet > 0 ? build.energyPerSec / econ.energyNet : Infinity,
+  );
+  return { stretch, seconds: stretch > 1 ? build.seconds * stretch : build.seconds };
+}
+
 /* ---------------- build order ---------------- */
 // A queue of builds worked one after another by the same builder (plus any
 // assists), starting from a stockpile. Unlike a single build, the economy
@@ -107,7 +122,7 @@ export function economyResult(economy: CountedRow[], byId: Map<string, Unit>): E
 // can't cover that, progress slows to the fraction it can. Walking between
 // build sites is not modelled.
 
-export const TICKS_PER_SEC = 10;
+const TICKS_PER_SEC = 10;
 // A queue that can't finish inside four hours of game time is treated as
 // never finishing — it's stuck, not slow.
 const MAX_TICKS = 4 * 3600 * TICKS_PER_SEC;
@@ -126,6 +141,10 @@ export interface QueueStep {
   ideal: number;
   after: Stock;
 }
+
+// How far past its ideal time (in seconds) a build, or the whole queue, can
+// finish before the readout calls it held up.
+export const STALL_EPSILON = 0.05;
 
 export interface QueueResult {
   steps: QueueStep[];
@@ -146,7 +165,6 @@ export interface QueueResult {
 
 // A game always starts with a commander: its income and storage are the base
 // every build order grows from.
-export { isCommander };
 export const commanderOf = (units: Unit[], faction: string | undefined) =>
   faction ? units.find((u) => u.faction === faction && isCommander(u)) : undefined;
 
@@ -166,8 +184,7 @@ export function simulateQueue(
   byId: Map<string, Unit>,
 ): QueueResult | null {
   if (!builder || !queue.length) return null;
-  const assistPower = assists.reduce((sum, row) => sum + (byId.get(row.id)?.buildPower ?? 0) * row.count, 0);
-  const power = (builder.buildPower ?? 0) + assistPower;
+  const power = (builder.buildPower ?? 0) + assistPowerOf(assists, byId);
   if (power <= 0) return null;
 
   const econ = economyResult(startEconomy, byId);
