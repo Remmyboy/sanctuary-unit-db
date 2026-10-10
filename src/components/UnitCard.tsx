@@ -1,7 +1,9 @@
+import { memo } from 'react';
 import type { Unit, Weapon } from '../lib/types';
 import { fmt, shortName } from '../lib/format';
 import { economyRole, netRate } from '../lib/economy';
-import { FACTION_COLOURS, UnitIcon } from './UnitIcon';
+import { UnitIcon } from './UnitIcon';
+import { FACTION_COLOURS } from '../lib/faction-colours';
 
 interface UnitCardProps {
   unit: Unit;
@@ -11,7 +13,9 @@ interface UnitCardProps {
   onOpen: (id: string) => void;
 }
 
-export function UnitCard({ unit: u, iconManifest, picked, onOpen }: UnitCardProps) {
+// Memoised: the board holds a few hundred of these, and opening a unit or
+// picking one to compare leaves all but a card or two exactly as they were.
+export const UnitCard = memo(function UnitCard({ unit: u, iconManifest, picked, onOpen }: UnitCardProps) {
   // Only no-model units get dimmed — an in-progress unit has real art and real
   // numbers, it just isn't switched on, so it keeps its colour and says why.
   const muted = u.status === 'no-model';
@@ -29,14 +33,18 @@ export function UnitCard({ unit: u, iconManifest, picked, onOpen }: UnitCardProp
           <UnitIcon icon={u.icon} faction={u.faction} manifest={iconManifest} size={32} muted={muted} />
         </span>
         <span className="who">
-          <h4>
+          {/* A span, not a heading: a button can only hold phrasing content. */}
+          <span className="card-name">
             {u.name ?? shortName(u)}
             {u.status === 'in-progress' && (
               <span className="wip" title={u.statusReason ?? 'Not enabled'}>
                 WIP
               </span>
             )}
-          </h4>
+            {u.balance && (
+              <span className="bp-mark" title="Changed by the balance patch" aria-hidden="true" />
+            )}
+          </span>
           <small>{u.displayName}</small>
         </span>
       </span>
@@ -52,7 +60,7 @@ export function UnitCard({ unit: u, iconManifest, picked, onOpen }: UnitCardProp
       <WeaponLines unit={u} />
     </button>
   );
-}
+});
 
 function Readout({ label, value, cls }: { label: string; value: string; cls?: string }) {
   return (

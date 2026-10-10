@@ -127,7 +127,22 @@ export interface Unit {
   maxRange: number | null;
   projectileSpeed: number | null;
   tags: string[];
+  /** Only in units-balance-patch.json: what Remmy's Balance Patch changed on
+   *  this unit, as template values (the game's, then the patch's). */
+  balance?: BalanceChange[];
 }
+
+/** One template field the balance patch changes, as the mod's export words it. */
+export interface BalanceChange {
+  /** The field in words, e.g. "health", "weapon 2 targets", "missile top speed". */
+  label: string;
+  before: BalanceValue;
+  after: BalanceValue;
+  /** The lobby options (sections) the change belongs to. */
+  sections: string[];
+}
+
+export type BalanceValue = number | string | boolean | null | string[] | Record<string, number>;
 
 /** The Steam build the data was extracted from (from appmanifest_<appid>.acf). */
 export interface GameBuild {
@@ -146,6 +161,17 @@ export interface UnitsMeta {
   unitCount: number;
   isDemo: boolean;
   dataIssues: string[];
+  /** Only in units-balance-patch.json: which release of the patch was applied. */
+  balancePatch?: {
+    id: string;
+    version: string;
+    game: { version: string; steamBuild: string };
+    /** The patch's lobby options, each switching a group of its changes. */
+    sections: { key: string; label: string }[];
+    changedUnits: number;
+    /** Changes whose game value no longer matched the install, so left out. */
+    stale: string[];
+  };
 }
 
 export interface UnitsData {

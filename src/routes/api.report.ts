@@ -10,7 +10,9 @@
 // - the reporter claiming their own WIN opens the usual 15-minute
 //   auto-confirm window, exactly like a manual report — unless the opponent's
 //   client corroborates, which applies it on the spot;
-// - contradicting reports freeze the match as disputed.
+// - contradicting reports freeze the match as disputed;
+// - a report for a match already settled changes nothing and is answered
+//   with that match's id (answerLate), so the mod can still upload to it.
 //
 // A report for a game that isn't an open ladder match between the two named
 // players is answered 404 and ignored — playing unranked is invisible here.
@@ -20,6 +22,7 @@ import { sql } from '../server/db';
 import { allowRequest, clientIp, tooManyRequests } from '../server/rate-limit';
 import { verifyWebApiTicket } from '../server/steam';
 import { TICKET_IDENTITY } from '../lib/mm';
+import { answerSettled, SETTLED_WINDOW_HOURS, type SettledStatus } from '../lib/report-settled';
 
 const AUTO_CONFIRM_MINUTES = 15;
 
@@ -38,11 +41,56 @@ const bad = (status: number, message: string) =>
     headers: { 'Content-Type': 'application/json' },
   });
 
-const ok = (outcome: string) =>
-  new Response(JSON.stringify({ outcome }), {
+// The match id lets the mod attach its stats and replay uploads to the game
+// it just reported, which a manually hosted match gives it no other way.
+const ok = (outcome: string, matchId: string) =>
+  new Response(JSON.stringify({ outcome, matchId }), {
     status: 200,
     headers: { 'Content-Type': 'application/json' },
   });
+
+// A report for a match that is already settled: usually the second of two
+// auto-reports, after the loser's concession completed the match (see
+// src/lib/report-settled.ts). It changes nothing; the answer carries the
+// match id so the mod can still attach its stats and replay. A named
+// matchId pins the match; otherwise only one settled in the last couple of
+// hours counts, so an old match between the same pair is never picked up.
+async function answerLate(body: ReportBody, steamIds: string[], winnerSteamId: string): Promise<Response> {
+  const [settled] = await sql()<
+    {
+      match_id: string;
+      status: SettledStatus;
+      recorded_winner_team: number | null;
+      winner_team: number;
+    }[]
+  >`
+    select m.id as match_id, m.status, mpw.team as winner_team,
+           (select mp.team from match_participants mp
+            where mp.match_id = m.id and mp.outcome = 'win' limit 1) as recorded_winner_team
+    from matches m
+    join match_participants mpa on mpa.match_id = m.id
+    join players pa on pa.id = mpa.player_id and pa.steam_id = ${steamIds[0]}
+    join match_participants mpb on mpb.match_id = m.id
+    join players pb on pb.id = mpb.player_id and pb.steam_id = ${steamIds[1]}
+    join match_participants mpw on mpw.match_id = m.id
+    join players pw on pw.id = mpw.player_id and pw.steam_id = ${winnerSteamId}
+    where m.status in ('completed', 'disputed')
+      and (m.id = ${body.matchId ?? null}::uuid
+           -- when it was settled: completed_at, or for a dispute the first
+           -- report (auto_confirm_at is that plus the confirm window)
+           or coalesce(m.completed_at, m.auto_confirm_at - interval '1 minute' * ${AUTO_CONFIRM_MINUTES},
+                       m.created_at) > now() - interval '1 hour' * ${SETTLED_WINDOW_HOURS})
+    order by (m.id = ${body.matchId ?? null}::uuid) desc nulls last, m.created_at desc
+    limit 1`;
+  if (!settled) return bad(404, 'No open ladder match between these players.');
+
+  const answer = answerSettled(settled.status, settled.recorded_winner_team, settled.winner_team);
+  if (answer.status === 200) return ok(answer.outcome, settled.match_id);
+  return new Response(JSON.stringify({ error: answer.error, matchId: settled.match_id }), {
+    status: 409,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
 
 // Returns the parsed body or the name of the first check that failed — the
 // mod logs the server's answer, so a precise reason debugs a field problem
@@ -120,7 +168,9 @@ export const Route = createFileRoute('/api/report')({
           where m.status in ('in_progress', 'reported')
           order by (m.id = ${body.matchId ?? null}::uuid) desc nulls last, m.created_at desc
           limit 1`;
-        if (!match) return bad(404, 'No open ladder match between these players.');
+        if (!match) return answerLate(body, steamIds, winnerSteamId);
+        // A late answer above changes nothing, and a banned player has no bearer
+        // session to upload with; an open match is where a ban has to bite.
         if (match.reporter_banned) return bad(403, 'This account is banned from the ladder.');
 
         const reporterWon = reporterSteamId === winnerSteamId;
@@ -135,9 +185,9 @@ export const Route = createFileRoute('/api/report')({
             where id = ${match.match_id} and status = 'in_progress'
             returning id`;
           if (updated.length === 0) return bad(409, 'The match changed while reporting — retry.');
-          if (reporterWon) return ok('reported'); // opponent confirms, or the window lapses
+          if (reporterWon) return ok('reported', match.match_id); // opponent confirms, or the window lapses
           await sql()`select apply_match_result(${match.match_id}, ${match.winner_team})`;
-          return ok('applied');
+          return ok('applied', match.match_id);
         }
 
         // Already reported (by the opponent's mod or by hand).
@@ -145,9 +195,9 @@ export const Route = createFileRoute('/api/report')({
           if (match.reported_by !== match.reporter_player_id) {
             // Both sides agree — no reason to wait out the window.
             await sql()`select apply_match_result(${match.match_id}, ${match.winner_team})`;
-            return ok('applied');
+            return ok('applied', match.match_id);
           }
-          return ok('reported'); // same reporter repeating themselves
+          return ok('reported', match.match_id); // same reporter repeating themselves
         }
 
         if (match.reported_by !== match.reporter_player_id) {
@@ -158,7 +208,7 @@ export const Route = createFileRoute('/api/report')({
             insert into disputes (match_id, raised_by, reason)
             values (${match.match_id}, ${match.reporter_player_id},
                     'Auto-reporter contradiction: clients disagreed on the winner.')`;
-          return ok('disputed');
+          return ok('disputed', match.match_id);
         }
         return bad(409, 'Contradicts your own earlier report.');
       },

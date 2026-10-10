@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { loadData } from '../lib/data';
 import {
@@ -16,16 +16,19 @@ import {
 } from '../lib/board';
 import type { Faction, Unit } from '../lib/types';
 import { tierKey, tierKeyLabel } from '../lib/format';
-import { FACTION_COLOURS } from '../components/UnitIcon';
+import { FACTION_COLOURS } from '../lib/faction-colours';
 import { FactionEmblem } from '../components/FactionEmblem';
 import { CompactBoard } from '../components/CompactBoard';
 import { CompareTray } from '../components/CompareTray';
 import { COMPARE_MAX, parseCompare, togglePick } from '../lib/compare';
+import { str } from '../lib/search';
 import { UnitCard } from '../components/UnitCard';
 import { DetailPanel } from '../components/DetailPanel';
 import { HeaderSearch } from '../components/HeaderSearch';
 import { GameVersion } from '../components/GameVersion';
 import { HeadStat, PageHead } from '../components/PageHead';
+import { BalanceStrip, BalanceToggle } from '../components/BalanceToggle';
+import { parseBalance, type Balance } from '../lib/balance-patch';
 
 // Filters, sort, search, the open unit, the view and the units picked for
 // comparison all live in the URL — same param names and comma-joined encoding
@@ -43,13 +46,22 @@ interface BoardSearch {
   view?: 'compact';
   /** Units picked for comparison, comma-joined ids. */
   compare?: string;
+  /** Show the numbers with a balance mod applied; absent means the game's. */
+  balance?: Balance;
 }
 
-const str = (v: unknown): string | undefined => {
-  // Bare numbers in the URL (?tier=1) arrive parsed; normalise back to string.
-  const s = v == null ? '' : String(v);
-  return s ? s : undefined;
+// The factory roles were plain Air / Land / Naval until October 2026, which read
+// like the Domain filter. Old links still pick the factories.
+const RENAMED_ROLES: Record<string, string> = {
+  Air: 'Air Factory',
+  Land: 'Land Factory',
+  Naval: 'Naval Factory',
 };
+const roleParam = (v: unknown): string | undefined =>
+  str(v)
+    ?.split(',')
+    .map((r) => RENAMED_ROLES[r] ?? r)
+    .join(',');
 
 export const Route = createFileRoute('/')({
   // Data comes from /data/units.json at runtime; there is nothing to render on
@@ -60,12 +72,13 @@ export const Route = createFileRoute('/')({
     faction: str(raw.faction),
     domain: str(raw.domain),
     tier: str(raw.tier),
-    role: str(raw.role),
+    role: roleParam(raw.role),
     status: str(raw.status),
-    sort: METRICS[String(raw.sort)] ? (String(raw.sort) as SortKey) : undefined,
+    sort: Object.hasOwn(METRICS, String(raw.sort)) ? (String(raw.sort) as SortKey) : undefined,
     unit: str(raw.unit),
     view: raw.view === 'compact' ? 'compact' : undefined,
     compare: str(raw.compare),
+    balance: parseBalance(raw.balance),
   }),
   head: () => ({
     meta: [
@@ -77,7 +90,8 @@ export const Route = createFileRoute('/')({
       },
     ],
   }),
-  loader: () => loadData(),
+  loaderDeps: ({ search }) => ({ balance: search.balance }),
+  loader: ({ deps }) => loadData(deps.balance),
   component: BoardPage,
 });
 
@@ -93,9 +107,15 @@ function BoardPage() {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
 
-  const patch = (p: Partial<BoardSearch>) =>
-    navigate({ search: (prev: BoardSearch) => ({ ...prev, ...p }), replace: true });
+  const patch = useCallback(
+    (p: Partial<BoardSearch>) =>
+      navigate({ search: (prev: BoardSearch) => ({ ...prev, ...p }), replace: true }),
+    [navigate],
+  );
 
+  // Keyed on the filter params themselves, not the whole search: opening a
+  // unit or picking one to compare changes the search too, and shouldn't
+  // refilter the board.
   const filters: BoardFilters = useMemo(
     () => ({
       faction: toSet(search.faction),
@@ -105,13 +125,13 @@ function BoardPage() {
       status: statusToSet(search.status),
       search: search.q ?? '',
     }),
-    [search],
+    [search.faction, search.domain, search.tier, search.role, search.status, search.q],
   );
   const sort: SortKey = search.sort ?? 'default';
 
   const groups = useMemo(() => buildGroups(loaded.data.units), [loaded]);
   const visible = useMemo(() => visibleGroups(groups, filters, sort), [groups, filters, sort]);
-  const factions = activeFactions(filters.faction);
+  const factions = useMemo(() => activeFactions(filters.faction), [filters.faction]);
   const shownCount = visible.reduce((n, g) => n + g.units.length, 0);
   // Per-faction counts for the masthead, following the filters like the board.
   const perFaction = useMemo(() => {
@@ -120,29 +140,47 @@ function BoardPage() {
     return counts;
   }, [visible]);
 
-  const openDetail = (id: string) => patch({ unit: id });
-  const closeDetail = () => patch({ unit: undefined });
+  // The click handlers stay the same function from render to render, so the
+  // memoised cards don't all re-render when only the open unit changes.
+  const openDetail = useCallback((id: string) => patch({ unit: id }), [patch]);
+  const closeDetail = useCallback(() => patch({ unit: undefined }), [patch]);
   const selected = search.unit ? loaded.byId.get(search.unit) : undefined;
 
   // Compare mode turns a click on a card or tile from "open it" into "pick it".
   // The mode is this visit's state; the picks are in the URL.
   const [picking, setPicking] = useState(false);
-  const picks = parseCompare(search.compare, (id) => loaded.byId.has(id));
+  const known = useCallback((id: string) => loaded.byId.has(id), [loaded.byId]);
+  const picks = useMemo(() => parseCompare(search.compare, known), [search.compare, known]);
   const pickedUnits = picks.map((id) => loaded.byId.get(id)!);
   const setPicks = (ids: string[]) => patch({ compare: ids.length ? ids.join(',') : undefined });
-  const togglePicked = (id: string) => setPicks(togglePick(picks, id));
+  // Toggled against the picks in the URL at the time rather than this
+  // render's, which is what lets it stay stable as the picks change.
+  const togglePicked = useCallback(
+    (id: string) =>
+      navigate({
+        search: (prev: BoardSearch) => {
+          const ids = togglePick(parseCompare(prev.compare, known), id);
+          return { ...prev, compare: ids.length ? ids.join(',') : undefined };
+        },
+        replace: true,
+      }),
+    [navigate, known],
+  );
   const onUnitClick = picking ? togglePicked : openDetail;
-  const pickedSet = picking ? new Set(picks) : undefined;
+  const pickedSet = useMemo(() => (picking ? new Set(picks) : undefined), [picking, picks]);
 
+  // Escape leaves compare mode, or drops a unit param that matched nothing.
+  // An open drawer is a modal dialog that handles its own Escape, so while
+  // one is showing this leaves the key to it.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
+      if (e.key !== 'Escape' || selected) return;
       if (search.unit) closeDetail();
       else if (picking) setPicking(false);
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  });
+  }, [selected, search.unit, picking, closeDetail]);
 
   // Toggling a chip rewrites its group's param; an empty set drops the param —
   // except Availability, whose default is a real filter, so clearing it has to
@@ -159,8 +197,13 @@ function BoardPage() {
     }
   };
 
-  // Reset clears the filters, not the view (a display preference) or the picks.
-  const reset = () => navigate({ search: { view: search.view, compare: search.compare }, replace: true });
+  // Reset clears the filters, not the view (a display preference), the picks
+  // or which numbers are showing.
+  const reset = () =>
+    navigate({
+      search: { view: search.view, compare: search.compare, balance: search.balance },
+      replace: true,
+    });
 
   return (
     <>
@@ -170,6 +213,7 @@ function BoardPage() {
         // word is typed. The match itself trims (see matches in lib/board).
         onChange={(q) => patch({ q: q || undefined })}
         placeholder="Search name, id, role or tag…"
+        label="Search units"
       />
       <PageHead
         art="units"
@@ -189,6 +233,10 @@ function BoardPage() {
         </span>
         <div className="toolbar-controls">
           <GameVersion game={loaded.data.meta.game} generatedAt={loaded.data.meta.generatedAt} />
+          <BalanceToggle
+            on={!!search.balance}
+            onChange={(on) => patch({ balance: on ? 'remmy' : undefined })}
+          />
           <ViewToggle
             compact={search.view === 'compact'}
             onChange={(c) => patch({ view: c ? 'compact' : undefined })}
@@ -215,20 +263,17 @@ function BoardPage() {
               }
             >
               <option value="default">Tech tree</option>
-              <option value="alloys">Alloy</option>
-              <option value="energy">Energy</option>
-              <option value="buildTime">Build time</option>
-              <option value="health">Health</option>
-              <option value="dps">DPS</option>
-              <option value="range">Range</option>
-              <option value="speed">Speed</option>
-              <option value="projectileSpeed">Shot speed</option>
-              <option value="turnRate">Turn rate (unit)</option>
-              <option value="traverseSpeed">Turn rate (weapon)</option>
+              {Object.entries(METRICS).map(([key, m]) => (
+                <option key={key} value={key}>
+                  {m.label}
+                </option>
+              ))}
             </select>
           </label>
         </div>
       </div>
+
+      {search.balance && <BalanceStrip meta={loaded.data.meta} onOff={() => patch({ balance: undefined })} />}
 
       <main className={`layout${picking || picks.length ? ' has-tray' : ''}`}>
         <FilterSidebar units={loaded.data.units} filters={filters} onToggle={toggle} onReset={reset} />
@@ -264,6 +309,7 @@ function BoardPage() {
         <CompareTray
           units={pickedUnits}
           picking={picking}
+          balance={search.balance}
           iconManifest={loaded.iconManifest}
           onRemove={togglePicked}
           onClear={() => setPicks([])}
@@ -364,7 +410,10 @@ function FilterSidebar({
                   onClick={() => onToggle(g.key, String(v))}
                 >
                   {'colour' in g && g.colour ? (
-                    <FactionEmblem faction={String(v)} colour={FACTION_COLOURS[String(v)] ?? '#888'} />
+                    <FactionEmblem
+                      faction={String(v)}
+                      colour={FACTION_COLOURS[String(v)] ?? FACTION_COLOURS.Unknown}
+                    />
                   ) : null}
                   {'label' in g && g.label ? g.label(String(v)) : String(v)}
                 </button>
@@ -420,7 +469,7 @@ function Board({
         const heading = headingFor(i);
 
         return (
-          <div key={group.key} style={{ display: 'contents' }}>
+          <Fragment key={group.key}>
             {heading && <h2 className="domain-head">{heading}</h2>}
             <div className="slot">
               <div className="slot-label">
@@ -449,7 +498,7 @@ function Board({
                 })}
               </div>
             </div>
-          </div>
+          </Fragment>
         );
       })}
     </div>

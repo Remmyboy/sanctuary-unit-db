@@ -4,10 +4,11 @@
 // doesn't ask at all. Degrades to "can't reach Steam" when there's no key
 // (the static e2e build) rather than claiming nobody is hosting.
 
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { isFull, joinHref, loadLobbies, mapLabel, type Lobby, type LobbyList } from '../lib/lobbies';
 import { useNow } from '../lib/use-now';
+import { useVisiblePoll } from '../lib/use-visible-poll';
 import { HeadStat, PageHead } from '../components/PageHead';
 
 // The list is cached for 20 s (a further 40 s stale) at the CDN, so asking
@@ -35,28 +36,8 @@ export const Route = createFileRoute('/lobbies')({
 function LobbiesPage() {
   // undefined until the first answer; null when even /api/lobbies failed.
   const [list, setList] = useState<LobbyList | null | undefined>(undefined);
-  const alive = useRef(true);
 
-  useEffect(() => {
-    alive.current = true;
-    let id: ReturnType<typeof setTimeout> | null = null;
-    const tick = () => {
-      if (!document.hidden) void loadLobbies().then((l) => alive.current && setList(l));
-      id = setTimeout(tick, POLL_MS);
-    };
-    const onVisible = () => {
-      if (document.hidden) return;
-      if (id) clearTimeout(id);
-      tick();
-    };
-    tick();
-    document.addEventListener('visibilitychange', onVisible);
-    return () => {
-      alive.current = false;
-      if (id) clearTimeout(id);
-      document.removeEventListener('visibilitychange', onVisible);
-    };
-  }, []);
+  useVisiblePoll((live) => void loadLobbies().then((l) => live() && setList(l)), POLL_MS);
 
   const reachable = !!list?.ok;
   const lobbies = reachable ? list.lobbies : [];
@@ -121,7 +102,12 @@ function LobbyRow({ lobby: l }: { lobby: Lobby }) {
       <span className="lobby-map" title={l.map}>
         {mapLabel(l.map) || '—'}
       </span>
-      <span className="lobby-seats" aria-label={`${l.players} of ${l.maxPlayers} players`}>
+      {/* aria-label does nothing on a plain span, so a screen reader gets
+          the seats as hidden text and skips the pips and the bare "2/8". */}
+      <span className="lobby-seats">
+        <span className="sr-only">
+          {l.players} of {l.maxPlayers} players
+        </span>
         {l.maxPlayers > 0 && l.maxPlayers <= MAX_PIPS && (
           <span className="lobby-pips" aria-hidden="true">
             {Array.from({ length: l.maxPlayers }, (_, i) => (
@@ -129,7 +115,7 @@ function LobbyRow({ lobby: l }: { lobby: Lobby }) {
             ))}
           </span>
         )}
-        <span className="lobby-count">
+        <span className="lobby-count" aria-hidden="true">
           {l.players}/{l.maxPlayers}
         </span>
       </span>

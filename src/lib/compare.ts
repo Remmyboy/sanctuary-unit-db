@@ -65,7 +65,7 @@ const orNull = (n: number | null | undefined) => (n ? n : null);
 
 // Every row is optional: a row only shows when at least one compared unit has
 // a value for it, so comparing tanks doesn't list radar and storage.
-export const COMPARE_SECTIONS: CompareSection[] = [
+const COMPARE_SECTIONS: CompareSection[] = [
   {
     title: 'Cost',
     rows: [

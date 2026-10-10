@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import type { Unit } from '../lib/types';
 import type { LoadedData } from '../lib/data';
 import { fmt, shortName } from '../lib/format';
@@ -12,7 +12,8 @@ import {
   type Body,
   type ChaseResult,
 } from '../lib/chase';
-import { FACTION_COLOURS, iconUrl } from './UnitIcon';
+import { iconUrl } from './UnitIcon';
+import { FACTION_COLOURS } from '../lib/faction-colours';
 
 // Two of the compared units on open ground — one of each, or a group of
 // each — one side chasing the other, with their weapon ranges drawn round
@@ -63,14 +64,30 @@ export function ChaseSim({ units, loaded }: { units: Unit[]; loaded: LoadedData 
 
   // Picks survive only while both units are still being compared.
   const ids = picked && picked.every((id) => units.some((u) => u.id === id)) ? picked : defaults(units);
-  const chaser = ids && loaded.byId.get(ids[0]);
-  const target = ids && loaded.byId.get(ids[1]);
+  const chaser = ids ? loaded.byId.get(ids[0]) : undefined;
+  const target = ids ? loaded.byId.get(ids[1]) : undefined;
+  const ready = chaser && target && mobile(chaser);
 
-  if (!chaser || !target || !mobile(chaser)) return null;
-
-  const behave: Behaviour = mobile(target) ? behaviour : 'hold';
-  const gap = gapOverride ?? defaultGap(chaser, target, behave);
+  const behave: Behaviour = target && mobile(target) ? behaviour : 'hold';
+  const gap = gapOverride ?? (ready ? defaultGap(chaser, target, behave) : 0);
   const [chaserCount, targetCount] = counts;
+
+  // A run is a few thousand steps, so it's worked out once per setup rather
+  // than on every render. Dragging the gap slider asks for a new one per
+  // pixel; the deferred gap lets the slider keep up and simulates the latest
+  // position when there's time. Only a dragged gap is deferred — any other
+  // change resets the gap, and that run should match its setup straight away.
+  const deferredGap = useDeferredValue(gap);
+  const runGap = gapOverride == null ? gap : deferredGap;
+  const result = useMemo(
+    () =>
+      ready
+        ? simulateChase({ chaser, target, behaviour: behave, gap: runGap, chaserCount, targetCount })
+        : null,
+    [ready, chaser, target, behave, runGap, chaserCount, targetCount],
+  );
+
+  if (!ready || !result) return null;
   const choose = (next: [string, string]) => {
     setPicked(next);
     setGapOverride(null);
@@ -184,8 +201,8 @@ export function ChaseSim({ units, loaded }: { units: Unit[]; loaded: LoadedData 
       </div>
 
       <Playback
-        key={`${chaser.id}-${chaserCount}-${target.id}-${targetCount}-${behave}-${gap}`}
-        result={simulateChase({ chaser, target, behaviour: behave, gap, chaserCount, targetCount })}
+        key={`${chaser.id}-${chaserCount}-${target.id}-${targetCount}-${behave}-${runGap}`}
+        result={result}
         chaser={chaser}
         target={target}
         behaviour={behave}

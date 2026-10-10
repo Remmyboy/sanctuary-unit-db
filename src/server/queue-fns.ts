@@ -28,7 +28,8 @@ import type { LeaderboardRow, PlayStatus, QueueModeStatus } from '../lib/ladder-
 
 // A player's unfinished matches, in one pass. Two different things live in
 // here: the game they are in *right now*, which is the only thing that stops
-// them queueing (pair_queue in 0011 has to agree — change both together),
+// them queueing (pair_queue has to agree — the rule came in 0011, whose header
+// calls this blockingMatchIdFor; live in 0013 — change both together),
 // and the most recent result still settling, which does not. A reported
 // result waits 15 minutes for the other side and a dispute waits on an
 // admin; neither is a reason to keep someone off the ladder when their

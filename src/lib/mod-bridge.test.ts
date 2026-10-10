@@ -41,7 +41,20 @@ describe('mod-bridge', () => {
       modVersion: '0.3.0',
       gameVersion: '1.0',
       match: null,
+      watching: null,
     });
+  });
+
+  it('reads a live game being watched', async () => {
+    vi.stubGlobal(
+      'fetch',
+      reply({
+        state: 'replay',
+        live: { streaming: null, watching: { id: 's1', phase: 'failed', error: 'Wrong version.' } },
+      }),
+    );
+    const bridge = await fresh();
+    expect((await bridge.probe())?.watching).toEqual({ id: 's1', phase: 'failed', error: 'Wrong version.' });
   });
 
   it('keeps what the mod is acting on, for the test bench', async () => {
@@ -55,6 +68,7 @@ describe('mod-bridge', () => {
       modVersion: null,
       gameVersion: null,
       match: { id: 'm1', status: 'launch', phase: 'HostWaiting' },
+      watching: null,
     });
   });
 

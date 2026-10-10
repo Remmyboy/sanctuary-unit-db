@@ -4,22 +4,18 @@
 // display name (empty = your Steam name).
 
 import { useEffect, useState } from 'react';
-import { Link, createFileRoute } from '@tanstack/react-router';
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
 import { RatingGraph } from '../components/RatingGraph';
 import { loadMe } from '../lib/auth';
 import { MODES, isMode, type Mode } from '../lib/ladder-modes';
 import { setDisplayName } from '../server/auth-fns';
 import { profileGet } from '../server/match-fns';
 import type { Me, Profile } from '../lib/ladder-types';
+import { str } from '../lib/search';
 
 interface ProfileSearch {
   mode?: string;
 }
-
-const str = (v: unknown): string | undefined => {
-  const s = v == null ? '' : String(v);
-  return s ? s : undefined;
-};
 
 export const Route = createFileRoute('/ladder_/player/$steamId')({
   ssr: false,
@@ -89,6 +85,7 @@ function NameEditor({ current }: { current: string }) {
 
 function PlayerPage() {
   const profile = Route.useLoaderData();
+  const navigate = useNavigate();
   const search = Route.useSearch();
   const [me, setMe] = useState<Me | null>(null);
 
@@ -199,7 +196,17 @@ function PlayerPage() {
           </thead>
           <tbody>
             {[...profile.history].reverse().map((h) => (
-              <tr key={h.matchId}>
+              <tr
+                key={h.matchId}
+                className="row-link"
+                // The whole row opens the match; the player links inside it
+                // keep their own clicks.
+                onClick={(e) => {
+                  if (!(e.target as HTMLElement).closest('a')) {
+                    void navigate({ to: '/ladder/match/$matchId', params: { matchId: h.matchId } });
+                  }
+                }}
+              >
                 <td>
                   <span className={`outcome ${h.outcome}`}>{h.outcome}</span>
                 </td>
@@ -214,7 +221,11 @@ function PlayerPage() {
                     </span>
                   ))}
                 </td>
-                <td>{h.mapName}</td>
+                <td>
+                  {h.mapName}
+                  {h.hasStats && <span className="hist-tag">stats</span>}
+                  {h.hasReplay && <span className="hist-tag">replay</span>}
+                </td>
                 <td>
                   {h.ratingAfter}{' '}
                   <span className={h.ratingDelta >= 0 ? 'delta-up' : 'delta-down'}>
@@ -222,7 +233,11 @@ function PlayerPage() {
                     {h.ratingDelta}
                   </span>
                 </td>
-                <td className="dim">{new Date(h.completedAt).toLocaleDateString()}</td>
+                <td className="dim">
+                  <Link to="/ladder/match/$matchId" params={{ matchId: h.matchId }} className="hist-date">
+                    {new Date(h.completedAt).toLocaleDateString()}
+                  </Link>
+                </td>
               </tr>
             ))}
           </tbody>

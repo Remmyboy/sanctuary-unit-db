@@ -114,6 +114,7 @@ export function toView(
   participants: ParticipantRow[],
   events: MmEventRow[] = [],
   modMatch: ModMatch | null = null,
+  uploads: Pick<MatchView, 'stats' | 'replay'> = { stats: null, replay: null },
 ): MatchView {
   return {
     id: m.id,
@@ -138,5 +139,6 @@ export function toView(
     createdAt: m.created_at.toISOString(),
     completedAt: m.completed_at?.toISOString() ?? null,
     participants: participants.map(toParticipant),
+    ...uploads,
   };
 }

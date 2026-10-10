@@ -60,6 +60,26 @@ describe('pollDelay', () => {
     expect(pollDelay(match({ status: 'completed', mmStatus: 'done' }))).toBeNull();
     expect(pollDelay(match({ status: 'cancelled', mmStatus: 'cancelled' }))).toBeNull();
   });
+
+  it('keeps a slow poll on a fresh result while the mods may still be uploading', () => {
+    const now = Date.parse('2026-10-05T12:00:00Z');
+    const done = (minutesAgo: number, over: Partial<MatchView> = {}) =>
+      match({
+        status: 'completed',
+        mmStatus: 'done',
+        completedAt: new Date(now - minutesAgo * 60_000).toISOString(),
+        stats: null,
+        replay: null,
+        ...over,
+      });
+    expect(pollDelay(done(2), now)).toBe(SLOW_MS);
+    expect(pollDelay(done(2, { stats: {} as MatchView['stats'] }), now)).toBe(SLOW_MS); // replay to come
+    expect(pollDelay(done(25), now)).toBeNull(); // nobody uploads this late
+    const ready = { status: 'ready', uploading: false } as MatchView['replay'];
+    expect(pollDelay(done(2, { stats: {} as MatchView['stats'], replay: ready }), now)).toBeNull();
+    const uploading = { status: 'pending', uploading: true } as MatchView['replay'];
+    expect(pollDelay(done(2, { stats: {} as MatchView['stats'], replay: uploading }), now)).toBe(SLOW_MS);
+  });
 });
 
 describe('shouldPoll', () => {

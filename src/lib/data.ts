@@ -1,7 +1,8 @@
 import type { Unit, UnitsData } from './types';
+import { BALANCE_DATA_URL, type Balance } from './balance-patch';
 
-// One fetch per session, shared by every route loader. Routes run with
-// ssr: false, so this only ever executes in the browser.
+// One fetch per session and balance, shared by every route loader. Routes run
+// with ssr: false, so this only ever executes in the browser.
 
 export interface LoadedData {
   data: UnitsData;
@@ -14,16 +15,28 @@ export interface LoadedData {
   renders: Set<string>;
 }
 
-let cache: Promise<LoadedData> | null = null;
+const cache = new Map<string, Promise<LoadedData>>();
 
-export function loadData(): Promise<LoadedData> {
-  cache ??= load();
-  return cache;
+/** The units as the game ships them, or with a balance mod applied. */
+export function loadData(balance?: Balance): Promise<LoadedData> {
+  const key = balance ?? 'game';
+  if (!cache.has(key)) cache.set(key, load(balance));
+  return cache.get(key)!;
 }
 
-async function load(): Promise<LoadedData> {
+/**
+ * The sharpest picture there is of a unit: the developers' 384px render (hd),
+ * else the game's 64px thumbnail, else null — callers fall back to the icon.
+ */
+export function unitArt(u: Unit, loaded: LoadedData): { src: string; hd: boolean } | null {
+  if (loaded.renders.has(u.id)) return { src: `/renders/${u.id}.webp`, hd: true };
+  if (loaded.previews.has(u.id)) return { src: `/previews/${u.id}.png`, hd: false };
+  return null;
+}
+
+async function load(balance?: Balance): Promise<LoadedData> {
   const [data, iconManifest, previews, renders] = await Promise.all([
-    fetchJson<UnitsData>('/data/units.json'),
+    fetchJson<UnitsData>(balance ? BALANCE_DATA_URL : '/data/units.json'),
     // The manifests are optional: without them icons fall back to generated
     // SVG, the detail panel uses the 64px render, or omits it.
     fetchJson<string[]>('/icons/manifest.json').catch(() => []),

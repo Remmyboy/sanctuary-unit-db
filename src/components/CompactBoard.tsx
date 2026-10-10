@@ -5,11 +5,12 @@
 // strip that follows the pointer or keyboard focus, in place of tooltips that
 // would clip at the blocks' edges; a click opens the usual detail panel.
 
-import { useState } from 'react';
+import { Fragment, memo, useMemo, useState } from 'react';
 import type { Faction, Unit } from '../lib/types';
 import { compactBlocks, slotSpan, DOMAIN_NAMES, type Group, type SortKey } from '../lib/board';
 import { fmt, shortName } from '../lib/format';
-import { FACTION_COLOURS, UnitIcon } from './UnitIcon';
+import { UnitIcon } from './UnitIcon';
+import { FACTION_COLOURS } from '../lib/faction-colours';
 import { FactionEmblem } from './FactionEmblem';
 
 interface CompactBoardProps {
@@ -24,7 +25,30 @@ interface CompactBoardProps {
   onOpen: (id: string) => void;
 }
 
-export function CompactBoard({
+export function CompactBoard(props: CompactBoardProps) {
+  const { groups } = props;
+  const [hovered, setHovered] = useState<Unit | null>(null);
+  const byId = useMemo(() => new Map(groups.flatMap((g) => g.units).map((u) => [u.id, u])), [groups]);
+
+  // Delegated, so a move between two tiles is one update rather than a
+  // leave/enter pair, and the readout keeps the last unit while crossing gaps.
+  const track = (e: React.SyntheticEvent) => {
+    const id = (e.target as HTMLElement).closest<HTMLElement>('[data-unit]')?.dataset.unit;
+    if (id && id !== hovered?.id) setHovered(byId.get(id) ?? null);
+  };
+
+  // Only the readout follows the pointer. The tiles are a memoised subtree
+  // with none of the hover state in its props, so a hover re-renders the
+  // strip and nothing else.
+  return (
+    <div className="compact-board" onPointerOver={track} onFocus={track}>
+      <Readout unit={hovered} />
+      <Blocks {...props} />
+    </div>
+  );
+}
+
+const Blocks = memo(function Blocks({
   groups,
   factions,
   sort,
@@ -34,48 +58,35 @@ export function CompactBoard({
   picked,
   onOpen,
 }: CompactBoardProps) {
-  const [hovered, setHovered] = useState<Unit | null>(null);
   const blocks = compactBlocks(groups, sort);
-  const byId = new Map(groups.flatMap((g) => g.units).map((u) => [u.id, u]));
-
-  // Delegated, so a move between two tiles is one update rather than a
-  // leave/enter pair, and the readout keeps the last unit while crossing gaps.
-  const track = (e: React.SyntheticEvent) => {
-    const id = (e.target as HTMLElement).closest<HTMLElement>('[data-unit]')?.dataset.unit;
-    if (id && id !== hovered?.id) setHovered(byId.get(id) ?? null);
-  };
-
   return (
-    <div className="compact-board" onPointerOver={track} onFocus={track}>
-      <Readout unit={hovered} />
-      <div className="cblocks">
-        {blocks.map((block, i) => {
-          const heading =
-            block.domain && (i === 0 || blocks[i - 1].domain !== block.domain)
-              ? DOMAIN_NAMES[block.domain]
-              : null;
-          return (
-            <div key={block.key} style={{ display: 'contents' }}>
-              {heading && <h2 className="domain-head">{heading}</h2>}
-              <Block block={block.groups} label={block.label} factions={factions}>
-                {(u) => (
-                  <Tile
-                    unit={u}
-                    iconManifest={iconManifest}
-                    hasPreview={previews.has(u.id)}
-                    selected={u.id === selectedId}
-                    picked={picked?.has(u.id)}
-                    onOpen={onOpen}
-                  />
-                )}
-              </Block>
-            </div>
-          );
-        })}
-      </div>
+    <div className="cblocks">
+      {blocks.map((block, i) => {
+        const heading =
+          block.domain && (i === 0 || blocks[i - 1].domain !== block.domain)
+            ? DOMAIN_NAMES[block.domain]
+            : null;
+        return (
+          <Fragment key={block.key}>
+            {heading && <h2 className="domain-head">{heading}</h2>}
+            <Block block={block.groups} label={block.label} factions={factions}>
+              {(u) => (
+                <Tile
+                  unit={u}
+                  iconManifest={iconManifest}
+                  hasPreview={previews.has(u.id)}
+                  selected={u.id === selectedId}
+                  picked={picked?.has(u.id)}
+                  onOpen={onOpen}
+                />
+              )}
+            </Block>
+          </Fragment>
+        );
+      })}
     </div>
   );
-}
+});
 
 // One block: a grid with a row per faction and a column per slot position.
 // Everything is placed explicitly, so a faction missing from a slot leaves a
@@ -159,6 +170,7 @@ function Tile({
       onClick={() => onOpen(u.id)}
     >
       {picked !== undefined && <span className="pick-mark" aria-hidden="true" />}
+      {u.balance && <span className="bp-mark" aria-hidden="true" />}
       {hasPreview ? (
         <>
           <img className="tile-render" src={`/previews/${u.id}.png`} alt="" loading="lazy" decoding="async" />
@@ -188,6 +200,7 @@ function Readout({ unit: u }: { unit: Unit | null }) {
       <strong>{u.name ?? shortName(u)}</strong>
       <span className="creadout-sub">{u.displayName}</span>
       {u.status === 'in-progress' && <span className="wip">WIP</span>}
+      {u.balance && <span className="bp-mark" title="Changed by the balance patch" aria-hidden="true" />}
       <span className="creadout-stats">
         <Stat label="Alloy" value={fmt(u.cost.alloys)} cls="alloy-val" />
         <Stat label="Energy" value={fmt(u.cost.energy)} cls="energy-val" />

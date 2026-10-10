@@ -21,6 +21,7 @@ import { FACTIONS, isFaction, type Faction } from '../lib/mm';
 import { bridgeSignal, useModBridge, watchBridge } from '../lib/mod-bridge';
 import { fetchQueueCounts } from '../lib/queue-counts';
 import { applyStatus, isQueued, markJoining, refreshQueue, useQueueState } from '../lib/queue-watch';
+import { useVisiblePoll } from '../lib/use-visible-poll';
 import { queueJoin, queueLeave } from '../server/queue-fns';
 import type { Me, PlayStatus, QueueCounts } from '../lib/ladder-types';
 
@@ -91,24 +92,7 @@ function PlayPage() {
   // fresher ones and wins below. A hidden tab doesn't ask — nobody is
   // looking, and an idle tab left open must cost nothing — and asks the
   // moment it is shown again.
-  useEffect(() => {
-    let id: ReturnType<typeof setTimeout> | null = null;
-    const tick = () => {
-      if (!document.hidden) void fetchQueueCounts().then((c) => alive.current && c && setCounts(c));
-      id = setTimeout(tick, COUNTS_MS);
-    };
-    const onVisible = () => {
-      if (document.hidden) return;
-      if (id) clearTimeout(id);
-      tick();
-    };
-    tick();
-    document.addEventListener('visibilitychange', onVisible);
-    return () => {
-      if (id) clearTimeout(id);
-      document.removeEventListener('visibilitychange', onVisible);
-    };
-  }, []);
+  useVisiblePoll((live) => void fetchQueueCounts().then((c) => live() && c && setCounts(c)), COUNTS_MS);
 
   // Signed in: one answer now, so an open match or a queue from another tab
   // shows up. The shared watch keeps polling only if that answer says we're

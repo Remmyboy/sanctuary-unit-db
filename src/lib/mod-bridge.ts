@@ -36,11 +36,20 @@ export interface BridgeMatch {
   phase: string;
 }
 
+// A live game the mod is watching (docs/live-replays.md): waiting for the
+// delay, loading, playing, over, or failed with a sentence to show.
+export interface BridgeWatch {
+  id: string;
+  phase: string;
+  error: string | null;
+}
+
 export interface BridgeStatus {
   modVersion: string | null;
   gameVersion: string | null;
   state: ModState;
   match: BridgeMatch | null;
+  watching: BridgeWatch | null;
 }
 
 export interface BridgeState {
@@ -93,16 +102,36 @@ function parseMatch(v: unknown): BridgeMatch | null {
   return { id: d.id, status: str(d.status) ?? '', phase: str(d.phase) ?? '' };
 }
 
+function parseWatch(v: unknown): BridgeWatch | null {
+  const d = (v as { watching?: unknown } | null)?.watching as {
+    id?: unknown;
+    phase?: unknown;
+    error?: unknown;
+  } | null;
+  if (!d || typeof d !== 'object' || typeof d.id !== 'string') return null;
+  return { id: d.id, phase: str(d.phase) ?? '', error: str(d.error) };
+}
+
 function parseStatus(v: unknown): BridgeStatus | null {
-  const d = v as { state?: unknown; modVersion?: unknown; gameVersion?: unknown; match?: unknown } | null;
+  const d = v as {
+    state?: unknown;
+    modVersion?: unknown;
+    gameVersion?: unknown;
+    match?: unknown;
+    live?: unknown;
+  } | null;
   if (!d || typeof d !== 'object' || !isModState(d.state)) return null;
   return {
     state: d.state,
     modVersion: str(d.modVersion),
     gameVersion: str(d.gameVersion),
     match: parseMatch(d.match),
+    watching: parseWatch(d.live),
   };
 }
+
+const sameWatch = (a: BridgeWatch | null, b: BridgeWatch | null): boolean =>
+  a === b || (a !== null && b !== null && a.id === b.id && a.phase === b.phase && a.error === b.error);
 
 const sameMatch = (a: BridgeMatch | null, b: BridgeMatch | null): boolean =>
   a === b || (a !== null && b !== null && a.id === b.id && a.status === b.status && a.phase === b.phase);
@@ -114,7 +143,8 @@ const same = (a: BridgeStatus | null, b: BridgeStatus | null): boolean =>
     a.state === b.state &&
     a.modVersion === b.modVersion &&
     a.gameVersion === b.gameVersion &&
-    sameMatch(a.match, b.match));
+    sameMatch(a.match, b.match) &&
+    sameWatch(a.watching, b.watching));
 
 // Only a change is news: the probe answers every two seconds and the same
 // answer must not re-render anything.
@@ -236,6 +266,36 @@ export async function pushMatch(match: ModMatch | null): Promise<boolean> {
     return res.ok;
   } catch {
     return false;
+  }
+}
+
+export type WatchResult = { ok: true } | { ok: false; error: string | null }; // null: no mod reachable
+
+// The live page's "Watch in game" (docs/live-replays.md): the mod downloads
+// the stream from the site itself and plays it. A user's click, so it may
+// raise the local-network prompt; it turns the bridge on the way the
+// Connect button does, so the page can follow the game afterwards.
+export async function watchLive(streamId: string): Promise<WatchResult> {
+  if (!canFetch()) return { ok: false, error: null };
+  if (!state.enabled) enableBridge();
+  try {
+    const res = await fetch(`${BASE}/watch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stream: streamId }),
+      signal: AbortSignal.timeout(TIMEOUT_MS * 4),
+    });
+    if (res.ok) return { ok: true };
+    // A mod from before live replays has no /watch.
+    if (res.status === 404)
+      return { ok: false, error: 'Your LadderReporter is too old to watch live games — update it.' };
+    const body = (await res.json().catch(() => null)) as { error?: unknown } | null;
+    return {
+      ok: false,
+      error: typeof body?.error === 'string' ? body.error : `The game said no (${res.status}).`,
+    };
+  } catch {
+    return { ok: false, error: null };
   }
 }
 

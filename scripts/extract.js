@@ -6,10 +6,28 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseLuaTable } from './lua-parser.js';
 import { locateGame, contentRoot, steamBuild } from './locate-game.js';
+import { compileTagExpression } from './lib/tag-expression.js';
+import {
+  aimingOf,
+  cycleMuzzleCount,
+  groupWeapons,
+  mainWeapon,
+  projectileSpeedOf,
+  round,
+  simulateWeapon,
+} from './lib/weapons.js';
+import { netChanges } from '../src/lib/balance-net.ts';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const OUT_FILE = path.join(here, '..', 'public', 'data', 'units.json');
 const VERSION_FILE = path.join(here, '..', 'public', 'data', 'version.json');
+// Remmy's Balance Patch: its changes (imported by `npm run balance-patch`) and
+// the units with them applied, for the database's balance-patch toggle.
+const PATCH_FILE = path.join(here, '..', 'src', 'lib', 'balance-patch.json');
+const PATCH_OUT_FILE = path.join(here, '..', 'public', 'data', 'units-balance-patch.json');
+// Set by the patch but not worth a line: a unit spawns with its max health, so
+// this always moves with `health`. src/lib/balance-patch.ts hides the same.
+const HIDDEN_FIELDS = new Set(['defence.health.value']);
 
 // Third character of the template id encodes the domain, second the faction.
 const FACTIONS = { e: 'EDA', c: 'Chosen', g: 'Guard', w: 'Guard' };
@@ -19,13 +37,6 @@ const DOMAINS = { l: 'Land', a: 'Air', n: 'Naval', s: 'Structure' };
 // mis-tagged templates — see normaliseFactionTag.
 const FACTION_TAGS = { e: 'EDA', c: 'CHOSEN', g: 'GUARD', w: 'GUARD' };
 const ALL_FACTION_TAGS = new Set(Object.values(FACTION_TAGS));
-
-// Simulation tick rate and step, from the game's generated constants.lua
-// (TickRate = 10, TickTimeStep = 0.1). Beam weapons deal their `damage` once
-// per tick, and every weapon timer counts down by the step once per tick — as
-// a double, exactly as LuaJIT does, which matters (see simulateWeapon).
-const TICK_RATE = 10;
-const TICK_STEP = 0.1;
 
 // Problems found in the game's own data, surfaced rather than silently patched.
 const issues = [];
@@ -42,12 +53,34 @@ const ROLES = {
   shield: 'Shield',
   plasma: 'Plasma',
   alloy: 'Economy',
-  air: 'Air',
-  land: 'Land',
-  naval: 'Naval',
+  // Only factories wear these. Named for what they are, so the Role chips
+  // can't be mistaken for the Domain filter's Air / Land / Naval.
+  air: 'Air Factory',
+  land: 'Land Factory',
+  naval: 'Naval Factory',
   transmiter: 'Transmitter',
   none: null,
 };
+
+// The icon is wrong for one factory (every T3 Naval Factory wears the air
+// symbol), so a factory's role comes from its *_FACTORY tag, which agrees with
+// its name everywhere.
+const FACTORY_ROLES = {
+  LAND_FACTORY: 'Land Factory',
+  AIR_FACTORY: 'Air Factory',
+  NAVAL_FACTORY: 'Naval Factory',
+};
+
+function roleOf(symbol, tags, id) {
+  const fromIcon = ROLES[symbol] ?? null;
+  const factoryTag = tags.find((tag) => FACTORY_ROLES[tag]);
+  if (!factoryTag) return fromIcon;
+  const role = FACTORY_ROLES[factoryTag];
+  if (fromIcon && fromIcon !== role) {
+    issues.push(`${id} is tagged ${factoryTag} but its icon shows "${symbol}" — role taken from the tag`);
+  }
+  return role;
+}
 
 function main() {
   const gameDir = locateGame();
@@ -69,6 +102,8 @@ function main() {
 
   const units = [];
   const failures = [];
+  // Each unit's template as parsed, for the balance patch to apply its changes to.
+  const templates = new Map();
 
   for (const id of fs.readdirSync(templateDir).sort()) {
     const file = path.join(templateDir, id, `${id}.santp`);
@@ -78,6 +113,7 @@ function main() {
     }
     try {
       const raw = parseLuaTable(fs.readFileSync(file, 'utf8'), { assignment: 'UnitTemplate' });
+      templates.set(id, structuredClone(raw));
       units.push(toUnit(raw, id, available, models, adjacency, projectiles));
     } catch (err) {
       failures.push({ id, reason: err.message });
@@ -135,6 +171,126 @@ function main() {
   );
 
   report(units, failures, payload);
+  writeBalancePatch(payload, templates, { available, models, adjacency, projectiles });
+}
+
+// Remmy's Balance Patch, applied to the templates just read: the same
+// derivation as the base data (DPS, tiers, build trees), on the patched
+// numbers, so every page can show either. The patch's changes count array
+// items from 1, as Lua does, and say what the game's value was; a change whose
+// "before" no longer matches the install means the game has moved on since the
+// patch was made, so it's reported and left out, as the mod itself would skip it.
+function writeBalancePatch(base, templates, { available, models, adjacency, projectiles }) {
+  if (!fs.existsSync(PATCH_FILE)) return;
+  const patch = JSON.parse(fs.readFileSync(PATCH_FILE, 'utf8'));
+  const build = base.meta.game?.buildId;
+  if (build && String(build) !== String(patch.game.steamBuild)) {
+    console.warn(
+      `
+balance patch: made for build ${patch.game.steamBuild}, this install is ${build} — checking every change`,
+    );
+  }
+
+  const stale = [];
+  const apply = (target, c) => {
+    const keys = c.field.split('.');
+    let node = target;
+    for (const k of keys.slice(0, -1)) node = node?.[Array.isArray(node) ? Number(k) - 1 : k];
+    const last = keys.at(-1);
+    const key = Array.isArray(node) ? Number(last) - 1 : last;
+    if (!node || !sameValue(node[key], c.before)) {
+      stale.push(
+        `${c.id} ${c.field}: expected ${JSON.stringify(c.before)}, found ${JSON.stringify(node?.[key])}`,
+      );
+      return false;
+    }
+    node[key] = structuredClone(c.after);
+    return true;
+  };
+
+  const patchedProjectiles = new Map(projectiles);
+  const appliedShots = [];
+  const shotName = new Map();
+  for (const c of patch.changes.filter((c) => c.kind === 'projectile')) {
+    const tp = structuredClone(patchedProjectiles.get(c.id));
+    if (!tp || !apply(tp, c)) continue;
+    patchedProjectiles.set(c.id, tp);
+    appliedShots.push(c);
+    shotName.set(c.id, /missile/i.test(tp.general?.name ?? '') ? 'missile' : 'shell');
+  }
+
+  const patched = new Map();
+  const appliedUnits = [];
+  for (const c of patch.changes.filter((c) => c.kind === 'unit')) {
+    if (!templates.has(c.id)) {
+      stale.push(`${c.id}: no such unit in this install`);
+      continue;
+    }
+    if (!patched.has(c.id)) patched.set(c.id, structuredClone(templates.get(c.id)));
+    if (apply(patched.get(c.id), c)) appliedUnits.push(c);
+  }
+
+  // What changed on each unit against the game, one net change per field
+  // (see src/lib/balance-net.ts): its own fields first, then its shots',
+  // which show on every unit that fires them.
+  const entry = (c, label) => ({ label, before: c.before, after: c.after, sections: c.sections });
+  const byUnit = new Map();
+  const add = (id, e) => byUnit.set(id, [...(byUnit.get(id) ?? []), e]);
+  for (const c of netChanges(appliedUnits.filter((c) => !HIDDEN_FIELDS.has(c.field))))
+    add(c.id, entry(c, c.label));
+  for (const c of netChanges(appliedShots)) {
+    for (const [id, t] of templates) {
+      if ((t.weapons ?? []).some((w) => w.projectileTemplate === c.id))
+        add(id, entry(c, `${shotName.get(c.id)} ${c.label}`));
+    }
+  }
+
+  // The base run already reported the game's own data faults; re-deriving the
+  // same units would only repeat them.
+  const issuesBefore = issues.length;
+  const units = base.units.map((u) => {
+    const t = patched.get(u.id) ?? (byUnit.has(u.id) ? templates.get(u.id) : null);
+    const unit = t
+      ? toUnit(structuredClone(t), u.id, available, models, adjacency, patchedProjectiles)
+      : structuredClone(u);
+    unit.builds = [];
+    unit.builtBy = [];
+    if (byUnit.has(u.id)) unit.balance = byUnit.get(u.id);
+    return unit;
+  });
+  resolveBuildTrees(units);
+  issues.length = issuesBefore;
+
+  const payload = {
+    meta: {
+      ...base.meta,
+      balancePatch: {
+        id: patch.mod.id,
+        version: patch.mod.version,
+        game: patch.game,
+        sections: patch.sections.map(({ key, label }) => ({ key, label })),
+        changedUnits: byUnit.size,
+        stale,
+      },
+    },
+    units,
+  };
+  fs.writeFileSync(PATCH_OUT_FILE, JSON.stringify(payload));
+  const size = (fs.statSync(PATCH_OUT_FILE).size / 1024).toFixed(0);
+  console.log(`
+balance patch ${patch.mod.version}: ${byUnit.size} units changed`);
+  console.log(`wrote:     ${path.relative(process.cwd(), PATCH_OUT_FILE)} (${size} KB)`);
+  if (stale.length) {
+    console.warn(`balance patch changes that no longer match the game (${stale.length}), left out:`);
+    for (const s of stale) console.warn(`  ! ${s}`);
+  }
+}
+
+// Template values as the patch records them: a missing field is the game's
+// default, which for every field it touches is false, 0 or nothing.
+function sameValue(found, before) {
+  const norm = (v) => (v === undefined || v === false ? null : v);
+  return JSON.stringify(norm(found)) === JSON.stringify(norm(before));
 }
 
 // Which units actually have a model, found by looking for their LOD assets in
@@ -402,7 +558,7 @@ function toUnit(t, id, available, models, adjacency, projectiles) {
     faction: FACTIONS[id[1]] ?? 'Unknown',
     domain: DOMAINS[id[2]] ?? 'Unknown',
     tier: resolveTier(tags, id),
-    role: ROLES[general.icon?.symbol] ?? null,
+    role: roleOf(general.icon?.symbol, tags, id),
     icon: {
       shape: general.icon?.shape ?? null,
       symbol: general.icon?.symbol ?? null,
@@ -503,210 +659,6 @@ function toUnit(t, id, available, models, adjacency, projectiles) {
   };
 }
 
-// Firing model, per the game's own template documentation:
-//   muzzleGroups    - each group is a set of muzzle bones that fire together
-//   muzzleSalvoSize - how many *groups* fire in one cycle (not shots per muzzle)
-//   reloadTime      - seconds between cycles
-// So a weapon with ten groups and a salvo size of one fires a single group per
-// cycle and cycles through them; counting all ten would overstate it tenfold.
-// Projectile speed lives on the weapon's aim controllers, not on the projectile
-// template (those are visuals only). A weapon can have several controllers: one
-// driving the turret yaw, which carries a coarse lead-estimate speed, and one
-// per muzzle carrying the real firing solution. Prefer the muzzle-bound ones.
-//
-//   ucl4002: yaw controller says 30, both muzzle controllers say 6 -> 6
-function projectileSpeedOf(w) {
-  const controllers = w.aimControllers ?? [];
-  const muzzleBound = controllers.filter((a) => /muzzle/i.test(a.aimBone ?? ''));
-  // The T1 Bomber declares 0.0001, which means "drops under gravity" rather than
-  // any real muzzle velocity. Every genuine speed in the data is >= 5, so the
-  // cutoff is unambiguous and reporting the placeholder would be nonsense.
-  const speeds = (muzzleBound.length ? muzzleBound : controllers)
-    .map((a) => a.projectileSpeed)
-    .filter((v) => typeof v === 'number' && v >= 1);
-
-  if (!speeds.length) return null;
-
-  // Take the most common value; ties break low so we never overstate it.
-  const counts = new Map();
-  for (const v of speeds) counts.set(v, (counts.get(v) ?? 0) + 1);
-  return [...counts].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0][0];
-}
-
-// How fast the weapon tracks a target, and how far around it can point.
-//
-// Controllers are split by axis: the one bound to a yawBone traverses, the ones
-// bound to a pitchBone elevate. A weapon can have several of each, so take the
-// most common speed per axis the same way projectile speed does.
-//
-// Note this reads the `weapons` block, not `turrets`. templateExplainations.lua
-// marks `turrets` as "Old format, still have some leftover stuff", and its
-// turnRateDegreesPerSecond disagrees with the live value on 20 weapons.
-function aimingOf(w) {
-  const controllers = w.aimControllers ?? [];
-
-  const mode = (values) => {
-    const nums = values.filter((v) => typeof v === 'number' && v > 0);
-    if (!nums.length) return null;
-    const counts = new Map();
-    for (const v of nums) counts.set(v, (counts.get(v) ?? 0) + 1);
-    return [...counts].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0][0];
-  };
-
-  const yawControllers = controllers.filter((c) => c.yawBone);
-  const pitchControllers = controllers.filter((c) => c.pitchBone);
-
-  // Arc comes from whichever yaw controller declares limits; 360 means the
-  // turret spins freely, anything less is a restricted firing arc.
-  const arcSource = yawControllers.find((c) => c.yawMin != null && c.yawMax != null);
-
-  return {
-    traverseSpeed: mode(yawControllers.map((c) => c.yawSpeed)),
-    elevationSpeed: mode(pitchControllers.map((c) => c.pitchSpeed)),
-    traverseArc: arcSource ? Math.round(arcSource.yawMax - arcSource.yawMin) : null,
-  };
-}
-
-// How many muzzles each muzzle group fires. Mirrors SetUpWeapons
-// (unitsBaseClass.lua), which walks `muzzleGroup.muzzles` — so a group that
-// declares no muzzles list fires nothing, and neither does a weapon with no
-// groups at all. Four bomber weapons ship an empty list; see toWeapon.
-function groupSizes(w) {
-  return (w.muzzleGroups ?? []).map((g) => (Array.isArray(g?.muzzles) ? g.muzzles.length : 0));
-}
-
-// Muzzles fired in one cycle. From AIFunctions.lua's GetWeaponCycleMuzzleCount:
-// salvo indices wrap around the groups, so a weapon whose salvo size exceeds
-// its group count fires some groups more than once per cycle — a series of
-// barrels cycling. Capping at the group count, as this once did, undercounts.
-function cycleMuzzleCount(w) {
-  const groups = groupSizes(w);
-  if (!groups.length) return 0;
-  let count = 0;
-  for (let i = 0; i < (w.muzzleSalvoSize ?? 1); i++) count += groups[i % groups.length];
-  return count;
-}
-
-// A tick-for-tick port of HostWeapon:Update and its UpdateProjectile /
-// UpdateBeam / AdvanceSalvoState (host/units/weaponsClasses/weaponsBaseClass.lua),
-// with the target held in the sights throughout. Returns the steady-state DPS
-// and the seconds from one volley to the next.
-//
-// Simulating rather than using a formula is deliberate. Three things the
-// template doesn't say out loud decide the real rate of fire:
-//
-// 1. Reload runs concurrently with the salvo. reloadTimer is reset as the salvo
-//    *starts* and keeps counting while it plays out, so a cycle is whichever is
-//    longer, not their sum. (The AI's own GetWeaponDamagePerSecond adds them;
-//    the Chosen Commander visibly alternates barrels with no pause, which only
-//    the concurrent reading predicts.)
-// 2. Every timer moves in 0.1s ticks and only fires once it reaches <= 0. It
-//    counts down by subtracting 0.1 as a double, and ten of those leave 1.0 at
-//    1.4e-16, not zero — so a 1s reload takes 11 ticks, 1.1s. 0.5s is really
-//    0.6s, 0.25s is 0.3s, 5s is 5.1s; 2s and 3s happen to land exactly.
-//    There is no rounding rule — only stepping the countdown gets it right.
-//    Timed in game on build 25474094: Chosen Commander 1.1s, EDA Commander
-//    2.0s, Jager and Stitcher 0.6s, all exactly as simulated.
-// 3. Beam damage is per tick, applied by HostBeam:Update after the weapons
-//    update in the same tick (CollisionUpdate). A continuous beam
-//    (beamLifetime -1) never finishes its salvo, so only the first muzzle group
-//    ever fires and reload is irrelevant. A pulse or burst beam lands
-//    beamLifetime ticks per volley.
-//
-// Anything the host never reads is left out: damageOverTimePulse*, chargeTime,
-// impactDelay and damageBox appear in no runtime code, Lua or compiled — see
-// unreadWeaponFields.
-function simulateWeapon(w, isBeam) {
-  const groups = groupSizes(w);
-  if (!groups.length) return null;
-
-  const damage = w.damage ?? 0;
-  const reloadTime = w.reloadTime ?? 0;
-  const salvoSize = w.muzzleSalvoSize ?? 1;
-  const lifetime = w.beamLifetime ?? -1;
-
-  if (isBeam && lifetime <= 0) return { dps: groups[0] * damage * TICK_RATE, cycleTime: null };
-
-  let reloadTimer = reloadTime;
-  let state = 'reload';
-  let salvosRemaining = 0;
-  let group = 0;
-  let between = 0;
-  let pending = false;
-  let countdown = 0;
-  let beaming = 0; // muzzles whose beam is on
-  let dealt = 0;
-  const starts = []; // [tick, damage dealt before it] at each volley start
-
-  const advance = () => {
-    group = (group + 1) % groups.length;
-    salvosRemaining -= 1;
-    if (salvosRemaining <= 0) state = 'reload';
-    else {
-      between = w.muzzleSalvoDelay ?? 0;
-      state = 'between';
-    }
-  };
-  const waitBetween = () => {
-    if (state !== 'between') return;
-    between -= TICK_STEP;
-    if (between <= 0) state = 'shoot';
-  };
-
-  const beamStep = () => {
-    if (state === 'shoot') {
-      state = 'beam';
-      pending = true;
-      return;
-    }
-    if (state === 'beam') {
-      if (pending) {
-        pending = false;
-        countdown = lifetime;
-        beaming = groups[group];
-        return;
-      }
-      if (countdown > 0 && --countdown === 0) state = 'finish';
-    }
-    if (state === 'finish') {
-      beaming = 0;
-      advance();
-    }
-    waitBetween();
-  };
-
-  const projectileStep = () => {
-    if (state === 'shoot') {
-      dealt += groups[group] * damage;
-      state = 'finish';
-    }
-    if (state === 'finish') advance();
-    waitBetween();
-  };
-
-  // Group rotation repeats after groups.length volleys, so measure across
-  // exactly that many (skipping the first, which starts from a fresh reload).
-  const volleys = groups.length;
-  for (let tick = 0; starts.length < volleys + 2 && tick < 1e6; tick++) {
-    reloadTimer -= TICK_STEP;
-    if (state === 'reload' && reloadTimer <= 0) state = 'target';
-    if (state === 'target') {
-      starts.push([tick, dealt]);
-      reloadTimer = reloadTime;
-      salvosRemaining = salvoSize;
-      state = 'shoot';
-    }
-    if (isBeam) beamStep();
-    else projectileStep();
-    dealt += beaming * damage;
-  }
-
-  const [t0, d0] = starts[1];
-  const [t1, d1] = starts[1 + volleys];
-  const seconds = (t1 - t0) / TICK_RATE;
-  return { dps: (d1 - d0) / seconds, cycleTime: round(seconds / volleys) };
-}
-
 // Template fields the documentation describes but no runtime code reads — not
 // the Lua host, not the compiled engine (Trebuchet.dll holds none of these
 // names). Counting them would credit damage the game never deals: the Onager's
@@ -789,61 +741,6 @@ function toWeapon(w, where, projectiles) {
   };
 }
 
-// canBuild is a boolean tag expression. `*` is AND, `+` is OR, and parentheses
-// group:
-//
-//   Tags.EDA * Tags.BUILDABLE_BY_T1_FACTORY * ((Tags.LAND * Tags.MOBILE) + Tags.LAND_FACTORY)
-//
-// i.e. a land factory builds EDA land units, or another land factory — that's
-// the upgrade chain. An atom that names a template id rather than a tag matches
-// that one unit, which is how in-place structure upgrades are written
-// ("Tags.ugs2806"). 27 of the 69 expressions use the OR/parenthesis form; a
-// naive split on `*` silently drops them, costing ~90 units their builders.
-function compileTagExpression(src) {
-  const tokens = src.match(/Tags\.[A-Za-z0-9_]+|[*+()]/g) ?? [];
-  let pos = 0;
-
-  // orExpr := andExpr ('+' andExpr)*
-  const orExpr = () => {
-    let node = andExpr();
-    while (tokens[pos] === '+') {
-      pos++;
-      const [lhs, rhs] = [node, andExpr()];
-      node = (u) => lhs(u) || rhs(u);
-    }
-    return node;
-  };
-
-  // andExpr := atom ('*' atom)*
-  const andExpr = () => {
-    let node = atom();
-    while (tokens[pos] === '*') {
-      pos++;
-      const [lhs, rhs] = [node, atom()];
-      node = (u) => lhs(u) && rhs(u);
-    }
-    return node;
-  };
-
-  const atom = () => {
-    if (tokens[pos] === '(') {
-      pos++;
-      const node = orExpr();
-      if (tokens[pos] !== ')') throw new Error(`expected ")" in: ${src}`);
-      pos++;
-      return node;
-    }
-    const token = tokens[pos++];
-    if (!token?.startsWith('Tags.')) throw new Error(`unexpected "${token ?? 'end'}" in: ${src}`);
-    const name = token.slice(5);
-    return (u) => u.tags.includes(name) || u.id === name;
-  };
-
-  const matches = orExpr();
-  if (pos !== tokens.length) throw new Error(`trailing tokens in: ${src}`);
-  return matches;
-}
-
 function resolveBuildTrees(units) {
   const byId = new Map(units.map((u) => [u.id, u]));
 
@@ -876,51 +773,6 @@ function resolveBuildTrees(units) {
     for (const targetId of builder.builds) byId.get(targetId).builtBy.push(builder.id);
   }
   for (const unit of units) unit.builtBy.sort();
-}
-
-// Big units mount the same gun several times — the Phoenix carries nine weapons
-// that are really three designs, the T5 Hovertank eleven that are four. Listing
-// each copy is noise, so identical entries collapse into one with a count.
-function groupWeapons(weapons) {
-  const groups = new Map();
-
-  for (const w of weapons) {
-    const key = JSON.stringify([
-      w.damage,
-      w.damageType,
-      w.damageRadius,
-      w.reloadTime,
-      w.rangeMax,
-      w.rangeMin,
-      w.isBeam,
-      w.beamLifetime,
-      w.projectileSpeed,
-      w.homing,
-      w.shotsPerCycle,
-      w.cycleTime,
-      w.category,
-      w.targets,
-      w.traverseSpeed,
-      w.elevationSpeed,
-      w.traverseArc,
-    ]);
-    const existing = groups.get(key);
-    if (existing) existing.count++;
-    else groups.set(key, { ...w, count: 1 });
-  }
-
-  return [...groups.values()]
-    .map((w) => ({ ...w, dpsTotal: w.dps == null ? null : round(w.dps * w.count) }))
-    .sort((a, b) => (b.dpsTotal ?? 0) - (a.dpsTotal ?? 0) || b.rangeMax - a.rangeMax);
-}
-
-// Highest DPS wins; ties go to the longer-ranged weapon, then the harder hitter.
-function mainWeapon(weapons) {
-  return weapons
-    .slice()
-    .sort(
-      (a, b) => (b.dpsTotal ?? 0) - (a.dpsTotal ?? 0) || b.rangeMax - a.rangeMax || b.damage - a.damage,
-    )[0];
 }
 
 // Build lists are resolved by matching tag expressions, so a wrong faction tag
@@ -986,10 +838,6 @@ function nonEmpty(obj) {
   if (!obj || typeof obj !== 'object') return null;
   const entries = Object.entries(obj).filter(([, v]) => typeof v === 'number' && v !== 0);
   return entries.length ? Object.fromEntries(entries) : null;
-}
-
-function round(n) {
-  return Math.round(n * 100) / 100;
 }
 
 function report(units, failures, payload) {

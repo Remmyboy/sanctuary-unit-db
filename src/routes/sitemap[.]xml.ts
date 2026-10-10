@@ -1,7 +1,17 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { siteOrigin } from '../lib/site-origin';
 
-const fixedPages = ['/', '/calculator', '/mods', '/gameplay-mods', '/play', '/lobbies', '/ladder'];
+const fixedPages = [
+  '/',
+  '/calculator',
+  '/mods',
+  '/gameplay-mods',
+  '/balance-patch',
+  '/play',
+  '/lobbies',
+  '/ladder',
+  '/replays',
+];
 
 function escapeXml(value: string): string {
   return value.replace(/[&<>"']/g, (character) => {

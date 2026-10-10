@@ -21,6 +21,7 @@ import {
   type ParticipantRow,
 } from './match-data';
 import { toModMatch } from './mm';
+import { loadReplay, loadStatsView, toReplayView } from './match-uploads';
 import { requirePlayer } from './player';
 import { recordPresence } from './presence';
 import { overallRating } from '../lib/elo';
@@ -57,7 +58,12 @@ const view = async (matchId: string, me: Me | null): Promise<MatchView> => {
   const events = match.mm_mode === 'auto' || match.mm_reason ? await loadMmEvents([matchId]) : [];
   const mine = me !== null && participants.some((p) => p.player_id === me.playerId);
   const modMatch = mine && match.mode === '1v1' ? toModMatch(match, participants, me.steamId) : null;
-  return toView(match, participants, events, modMatch);
+  // Uploads only follow a result, so an unreported match has none to load.
+  const [stats, replay] =
+    match.status === 'in_progress' || match.status === 'cancelled'
+      ? [null, null]
+      : await Promise.all([loadStatsView(matchId), loadReplay(matchId).then(toReplayView)]);
+  return toView(match, participants, events, modMatch, { stats, replay });
 };
 
 // Overdue auto-confirms, plus the auto-launch countdowns and timeouts.
@@ -203,9 +209,13 @@ export const profileGet = createServerFn({ method: 'POST' })
         rating_delta: number;
         map_name: string;
         completed_at: Date;
+        has_stats: boolean;
+        has_replay: boolean;
       }[]
     >`
-      select mp.match_id, m.mode, mp.outcome, mp.rating_after, mp.rating_delta, m.map_name, m.completed_at
+      select mp.match_id, m.mode, mp.outcome, mp.rating_after, mp.rating_delta, m.map_name, m.completed_at,
+             exists (select 1 from match_stats s where s.match_id = m.id) as has_stats,
+             exists (select 1 from match_replays r where r.match_id = m.id and r.status = 'ready') as has_replay
       from match_participants mp
       join matches m on m.id = mp.match_id and m.status = 'completed'
       where mp.player_id = ${player.id}
@@ -236,6 +246,8 @@ export const profileGet = createServerFn({ method: 'POST' })
       ratingAfter: g.rating_after,
       ratingDelta: g.rating_delta,
       completedAt: g.completed_at.toISOString(),
+      hasStats: g.has_stats,
+      hasReplay: g.has_replay,
     }));
 
     return {

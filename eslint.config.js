@@ -9,10 +9,13 @@ export default tseslint.config(
       '.output',
       '.vercel',
       '.nitro',
+      '.tanstack',
       'node_modules',
       'src/routeTree.gen.ts',
       'test-results',
       'playwright-report',
+      // Source PNGs for build-icons.js, nothing to lint.
+      'icons-src',
     ],
   },
   js.configs.recommended,

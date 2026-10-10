@@ -59,7 +59,7 @@ export function moveClass(u: Unit): MoveClass | null {
  * The share of `pool` strictly below `value`, counting ties as half — so the
  * middle of a crowd of equals reads 50%, not 0% or 100%.
  */
-export function percentile(value: number, pool: number[]): number {
+function percentile(value: number, pool: number[]): number {
   if (!pool.length) return 0;
   const below = pool.filter((v) => v < value).length;
   const equal = pool.filter((v) => v === value).length;
@@ -113,7 +113,7 @@ export interface PeerMetric {
   unit?: string;
 }
 
-export const PEER_METRICS: PeerMetric[] = [
+const PEER_METRICS: PeerMetric[] = [
   { key: 'health', label: 'Health', value: (u) => u.health || null, better: 'high' },
   { key: 'dps', label: 'DPS', value: (u) => u.dps || null, better: 'high' },
   { key: 'range', label: 'Range', value: (u) => u.maxRange || null, better: 'high' },
@@ -144,7 +144,7 @@ export type UnitClass =
   | 'factory'
   | 'other';
 
-export function unitClass(u: Unit): UnitClass {
+function unitClass(u: Unit): UnitClass {
   if (isCommander(u)) return 'commander';
   switch (u.role) {
     case 'Direct Fire':
@@ -165,9 +165,9 @@ export function unitClass(u: Unit): UnitClass {
     case 'Plasma':
       return 'economy';
     // Factories wear the icon of what they build.
-    case 'Air':
-    case 'Land':
-    case 'Naval':
+    case 'Air Factory':
+    case 'Land Factory':
+    case 'Naval Factory':
       return 'factory';
   }
   // A handful of big units have no icon symbol; an armed one is a fighter.

@@ -17,6 +17,7 @@
 // starts on fresh sockets.
 
 import postgres from 'postgres';
+import { siteOrigin } from '../lib/site-origin';
 
 type Sql = ReturnType<typeof postgres>;
 
@@ -105,6 +106,9 @@ function guarded(this: unknown, ...args: unknown[]): unknown {
   return (c as unknown as (...a: unknown[]) => unknown)(...args);
 }
 guarded.array = (...a: unknown[]) => (raw().array as (...x: unknown[]) => unknown)(...a);
+// For jsonb parameters. A JSON *string* bound to a ::jsonb parameter is
+// encoded again and stored as a jsonb string, not the object it spells.
+guarded.json = (...a: unknown[]) => (raw().json as (...x: unknown[]) => unknown)(...a);
 guarded.unsafe = (query: string, params?: unknown[]) =>
   guard((raw().unsafe as (q: string, p?: unknown[]) => PromiseLike<unknown>)(query, params), preview(query));
 guarded.end = (opts?: { timeout?: number }) => {
@@ -119,9 +123,10 @@ export function sql(): Sql {
 
 // The canonical public origin, e.g. https://sanctuarydb.example. Steam's
 // OpenID realm/return_to are derived from it, so sign-in only works on this
-// origin (set it to http://localhost:5173 for local dev).
+// origin (set it to http://localhost:5173 for local dev). Validated like the
+// canonical links and sitemap: an HTTP(S) origin, no path or credentials.
 export function siteUrl(): string {
   const url = process.env.SITE_URL;
-  if (!url) throw new Error('SITE_URL must be set (see .env.example)');
-  return url.replace(/\/$/, '');
+  if (!url?.trim()) throw new Error('SITE_URL must be set (see .env.example)');
+  return siteOrigin(url, true);
 }

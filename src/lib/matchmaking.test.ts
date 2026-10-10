@@ -1,5 +1,6 @@
-// Pins the queue rules that supabase/migrations/0002_ladder.sql transcribes
-// (queue_radius / pair_queue) — if these change, the SQL must change too.
+// Pins the queue rules that the SQL transcribes (queue_radius in 0002,
+// pair_queue in 0013; see supabase/README.md) — if these change, the SQL must
+// change too.
 
 import { describe, expect, it } from 'vitest';
 import {
