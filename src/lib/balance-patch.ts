@@ -84,6 +84,19 @@ export function collapseTexts(texts: ChangeText[]): ChangeText[] {
  *  left it and what joined it, since the rest didn't change. */
 export function describeChange(c: Pick<BalanceChange, 'label' | 'before' | 'after'>): ChangeText {
   let { before, after } = c;
+  // A shell with no movement table falls under the game's gravity; the patch
+  // gives some anti-air shells one with gravityMultiplier 0 so they fly straight.
+  if (
+    c.label === 'movement' &&
+    before == null &&
+    after != null &&
+    typeof after === 'object' &&
+    !Array.isArray(after) &&
+    Object.keys(after).join() === 'gravityMultiplier' &&
+    after.gravityMultiplier === 0
+  ) {
+    return { label: 'flight', before: 'falls', after: 'straight', percent: null };
+  }
   if (Array.isArray(before) && Array.isArray(after)) {
     const was = before;
     const now = after;

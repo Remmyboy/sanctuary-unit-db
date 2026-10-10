@@ -51,7 +51,7 @@ export const MODS: Mod[] = [
   {
     id: 'ModManager',
     name: 'Mod Manager',
-    version: '0.15.0',
+    version: '0.16.0',
     tagline:
       'A Mods page in the game menu for switching mods on and off and keeping them up to date, and a Mods panel in the lobby for the host’s gameplay mods.',
     features: [
@@ -89,7 +89,7 @@ export const MODS: Mod[] = [
   {
     id: 'SanctuaryHud',
     name: 'SanctuaryDB HUD',
-    version: '0.16.1',
+    version: '0.17.1',
     tagline:
       'A mini-map, a proper economy readout, reclaim values, build timers, alerts and post-match stats.',
     features: [
@@ -134,8 +134,20 @@ export const MODS: Mod[] = [
         text: 'Drag the grip in a panel’s corner to resize it: the economy strip, commander, bottom panels or mini-map. Each one remembers its size.',
       },
       {
+        title: 'Stats on the unit card',
+        text: 'Speed, damage per second and range for the selected unit, or for the build option under your mouse, with a balance mod’s numbers when one is on.',
+      },
+      {
+        title: 'Your engineers’ queue',
+        text: 'Select engineers and the buildings they have queued show as tiles, like a factory’s. Right-click one to drop it and keep the rest.',
+      },
+      {
+        title: 'Engineers that keep working',
+        text: 'Assisting engineers finish the building when its builder dies, then carry on with their own queue. A factory assist ends when the unit is done, and a right-click on an unfinished factory builds it rather than just repairing it.',
+      },
+      {
         title: 'Optional extras',
-        text: 'Switch on the ones you want: cursors that show what a right-click will do, waypoints and rally points you can drag, a build queue you reorder by dragging, Ctrl-A for every unit of the selected types, Delete asking for a second press before it blows up your commander, and a match clock.',
+        text: 'Switch on the ones you want: cursors that show what a right-click will do, waypoints and rally points you can drag, a build queue you reorder by dragging, Ctrl-A for every unit of the selected types, Delete asking for a second press before it blows up your commander, and a match clock. The unit stats, engineer queue and engineer orders above are off until you switch them on too.',
       },
     ],
     keys: 'F10 shows and hides it · F2 the mini-map · F3 the match stats',
@@ -257,7 +269,7 @@ export const MODS: Mod[] = [
   {
     id: 'ReplayManager',
     name: 'Replay Manager',
-    version: '0.5.1',
+    version: '0.5.2',
     tagline: 'Watch replays properly: any player’s view, no fog, every economy.',
     features: [
       {
@@ -376,7 +388,7 @@ export const zoneControlHref = (): string =>
 export const PHANTOM_X: Mod = {
   id: 'PhantomX',
   name: 'Phantom-X',
-  version: '0.2.1',
+  version: '0.2.2',
   tagline:
     'Supreme Commander’s Phantom-X: everyone starts allied, until some of you secretly become phantoms.',
   features: [
@@ -445,7 +457,7 @@ export const UNIT_RESTRICTIONS: Mod = {
 export const BALANCE_PATCH: Mod = {
   id: 'BalancePatch',
   name: 'Remmy’s Balance Patch',
-  version: '0.2.5',
+  version: '0.2.7',
   tagline:
     'A community balance pass for Sanctuary: a faster, map-driven early game, bombers, artillery and anti-air that hit moving targets, shields that stop aircraft, and fixes for units that shot the ground.',
   features: [
@@ -459,15 +471,23 @@ export const BALANCE_PATCH: Mod = {
     },
     {
       title: 'T4s that end games',
-      text: '10,000–25,000 alloy (the game’s 3,400–11,100), with health and damage to beat a T3 tank by about 10% per alloy. They move at 2.5–3.5 (2), brawlers fastest, and the Centaur’s railgun reaches 80 (40).',
+      text: '10,000–25,000 alloy (the game’s 3,400–11,100), priced against T3 tanks with splash and range counted, so one is strong without outclassing an army its cost. They move at 2.25–3 (2), never faster than a T3 tank, and the Centaur’s railgun reaches 80 (40).',
     },
     {
       title: 'T3 tanks that keep up',
-      text: 'The Kodiak, Glaive and Auger cost 30% less and move at 3.3 like a T1 tank (2.5–2.7), with guns that track much faster. The Guardian Nitro is quicker still, at 4.5, but fragile.',
+      text: 'The Kodiak, Glaive and Auger cost 30% less and move at 3.3 like a T1 tank (2.5–2.7), with guns that track much faster. The Guardian Nitro is quicker still, at 4.5, with 3,000 health (2,250).',
     },
     {
       title: 'Shots that hit moving targets',
       text: 'Artillery, bombers, anti-air and the EDA and Guardian commanders’ missiles aim where a target is going, not where it was.',
+    },
+    {
+      title: 'Anti-air that connects',
+      text: 'Anti-air shells fly 1.5–6× as fast and straight, missiles turn twice as fast, and aircraft hitboxes are 1.5× bigger, so weaving no longer dodges most of the flak. Guardian T2 anti-air, whose shots splash, does half damage.',
+    },
+    {
+      title: 'Point defences worth building',
+      text: 'T2 point defences have 3,000–3,800 health (2,000) and 1.5–1.9× the damage. The Chosen T3 one hits 2.2× as hard, with 7,000 health (6,500).',
     },
     {
       title: 'Reclaim worth fighting over',
