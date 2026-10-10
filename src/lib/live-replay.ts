@@ -7,7 +7,7 @@ import { safeReplayName } from './match-replay';
 
 // How far behind the game viewers are held. Server side: a chunk younger
 // than this is not handed out, whatever the client asks for.
-export const LIVE_DELAY_S = 60;
+export const LIVE_DELAY_S = 180;
 // The mod sends a chunk about every 15 s, usually tens of KB. The first one
 // is bigger: a game's opening frame is the whole starting state, up to
 // 1.7 MB on the stock maps seen (The Forge). A chunk is capped just under
@@ -144,6 +144,15 @@ export interface LiveStreamView extends LiveListRow {
   buildId: number | null;
   modded: boolean;
   endedAt: string | null;
+}
+
+// "three minutes", "90 seconds": the delay in a sentence.
+const SMALL = ['zero', 'a', 'two', 'three', 'four', 'five'];
+
+export function formatDelay(s: number): string {
+  if (s % 60 !== 0) return `${s} seconds`;
+  const m = s / 60;
+  return `${SMALL[m] ?? m} minute${m === 1 ? '' : 's'}`;
 }
 
 // "Maps/The_Forge/The_Forge.sanmap" → "The Forge" for display.

@@ -8,7 +8,7 @@ import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
 import { PageHead } from '../components/PageHead';
 import { formatPlayed } from '../lib/match-replay';
 import { LiveTeams } from '../components/LiveTeams';
-import { LIVE_DELAY_S, type LiveListRow } from '../lib/live-replay';
+import { formatDelay, LIVE_DELAY_S, type LiveListRow } from '../lib/live-replay';
 import { liveList } from '../server/live-fns';
 
 export const Route = createFileRoute('/live')({
@@ -19,7 +19,7 @@ export const Route = createFileRoute('/live')({
       {
         name: 'description',
         content:
-          'Watch Sanctuary: Shattered Sun games as they are played, in your own game, a minute behind.',
+          'Watch Sanctuary: Shattered Sun games as they are played, in your own game, three minutes behind.',
       },
     ],
   }),
@@ -51,8 +51,8 @@ function LivePage() {
   return (
     <>
       <PageHead art="replays" eyebrow="Multiplayer" title="Live games">
-        Games players are streaming right now, {LIVE_DELAY_S / 60 === 1 ? 'a minute' : `${LIVE_DELAY_S} s`}{' '}
-        behind. Open one and press Watch in game: it plays in Sanctuary like a replay that keeps going.
+        Games players are streaming right now, {formatDelay(LIVE_DELAY_S)} behind. Open one and press Watch in
+        game: it plays in Sanctuary like a replay that keeps going.
       </PageHead>
       <main className="replays">
         {rows === undefined ? null : rows === null ? (

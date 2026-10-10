@@ -9,7 +9,7 @@ import { Link, createFileRoute } from '@tanstack/react-router';
 import { LiveTeams } from '../components/LiveTeams';
 import { copyText } from '../lib/clipboard';
 import { formatPlayed } from '../lib/match-replay';
-import { LIVE_DELAY_S, type LiveStreamView } from '../lib/live-replay';
+import { formatDelay, LIVE_DELAY_S, type LiveStreamView } from '../lib/live-replay';
 import { useModBridge, watchBridge, watchLive, type BridgeWatch } from '../lib/mod-bridge';
 import { useNow } from '../lib/use-now';
 import { liveGet } from '../server/live-fns';
@@ -131,7 +131,7 @@ function LiveGame({ streamId }: { streamId: string }) {
         )}
         <p className="replay-help">
           {stream.live
-            ? `You watch ${LIVE_DELAY_S} seconds behind the players, in your own game, with the LadderReporter mod. `
+            ? `You watch ${formatDelay(LIVE_DELAY_S)} behind the players, in your own game, with the LadderReporter mod. `
             : 'The game is over; it can still be watched from the start for a day. '}
           It needs the same game version as the streaming player
           {stream.modded ? ' and the same gameplay mods' : ''}.

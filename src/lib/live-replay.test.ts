@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   checkChunk,
+  formatDelay,
   liveChunkKey,
   liveMapName,
   liveTeams,
@@ -115,5 +116,14 @@ describe('names', () => {
     expect(liveMapName('Maps/~TEAM-1v1_Tropical/~TEAM-1v1_Tropical.sanmap')).toBe('TEAM-1v1 Tropical');
     const teams = liveTeams((parseLiveStart(start()) as LiveStart).players);
     expect(teams.map((t) => t.map((p) => p.name))).toEqual([['Remmy'], ['AI: Duck']]);
+  });
+});
+
+describe('formatDelay', () => {
+  it('says the delay in words', () => {
+    expect(formatDelay(60)).toBe('a minute');
+    expect(formatDelay(180)).toBe('three minutes');
+    expect(formatDelay(600)).toBe('10 minutes');
+    expect(formatDelay(90)).toBe('90 seconds');
   });
 });

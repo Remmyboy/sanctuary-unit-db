@@ -8,7 +8,7 @@ A player who switched on `Live.Stream` in LadderReporter streams the game
 they are playing to the site while it runs. Anyone can open it from
 [/live](https://www.sanctuarydb.net/live) and press **Watch in game**: their
 own LadderReporter downloads the stream and plays it with the game's replay
-player, a fixed delay (`LIVE_DELAY_S`, 60 s) behind the players.
+player, a fixed delay (`LIVE_DELAY_S`, 180 s) behind the players.
 
 ## How it fits together
 
