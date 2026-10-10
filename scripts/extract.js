@@ -16,10 +16,18 @@ import {
   round,
   simulateWeapon,
 } from './lib/weapons.js';
+import { netChanges } from '../src/lib/balance-net.ts';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const OUT_FILE = path.join(here, '..', 'public', 'data', 'units.json');
 const VERSION_FILE = path.join(here, '..', 'public', 'data', 'version.json');
+// Remmy's Balance Patch: its changes (imported by `npm run balance-patch`) and
+// the units with them applied, for the database's balance-patch toggle.
+const PATCH_FILE = path.join(here, '..', 'src', 'lib', 'balance-patch.json');
+const PATCH_OUT_FILE = path.join(here, '..', 'public', 'data', 'units-balance-patch.json');
+// Set by the patch but not worth a line: a unit spawns with its max health, so
+// this always moves with `health`. src/lib/balance-patch.ts hides the same.
+const HIDDEN_FIELDS = new Set(['defence.health.value']);
 
 // Third character of the template id encodes the domain, second the faction.
 const FACTIONS = { e: 'EDA', c: 'Chosen', g: 'Guard', w: 'Guard' };
@@ -45,12 +53,34 @@ const ROLES = {
   shield: 'Shield',
   plasma: 'Plasma',
   alloy: 'Economy',
-  air: 'Air',
-  land: 'Land',
-  naval: 'Naval',
+  // Only factories wear these. Named for what they are, so the Role chips
+  // can't be mistaken for the Domain filter's Air / Land / Naval.
+  air: 'Air Factory',
+  land: 'Land Factory',
+  naval: 'Naval Factory',
   transmiter: 'Transmitter',
   none: null,
 };
+
+// The icon is wrong for one factory (every T3 Naval Factory wears the air
+// symbol), so a factory's role comes from its *_FACTORY tag, which agrees with
+// its name everywhere.
+const FACTORY_ROLES = {
+  LAND_FACTORY: 'Land Factory',
+  AIR_FACTORY: 'Air Factory',
+  NAVAL_FACTORY: 'Naval Factory',
+};
+
+function roleOf(symbol, tags, id) {
+  const fromIcon = ROLES[symbol] ?? null;
+  const factoryTag = tags.find((tag) => FACTORY_ROLES[tag]);
+  if (!factoryTag) return fromIcon;
+  const role = FACTORY_ROLES[factoryTag];
+  if (fromIcon && fromIcon !== role) {
+    issues.push(`${id} is tagged ${factoryTag} but its icon shows "${symbol}" — role taken from the tag`);
+  }
+  return role;
+}
 
 function main() {
   const gameDir = locateGame();
@@ -72,6 +102,8 @@ function main() {
 
   const units = [];
   const failures = [];
+  // Each unit's template as parsed, for the balance patch to apply its changes to.
+  const templates = new Map();
 
   for (const id of fs.readdirSync(templateDir).sort()) {
     const file = path.join(templateDir, id, `${id}.santp`);
@@ -81,6 +113,7 @@ function main() {
     }
     try {
       const raw = parseLuaTable(fs.readFileSync(file, 'utf8'), { assignment: 'UnitTemplate' });
+      templates.set(id, structuredClone(raw));
       units.push(toUnit(raw, id, available, models, adjacency, projectiles));
     } catch (err) {
       failures.push({ id, reason: err.message });
@@ -138,6 +171,126 @@ function main() {
   );
 
   report(units, failures, payload);
+  writeBalancePatch(payload, templates, { available, models, adjacency, projectiles });
+}
+
+// Remmy's Balance Patch, applied to the templates just read: the same
+// derivation as the base data (DPS, tiers, build trees), on the patched
+// numbers, so every page can show either. The patch's changes count array
+// items from 1, as Lua does, and say what the game's value was; a change whose
+// "before" no longer matches the install means the game has moved on since the
+// patch was made, so it's reported and left out, as the mod itself would skip it.
+function writeBalancePatch(base, templates, { available, models, adjacency, projectiles }) {
+  if (!fs.existsSync(PATCH_FILE)) return;
+  const patch = JSON.parse(fs.readFileSync(PATCH_FILE, 'utf8'));
+  const build = base.meta.game?.buildId;
+  if (build && String(build) !== String(patch.game.steamBuild)) {
+    console.warn(
+      `
+balance patch: made for build ${patch.game.steamBuild}, this install is ${build} — checking every change`,
+    );
+  }
+
+  const stale = [];
+  const apply = (target, c) => {
+    const keys = c.field.split('.');
+    let node = target;
+    for (const k of keys.slice(0, -1)) node = node?.[Array.isArray(node) ? Number(k) - 1 : k];
+    const last = keys.at(-1);
+    const key = Array.isArray(node) ? Number(last) - 1 : last;
+    if (!node || !sameValue(node[key], c.before)) {
+      stale.push(
+        `${c.id} ${c.field}: expected ${JSON.stringify(c.before)}, found ${JSON.stringify(node?.[key])}`,
+      );
+      return false;
+    }
+    node[key] = structuredClone(c.after);
+    return true;
+  };
+
+  const patchedProjectiles = new Map(projectiles);
+  const appliedShots = [];
+  const shotName = new Map();
+  for (const c of patch.changes.filter((c) => c.kind === 'projectile')) {
+    const tp = structuredClone(patchedProjectiles.get(c.id));
+    if (!tp || !apply(tp, c)) continue;
+    patchedProjectiles.set(c.id, tp);
+    appliedShots.push(c);
+    shotName.set(c.id, /missile/i.test(tp.general?.name ?? '') ? 'missile' : 'shell');
+  }
+
+  const patched = new Map();
+  const appliedUnits = [];
+  for (const c of patch.changes.filter((c) => c.kind === 'unit')) {
+    if (!templates.has(c.id)) {
+      stale.push(`${c.id}: no such unit in this install`);
+      continue;
+    }
+    if (!patched.has(c.id)) patched.set(c.id, structuredClone(templates.get(c.id)));
+    if (apply(patched.get(c.id), c)) appliedUnits.push(c);
+  }
+
+  // What changed on each unit against the game, one net change per field
+  // (see src/lib/balance-net.ts): its own fields first, then its shots',
+  // which show on every unit that fires them.
+  const entry = (c, label) => ({ label, before: c.before, after: c.after, sections: c.sections });
+  const byUnit = new Map();
+  const add = (id, e) => byUnit.set(id, [...(byUnit.get(id) ?? []), e]);
+  for (const c of netChanges(appliedUnits.filter((c) => !HIDDEN_FIELDS.has(c.field))))
+    add(c.id, entry(c, c.label));
+  for (const c of netChanges(appliedShots)) {
+    for (const [id, t] of templates) {
+      if ((t.weapons ?? []).some((w) => w.projectileTemplate === c.id))
+        add(id, entry(c, `${shotName.get(c.id)} ${c.label}`));
+    }
+  }
+
+  // The base run already reported the game's own data faults; re-deriving the
+  // same units would only repeat them.
+  const issuesBefore = issues.length;
+  const units = base.units.map((u) => {
+    const t = patched.get(u.id) ?? (byUnit.has(u.id) ? templates.get(u.id) : null);
+    const unit = t
+      ? toUnit(structuredClone(t), u.id, available, models, adjacency, patchedProjectiles)
+      : structuredClone(u);
+    unit.builds = [];
+    unit.builtBy = [];
+    if (byUnit.has(u.id)) unit.balance = byUnit.get(u.id);
+    return unit;
+  });
+  resolveBuildTrees(units);
+  issues.length = issuesBefore;
+
+  const payload = {
+    meta: {
+      ...base.meta,
+      balancePatch: {
+        id: patch.mod.id,
+        version: patch.mod.version,
+        game: patch.game,
+        sections: patch.sections.map(({ key, label }) => ({ key, label })),
+        changedUnits: byUnit.size,
+        stale,
+      },
+    },
+    units,
+  };
+  fs.writeFileSync(PATCH_OUT_FILE, JSON.stringify(payload));
+  const size = (fs.statSync(PATCH_OUT_FILE).size / 1024).toFixed(0);
+  console.log(`
+balance patch ${patch.mod.version}: ${byUnit.size} units changed`);
+  console.log(`wrote:     ${path.relative(process.cwd(), PATCH_OUT_FILE)} (${size} KB)`);
+  if (stale.length) {
+    console.warn(`balance patch changes that no longer match the game (${stale.length}), left out:`);
+    for (const s of stale) console.warn(`  ! ${s}`);
+  }
+}
+
+// Template values as the patch records them: a missing field is the game's
+// default, which for every field it touches is false, 0 or nothing.
+function sameValue(found, before) {
+  const norm = (v) => (v === undefined || v === false ? null : v);
+  return JSON.stringify(norm(found)) === JSON.stringify(norm(before));
 }
 
 // Which units actually have a model, found by looking for their LOD assets in
@@ -405,7 +558,7 @@ function toUnit(t, id, available, models, adjacency, projectiles) {
     faction: FACTIONS[id[1]] ?? 'Unknown',
     domain: DOMAINS[id[2]] ?? 'Unknown',
     tier: resolveTier(tags, id),
-    role: ROLES[general.icon?.symbol] ?? null,
+    role: roleOf(general.icon?.symbol, tags, id),
     icon: {
       shape: general.icon?.shape ?? null,
       symbol: general.icon?.symbol ?? null,

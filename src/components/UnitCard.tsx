@@ -41,6 +41,9 @@ export const UnitCard = memo(function UnitCard({ unit: u, iconManifest, picked, 
                 WIP
               </span>
             )}
+            {u.balance && (
+              <span className="bp-mark" title="Changed by the balance patch" aria-hidden="true" />
+            )}
           </span>
           <small>{u.displayName}</small>
         </span>

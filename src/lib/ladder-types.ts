@@ -1,6 +1,8 @@
 // DTOs shared between the ladder server functions (src/server/*-fns.ts) and
 // the ladder UI. Plain JSON shapes — dates travel as ISO strings.
 
+import type { MatchReplayView } from './match-replay';
+import type { MatchStatsView } from './match-stats';
 import type { Mode } from './ladder-modes';
 import type { Faction, MmEventType, MmMode, MmStatus, ModMatch } from './mm';
 
@@ -89,6 +91,32 @@ export interface MatchView {
   cancelRequestedByTeam: number | null;
   createdAt: string;
   completedAt: string | null;
+  // What LadderReporter uploaded after the game (players opt in), if anything.
+  stats: MatchStatsView | null;
+  replay: MatchReplayView | null;
+}
+
+// A finished game on the Replays page. Spoiler-free by construction: no
+// outcome, no ratings, and each team's players in name order, so nothing in
+// the row hints at who won.
+export interface ReplayListPlayer {
+  steamId: string;
+  personaName: string;
+}
+
+export interface ReplayListRow {
+  matchId: string;
+  mode: Mode;
+  mapName: string;
+  completedAt: string;
+  teams: ReplayListPlayer[][]; // by team number
+  replay: { sizeBytes: number; fileName: string } | null; // ready to download
+  hasStats: boolean;
+}
+
+export interface ReplayListPage {
+  rows: ReplayListRow[];
+  hasMore: boolean;
 }
 
 export interface LeaderboardRow {
@@ -123,6 +151,8 @@ export interface ProfileMatch {
   ratingAfter: number;
   ratingDelta: number;
   completedAt: string;
+  hasStats: boolean;
+  hasReplay: boolean;
 }
 
 export interface Profile {

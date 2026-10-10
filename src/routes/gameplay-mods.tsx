@@ -1,5 +1,5 @@
-// The gameplay mods page: Zone Control and Phantom-X, the mods that change
-// the match itself. Unlike the UI mods on /mods, one only runs when the
+// The gameplay mods page: Zone Control, Phantom-X, Unit Restrictions and
+// Remmy's Balance Patch, the mods that change the match itself. Unlike the UI mods on /mods, one only runs when the
 // lobby's host switches it on, and everyone in the match needs the same copy.
 // The Mod Manager is the one step they share, so it comes first; after that
 // each mode is a single card holding everything about it — download, set-up,
@@ -7,17 +7,20 @@
 // the page reads one mode at a time.
 //
 // Versions and download links come from src/lib/mods.ts; the rules' numbers
-// from src/lib/zone-control.ts and src/lib/phantom-x.ts, which copy them from
-// each mod's own files. This page replaced /zone-control, which redirects here.
+// from src/lib/zone-control.ts, src/lib/phantom-x.ts and
+// src/lib/unit-restrictions.ts, which copy them from each mod's own files. This page replaced /zone-control, which redirects here.
+// The balance patch's card is short: its changes have a page of their own, /balance-patch.
 
 import { Link, createFileRoute } from '@tanstack/react-router';
 import { ModCard } from '../components/ModCard';
 import { CopyPath, StepHead } from '../components/ModInstall';
 import { HeadStat, PageHead } from '../components/PageHead';
 import {
+  BALANCE_PATCH,
   GAMEPLAY_MODS,
   MODS_REPO,
   PHANTOM_X,
+  UNIT_RESTRICTIONS,
   ZONE_CONTROL,
   ZONE_CONTROL_MAP,
   mod,
@@ -25,6 +28,7 @@ import {
   standaloneHref,
 } from '../lib/mods';
 import { LOBBY_OPTIONS as PX_OPTIONS } from '../lib/phantom-x';
+import { LOBBY_OPTIONS as UR_OPTIONS } from '../lib/unit-restrictions';
 import { LEVELS, LOBBY_OPTIONS, MAP_RELEASE_HREF, ORIGINAL_MAPS_HREF, SHOPS } from '../lib/zone-control';
 
 export const Route = createFileRoute('/gameplay-mods')({
@@ -34,7 +38,7 @@ export const Route = createFileRoute('/gameplay-mods')({
       {
         name: 'description',
         content:
-          'Gameplay mods for Sanctuary: Shattered Sun — Forged Alliance’s Zone Control and Phantom-X, rebuilt for Sanctuary. How to install them, switch them on in a lobby, and how each one plays.',
+          'Gameplay mods for Sanctuary: Shattered Sun — Forged Alliance’s Zone Control and Phantom-X, rebuilt for Sanctuary, Unit Restrictions and Remmy’s Balance Patch. How to install them, switch them on in a lobby, and how each one plays.',
       },
     ],
   }),
@@ -47,6 +51,8 @@ const MANAGER = mod('ModManager');
 const GUIDES: Record<string, () => React.JSX.Element> = {
   [ZONE_CONTROL.id]: ZoneControlGuide,
   [PHANTOM_X.id]: PhantomXGuide,
+  [UNIT_RESTRICTIONS.id]: UnitRestrictionsGuide,
+  [BALANCE_PATCH.id]: BalancePatchGuide,
 };
 
 function GameplayModsPage() {
@@ -56,11 +62,11 @@ function GameplayModsPage() {
         eyebrow="Modding"
         title="Gameplay Mods"
         art="ladder"
-        aside={<HeadStat value={GAMEPLAY_MODS.length} label="Game modes" />}
+        aside={<HeadStat value={GAMEPLAY_MODS.length} label="Gameplay mods" />}
       >
-        Forged Alliance classics, rebuilt for Sanctuary. A gameplay mod changes the match itself: the host
-        switches it on in the lobby, everyone playing gets the same rules, and every other lobby stays
-        vanilla.
+        Forged Alliance classics, lobby rules and a balance pass, for Sanctuary. A gameplay mod changes the
+        match itself: the host switches it on in the lobby, everyone playing gets the same rules, and every
+        other lobby stays vanilla.
       </PageHead>
       <div className="toolbar">
         <span className="toolbar-summary">
@@ -101,6 +107,10 @@ function GameplayModsPage() {
               <br />
               <code>SanctuaryMods\PhantomX\</code>
               <br />
+              <code>SanctuaryMods\UnitRestrictions\</code>
+              <br />
+              <code>SanctuaryMods\BalancePatch\</code>
+              <br />
               <code>Sanctuary_Data\Maps\Zone_Control_for_FAF_8P_V2\</code> (the map)
             </p>
           </div>
@@ -131,7 +141,7 @@ function GameplayModsPage() {
 
           <section className="mods-step" aria-labelledby="gm-step-2">
             <StepHead n={2} id="gm-step-2">
-              Pick a mode
+              Pick a mod
             </StepHead>
             <p className="mods-step-text">
               Each one below has everything in one place: the download, how to switch it on, and how it plays.
@@ -173,7 +183,7 @@ function ZoneControlGuide() {
         <ol className="gm-steps">
           <li>
             Extract the zip into your <code>engine</code> folder. It holds the mod and its map, and lands both
-            where the game looks for them.
+            where the game looks for them. It needs Mod Manager 0.13.0 or later, for every player.
           </li>
           <li>
             Host a lobby and pick the map <strong>{ZONE_CONTROL_MAP}</strong>.
@@ -387,7 +397,7 @@ function PhantomXGuide() {
         </h4>
         <ol className="gm-steps">
           <li>
-            Extract the zip into your <code>engine</code> folder. It needs Mod Manager 0.10.0 or later, for
+            Extract the zip into your <code>engine</code> folder. It needs Mod Manager 0.13.0 or later, for
             every player.
           </li>
           <li>Host a lobby on any map. It&rsquo;s best with three or more players.</li>
@@ -480,6 +490,125 @@ function PhantomXGuide() {
           <a href={sourceHref(PHANTOM_X)} target="_blank" rel="noreferrer">
             The mod&rsquo;s source ↗
           </a>
+        </p>
+      </section>
+    </div>
+  );
+}
+
+function UnitRestrictionsGuide() {
+  return (
+    <div className="gm-guide">
+      <section className="gm-section" aria-labelledby="ur-setup">
+        <h4 id="ur-setup" className="gm-heading">
+          Set it up
+        </h4>
+        <ol className="gm-steps">
+          <li>
+            Extract the zip into your <code>engine</code> folder. It needs Mod Manager 0.12.0 or later, for
+            every player in the lobby.
+          </li>
+          <li>Host a lobby on any map.</li>
+          <li>
+            Open <strong>Mods</strong> in the lobby, beside Settings. Switch on{' '}
+            <strong>Unit Restrictions</strong>, flip the sections you want gone, and open{' '}
+            <strong>Choose restricted units</strong> for the rest.
+          </li>
+          <li>
+            Start. The game waits until every player has the same copy, and says who&rsquo;s missing it.
+          </li>
+        </ol>
+      </section>
+
+      <section className="gm-section" aria-labelledby="ur-picker">
+        <h4 id="ur-picker" className="gm-heading">
+          The unit picker
+        </h4>
+        <ul className="mod-features gm-rules">
+          <li>
+            <strong>A grid per section</strong>
+            Land, air, naval and structures. A column per faction, and a row per kind of unit under its tech
+            level, each with its strategic icon and name.
+          </li>
+          <li>
+            <strong>As narrow or as wide as you like</strong>
+            Click a unit to restrict it alone, or a kind, a faction or a tech level to restrict all of it.
+            Factories and their upgrades are there too.
+          </li>
+          <li>
+            <strong>Faction mods included</strong>
+            The list holds the game&rsquo;s units and those of any faction mod picked for the match.
+          </li>
+        </ul>
+      </section>
+
+      <section className="gm-section" aria-labelledby="ur-options">
+        <h4 id="ur-options" className="gm-heading">
+          Lobby options
+        </h4>
+        <p className="mods-step-text hint">
+          The host sets these in the lobby&rsquo;s Mods panel. Everything starts unrestricted.
+        </p>
+        <Options options={UR_OPTIONS} />
+      </section>
+
+      <section className="gm-section" aria-labelledby="ur-notes">
+        <h4 id="ur-notes" className="gm-heading">
+          Good to know
+        </h4>
+        <p>
+          This is the first release. The lobby side is tested; the restrictions themselves haven&rsquo;t yet
+          been played in a match, and the AI may keep trying to build what it can&rsquo;t.
+        </p>
+        <p className="gm-credit-links">
+          <a href={sourceHref(UNIT_RESTRICTIONS)} target="_blank" rel="noreferrer">
+            The mod&rsquo;s source ↗
+          </a>
+        </p>
+      </section>
+    </div>
+  );
+}
+
+function BalancePatchGuide() {
+  return (
+    <div className="gm-guide">
+      <section className="gm-section" aria-labelledby="bp-setup">
+        <h4 id="bp-setup" className="gm-heading">
+          Set it up
+        </h4>
+        <ol className="gm-steps">
+          <li>
+            Delete any older <code>SanctuaryMods\BalancePatch\</code> folder, then extract the zip into your{' '}
+            <code>engine</code> folder. It needs Mod Manager 0.13.0 or later, for every player in the lobby.
+          </li>
+          <li>Host a lobby on any map.</li>
+          <li>
+            Open <strong>Mods</strong> in the lobby, beside Settings, and switch on{' '}
+            <strong>Balance Patch</strong>. All seven of its sections start on; switch off any you don&rsquo;t
+            want.
+          </li>
+          <li>
+            Start. The game waits until every player has the same copy, and says who&rsquo;s missing it.
+          </li>
+        </ol>
+      </section>
+
+      <section className="gm-section" aria-labelledby="bp-changes">
+        <h4 id="bp-changes" className="gm-heading">
+          What it changes
+        </h4>
+        <p className="mods-step-text">
+          Every change against the unmodded game, unit by unit: the game&rsquo;s number, the patch&rsquo;s,
+          and why it moved.
+        </p>
+        <p className="gm-step-actions">
+          <Link to="/balance-patch" className="gm-more">
+            Every change in {BALANCE_PATCH.name}
+          </Link>
+          <Link to="/" search={{ balance: 'remmy' }} className="gm-more">
+            The unit database with the patch on
+          </Link>
         </p>
       </section>
     </div>

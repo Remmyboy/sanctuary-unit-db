@@ -18,6 +18,7 @@ export const MASTHEAD_ART = {
   play: { screenshot: 8, crop: [0, 400, 1920], focus: '40% 50%' },
   lobbies: { screenshot: 5, crop: [100, 280, 1100], focus: '65% 50%' },
   ladder: { screenshot: 7, crop: [0, 180, 1300], focus: '60% 50%' },
+  replays: { screenshot: 3, crop: [300, 330, 1500], focus: '55% 50%' },
 } as const satisfies Record<
   string,
   { screenshot: number; crop: readonly [number, number, number]; focus: string }

@@ -16,6 +16,8 @@ import { StepperList } from '../components/calc/StepperList';
 import { Timeline } from '../components/calc/Timeline';
 import { Verdict } from '../components/calc/Verdict';
 import { useCalculatorState, type CalcSearch } from '../components/calc/use-calculator-state';
+import { BalanceStrip, BalanceToggle } from '../components/BalanceToggle';
+import { parseBalance } from '../lib/balance-patch';
 
 export const Route = createFileRoute('/calculator')({
   ssr: false,
@@ -29,6 +31,7 @@ export const Route = createFileRoute('/calculator')({
     q: str(raw.q),
     b: str(raw.b),
     s: str(raw.s),
+    balance: parseBalance(raw.balance),
   }),
   head: () => ({
     meta: [
@@ -40,7 +43,8 @@ export const Route = createFileRoute('/calculator')({
       },
     ],
   }),
-  loader: () => loadData(),
+  loaderDeps: ({ search }) => ({ balance: search.balance }),
+  loader: ({ deps }) => loadData(deps.balance),
   component: CalculatorPage,
 });
 
@@ -86,6 +90,7 @@ const econSub = (u: Unit): string =>
 function CalculatorPage() {
   const loaded = Route.useLoaderData();
   const { data, byId, iconManifest } = loaded;
+  const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
   const {
     patch,
@@ -126,7 +131,7 @@ function CalculatorPage() {
     copied,
     copyLink,
     reset,
-  } = useCalculatorState(loaded, Route.useSearch(), (next) => navigate({ search: next, replace: true }));
+  } = useCalculatorState(loaded, search, (next) => navigate({ search: next, replace: true }));
 
   return (
     <>
@@ -148,6 +153,10 @@ function CalculatorPage() {
         </span>
         <span className="toolbar-controls">
           <GameVersion game={data.meta.game} generatedAt={data.meta.generatedAt} />
+          <BalanceToggle
+            on={!!search.balance}
+            onChange={(on) => patch({ balance: on ? 'remmy' : undefined })}
+          />
           <button type="button" className="linkish" onClick={copyLink}>
             {copied ? 'Copied ✓' : 'Copy link'}
           </button>
@@ -156,6 +165,8 @@ function CalculatorPage() {
           </button>
         </span>
       </div>
+
+      {search.balance && <BalanceStrip meta={data.meta} onOff={() => patch({ balance: undefined })} />}
 
       <main className="calc">
         <section className="calc-col">

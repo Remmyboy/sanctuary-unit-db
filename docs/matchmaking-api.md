@@ -134,6 +134,137 @@ Unchanged, plus an optional `matchId`. When it names an open match between
 the two reported players, that match takes the result; otherwise it is
 ignored and the newest open match between them is used as before.
 
+The 200 answer now also names the match the result went to:
+`{ "outcome": "reported" | "applied" | "disputed", "matchId": "<uuid>" }`.
+That is how a manually hosted game gets the id its uploads need.
+
+A report for a match that is already settled changes nothing, and still
+names the match. With both players running the mod this is the usual case
+for the second report: the loser's concession completes the match at once.
+The match is the one `matchId` names, else one between the two players
+settled in the last two hours:
+
+- completed, same winner → 200 `{ "outcome": "applied", "matchId" }`;
+- completed, the other winner → 409 `{ "error", "matchId" }`. Its ratings
+  are applied, so a client can't reopen it; that is an admin's call;
+- disputed → 200 `{ "outcome": "disputed", "matchId" }`.
+
+Only when there is no such match is the answer 404.
+
+## After the game: stats and replay uploads
+
+Opt-in on the player's side (LadderReporter `[Upload] Stats` / `Replays`,
+both off by default). Both use the bearer session and are refused for a
+match the caller didn't play (404) or one that was cancelled. Neither touches
+ratings. The plan and the reasoning are in `docs/replays-and-stats-plan.md`.
+
+### `POST /api/mm/match/{id}/stats`
+
+The MatchStats figures, read once the result screen is up. JSON, at most
+256 KB (413 past it). Format 1, validated by `src/lib/match-stats.ts`:
+
+```json
+{
+  "format": 1,
+  "modVersion": "0.4.0",
+  "buildId": 20412345,
+  "tickRate": 10,
+  "endTick": 10430,
+  "armies": [
+    {
+      "steamId": "765…",
+      "armyId": 1,
+      "name": "…",
+      "faction": 2,
+      "team": 1,
+      "colour": "#3a7bd5",
+      "condition": 1,
+      "conditionTick": 10400,
+      "alloy": { "gathered": 0, "spent": 0, "wasted": 0, "stallTicks": 0, "peakIncome": 0 },
+      "energy": { "gathered": 0, "spent": 0, "wasted": 0, "stallTicks": 0, "peakIncome": 0 },
+      "maxStorage": 0,
+      "built": { "land": 0, "air": 0, "naval": 0, "engineers": 0, "structures": 0, "value": 0 },
+      "lost": { "mobile": 0, "structures": 0, "commander": 0, "value": 0 },
+      "killedValue": 0,
+      "commanderKills": 0,
+      "peakArmyValue": 0,
+      "peakUnits": 0,
+      "score": 0
+    }
+  ],
+  "timeline": {
+    "intervalS": 5,
+    "t": [0, 5, 10],
+    "series": {
+      "765…": {
+        "alloyIncome": [],
+        "energyIncome": [],
+        "alloySpend": [],
+        "energySpend": [],
+        "armyValue": [],
+        "units": [],
+        "score": []
+      }
+    }
+  }
+}
+```
+
+`armies` are the seated human players only, each a participant of the
+match. Every series has the length of `t`. Answers `{ "ok": true }`, or 400
+naming the first bad field. Re-sending replaces the caller's own upload.
+When both players upload and the results and scores agree (within 1%), the
+match page marks the stats confirmed.
+
+### `POST /api/mm/match/{id}/replay`
+
+Asks to upload the game's `.sanreplay`, which goes straight to Cloudflare R2
+(a replay is often bigger than a function request may be):
+
+```json
+{
+  "sizeBytes": 1195344,
+  "sha256": "<64 hex>",
+  "gameVersion": "1.0#…",
+  "buildId": 20412345,
+  "mapPath": "Maps/…/X.sanmap",
+  "fileName": "2026-10-04_12-47-17_X.sanreplay",
+  "sidecarBytes": 0
+}
+```
+
+Only once the match has a result (`reported`, `completed`, `disputed`). An
+auto match also checks `mapPath` against its own map (400 otherwise). At
+most 30 MB, and 256 KB for the `.mods.json` sidecar (413). Answers:
+
+- `{ "upload": { "url": "…", "sidecarUrl": "…" | null }, "expiresAt": "…" }` —
+  PUT the raw bytes to `url` (no auth header) and the sidecar to
+  `sidecarUrl`, then call `/replay/done`. The URLs last two hours.
+- `{ "skip": "stored" }` — the other player's replay is already stored (or
+  it was pruned); drop yours.
+- `{ "retryAfterS": n }` — the other player is uploading right now. If they
+  haven't finished in 15 minutes, their reservation can be taken over.
+- 503 with `retryAfterS` — replay storage isn't configured on this
+  deployment.
+
+### `POST /api/mm/match/{id}/replay/done`
+
+Body `{}`. The site checks the stored object's size against `sizeBytes` and
+publishes the replay: `{ "ok": true }`. A 409 means it didn't match (or
+nothing arrived); the reservation is released, so start again from
+`/replay`.
+
+### `GET /api/replays/{matchId}`
+
+Public: redirects to a five-minute download link that saves the file under
+the game's own name. 404 when there is no ready replay.
+
+## Live replays
+
+`POST /api/mm/live`, `POST /api/mm/live/{id}/chunk/{seq}`,
+`POST /api/mm/live/{id}/end` (bearer) and the public `GET /api/live/{id}`:
+see [live-replays.md](live-replays.md).
+
 ## Why a match went manual
 
 Every 1v1 match that could have been auto but wasn't carries the reason in

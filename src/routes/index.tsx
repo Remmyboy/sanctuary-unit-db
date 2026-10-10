@@ -27,6 +27,8 @@ import { DetailPanel } from '../components/DetailPanel';
 import { HeaderSearch } from '../components/HeaderSearch';
 import { GameVersion } from '../components/GameVersion';
 import { HeadStat, PageHead } from '../components/PageHead';
+import { BalanceStrip, BalanceToggle } from '../components/BalanceToggle';
+import { parseBalance, type Balance } from '../lib/balance-patch';
 
 // Filters, sort, search, the open unit, the view and the units picked for
 // comparison all live in the URL — same param names and comma-joined encoding
@@ -44,7 +46,22 @@ interface BoardSearch {
   view?: 'compact';
   /** Units picked for comparison, comma-joined ids. */
   compare?: string;
+  /** Show the numbers with a balance mod applied; absent means the game's. */
+  balance?: Balance;
 }
+
+// The factory roles were plain Air / Land / Naval until October 2026, which read
+// like the Domain filter. Old links still pick the factories.
+const RENAMED_ROLES: Record<string, string> = {
+  Air: 'Air Factory',
+  Land: 'Land Factory',
+  Naval: 'Naval Factory',
+};
+const roleParam = (v: unknown): string | undefined =>
+  str(v)
+    ?.split(',')
+    .map((r) => RENAMED_ROLES[r] ?? r)
+    .join(',');
 
 export const Route = createFileRoute('/')({
   // Data comes from /data/units.json at runtime; there is nothing to render on
@@ -55,12 +72,13 @@ export const Route = createFileRoute('/')({
     faction: str(raw.faction),
     domain: str(raw.domain),
     tier: str(raw.tier),
-    role: str(raw.role),
+    role: roleParam(raw.role),
     status: str(raw.status),
     sort: Object.hasOwn(METRICS, String(raw.sort)) ? (String(raw.sort) as SortKey) : undefined,
     unit: str(raw.unit),
     view: raw.view === 'compact' ? 'compact' : undefined,
     compare: str(raw.compare),
+    balance: parseBalance(raw.balance),
   }),
   head: () => ({
     meta: [
@@ -72,7 +90,8 @@ export const Route = createFileRoute('/')({
       },
     ],
   }),
-  loader: () => loadData(),
+  loaderDeps: ({ search }) => ({ balance: search.balance }),
+  loader: ({ deps }) => loadData(deps.balance),
   component: BoardPage,
 });
 
@@ -178,8 +197,13 @@ function BoardPage() {
     }
   };
 
-  // Reset clears the filters, not the view (a display preference) or the picks.
-  const reset = () => navigate({ search: { view: search.view, compare: search.compare }, replace: true });
+  // Reset clears the filters, not the view (a display preference), the picks
+  // or which numbers are showing.
+  const reset = () =>
+    navigate({
+      search: { view: search.view, compare: search.compare, balance: search.balance },
+      replace: true,
+    });
 
   return (
     <>
@@ -209,6 +233,10 @@ function BoardPage() {
         </span>
         <div className="toolbar-controls">
           <GameVersion game={loaded.data.meta.game} generatedAt={loaded.data.meta.generatedAt} />
+          <BalanceToggle
+            on={!!search.balance}
+            onChange={(on) => patch({ balance: on ? 'remmy' : undefined })}
+          />
           <ViewToggle
             compact={search.view === 'compact'}
             onChange={(c) => patch({ view: c ? 'compact' : undefined })}
@@ -245,6 +273,8 @@ function BoardPage() {
         </div>
       </div>
 
+      {search.balance && <BalanceStrip meta={loaded.data.meta} onOff={() => patch({ balance: undefined })} />}
+
       <main className={`layout${picking || picks.length ? ' has-tray' : ''}`}>
         <FilterSidebar units={loaded.data.units} filters={filters} onToggle={toggle} onReset={reset} />
 
@@ -279,6 +309,7 @@ function BoardPage() {
         <CompareTray
           units={pickedUnits}
           picking={picking}
+          balance={search.balance}
           iconManifest={loaded.iconManifest}
           onRemove={togglePicked}
           onClear={() => setPicks([])}

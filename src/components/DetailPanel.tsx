@@ -15,6 +15,8 @@ import { ShieldSection } from './detail/ShieldSection';
 import { UpgradeSection } from './detail/UpgradeSection';
 import { WeaponsSection } from './detail/WeaponsSection';
 import { Section, Stat } from './detail/parts';
+import { BalanceChanges } from './BalanceToggle';
+import { BALANCE_PATCH_NAME } from '../lib/balance-patch';
 
 interface DetailPanelProps {
   unit: Unit;
@@ -198,6 +200,12 @@ export function DetailPanel({ unit: u, loaded, onOpen, onClose, compare }: Detai
           ) : null}
         </dl>
       </Section>
+
+      {u.balance && (
+        <Section title={`${BALANCE_PATCH_NAME} changes`}>
+          <BalanceChanges changes={u.balance} meta={loaded.data.meta} />
+        </Section>
+      )}
 
       <PeerSection unit={u} units={loaded.data.units} byId={byId} onOpen={onOpen} />
       <EconomySection unit={u} />

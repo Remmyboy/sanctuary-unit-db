@@ -1,4 +1,4 @@
-// The mod catalogue behind /mods, /gameplay-mods and the Play page's download card.
+// The mod catalogue behind /mods, /gameplay-mods, /balance-patch and the Play page's download card.
 //
 // Every mod lives in the open-source sanctuary-mods repo and ships as release
 // assets there, so the version below is the only thing that moves when one is
@@ -51,13 +51,17 @@ export const MODS: Mod[] = [
   {
     id: 'ModManager',
     name: 'Mod Manager',
-    version: '0.10.1',
+    version: '0.16.0',
     tagline:
-      'A Mods page in the game menu for switching mods on and off, and a Mods panel in the lobby for the host’s gameplay mods.',
+      'A Mods page in the game menu for switching mods on and off and keeping them up to date, and a Mods panel in the lobby for the host’s gameplay mods.',
     features: [
       {
         title: 'A switch for every mod',
         text: 'Turn any mod on or off from the menu, or mid-match with F8. It takes effect straight away, with no restart.',
+      },
+      {
+        title: 'Updates in one click',
+        text: 'A red number on the Mods icon in the main menu says when your SanctuaryDB mods have updates. Click Update, or Update All, and they install and reload on the spot, with your settings kept.',
       },
       {
         title: 'Settings in the game',
@@ -85,7 +89,7 @@ export const MODS: Mod[] = [
   {
     id: 'SanctuaryHud',
     name: 'SanctuaryDB HUD',
-    version: '0.15.2',
+    version: '0.17.1',
     tagline:
       'A mini-map, a proper economy readout, reclaim values, build timers, alerts and post-match stats.',
     features: [
@@ -95,7 +99,7 @@ export const MODS: Mod[] = [
       },
       {
         title: 'Your economy at a glance',
-        text: 'Alloy and energy stored, in, out and net per second, with a stall warning and how long until you run dry.',
+        text: 'Alloy and energy stored, in, out and net per second, how long until you run dry, how fast your builds really go when you stall, and what a full store is wasting.',
       },
       {
         title: 'See what the wrecks are worth',
@@ -122,12 +126,28 @@ export const MODS: Mod[] = [
         text: 'When the game ends, a stats window for every army: score, resources gathered, spent and wasted, units built, lost and killed, with charts over time.',
       },
       {
+        title: 'Quit from the result screen',
+        text: 'A Quit button beside the result and the match stats takes you straight back to the menu.',
+      },
+      {
         title: 'Every panel your size',
         text: 'Drag the grip in a panel’s corner to resize it: the economy strip, commander, bottom panels or mini-map. Each one remembers its size.',
       },
       {
+        title: 'Stats on the unit card',
+        text: 'Speed, damage per second and range for the selected unit, or for the build option under your mouse, with a balance mod’s numbers when one is on.',
+      },
+      {
+        title: 'Your engineers’ queue',
+        text: 'Select engineers and the buildings they have queued show as tiles, like a factory’s. Right-click one to drop it and keep the rest.',
+      },
+      {
+        title: 'Engineers that keep working',
+        text: 'Assisting engineers finish the building when its builder dies, then carry on with their own queue. A factory assist ends when the unit is done, and a right-click on an unfinished factory builds it rather than just repairing it.',
+      },
+      {
         title: 'Optional extras',
-        text: 'Switch on the ones you want: cursors that show what a right-click will do, waypoints and rally points you can drag, a build queue you reorder by dragging, Ctrl-A for every unit of the selected types, and a match clock.',
+        text: 'Switch on the ones you want: cursors that show what a right-click will do, waypoints and rally points you can drag, a build queue you reorder by dragging, Ctrl-A for every unit of the selected types, Delete asking for a second press before it blows up your commander, and a match clock. The unit stats, engineer queue and engineer orders above are off until you switch them on too.',
       },
     ],
     keys: 'F10 shows and hides it · F2 the mini-map · F3 the match stats',
@@ -135,7 +155,7 @@ export const MODS: Mod[] = [
   {
     id: 'EcoManager',
     name: 'Eco Manager',
-    version: '0.8.1',
+    version: '0.9.1',
     tagline: 'See what’s eating your economy, and upgrade extractors without babysitting them.',
     features: [
       {
@@ -163,7 +183,7 @@ export const MODS: Mod[] = [
   {
     id: 'IdleEngineers',
     name: 'Idle Engineers',
-    version: '0.6.1',
+    version: '0.7.1',
     tagline: 'Never lose track of an engineer or factory with nothing to do.',
     features: [
       {
@@ -183,7 +203,7 @@ export const MODS: Mod[] = [
   {
     id: 'BuildHotkeys',
     name: 'Build Hotkeys',
-    version: '0.4.1',
+    version: '0.5.1',
     tagline:
       'One key per kind of unit, the same on every faction, and the game’s own keys wherever you want them.',
     features: [
@@ -221,7 +241,7 @@ export const MODS: Mod[] = [
   {
     id: 'LadderReporter',
     name: 'Ladder Reporter',
-    version: '0.3.4',
+    version: '0.5.0',
     tagline: 'Queue for a ranked 1v1 on the site, and the ladder does the rest.',
     features: [
       {
@@ -233,15 +253,23 @@ export const MODS: Mod[] = [
         text: 'When a ranked 1v1 ends, the result goes straight to the SanctuaryDB ladder.',
       },
       {
+        title: 'Your stats and replay on the match page',
+        text: 'Switch on uploads and every ranked game’s stats and replay land on its ladder page, for anyone to look through or download. Off until you choose.',
+      },
+      {
+        title: 'Stream your games live',
+        text: 'Switch on streaming and the game you’re playing shows up on the Live page while it runs. Anyone can watch it in their own game, three minutes behind. Off until you choose.',
+      },
+      {
         title: 'Nothing to set up',
-        text: 'No settings at all. It only ever touches two-player Steam lobbies that match an open ladder game.',
+        text: 'Install it and play ranked. It only ever touches two-player Steam lobbies that match an open ladder game.',
       },
     ],
   },
   {
     id: 'ReplayManager',
     name: 'Replay Manager',
-    version: '0.4.4',
+    version: '0.5.2',
     tagline: 'Watch replays properly: any player’s view, no fog, every economy.',
     features: [
       {
@@ -250,7 +278,7 @@ export const MODS: Mod[] = [
       },
       {
         title: 'Compare economies',
-        text: 'Every army’s economy side by side, with whole-game totals, so you can see where it was won.',
+        text: 'Every army’s economy side by side, with whole-game totals, so you can see where it was won. Click a column to sort by it.',
       },
       {
         title: 'Full playback control',
@@ -262,7 +290,7 @@ export const MODS: Mod[] = [
   {
     id: 'CameraUtilities',
     name: 'Camera Utilities',
-    version: '0.1.2',
+    version: '0.2.1',
     tagline: 'A clean picture for screenshots, videos and casting.',
     features: [
       {
@@ -279,7 +307,7 @@ export const MODS: Mod[] = [
       },
       {
         title: 'Change it mid-shot',
-        text: 'Every switch is on a small in-game panel, so you never have to leave the match.',
+        text: 'Every switch is on a small in-game panel, so you never have to leave the match. It stays up even with the whole HUD switched off.',
       },
     ],
     keys: 'F4 opens the panel',
@@ -297,7 +325,7 @@ export function mod(id: string): Mod {
   return found;
 }
 
-const releaseTag = (m: Mod): string => `${m.id}-${m.version}`;
+export const releaseTag = (m: Mod): string => `${m.id}-${m.version}`;
 
 export const releaseNotes = (m: Mod): string => `${MODS_REPO}/releases/tag/${releaseTag(m)}`;
 
@@ -330,7 +358,7 @@ export const managerHref = (m: Mod): string =>
 export const ZONE_CONTROL: Mod = {
   id: 'ZoneControl',
   name: 'Zone Control',
-  version: '0.5.0',
+  version: '0.5.1',
   tagline:
     'Forged Alliance’s Zone Control: no commanders, no building — every zone you hold sends you units.',
   features: [
@@ -355,11 +383,12 @@ const zoneControlHref = (): string =>
 
 /** Phantom-X is Lua only, with no map: its release's -ModManager.zip is the
  *  whole download, and it plays on any map. Its panel is drawn by the Mod API,
- *  which is why it needs Mod Manager 0.10.0. */
+ *  and since 0.2.1 its host side runs on the API's Lua helpers, which is why
+ *  it needs Mod Manager 0.13.0. Zone Control 0.5.1 needs the same. */
 export const PHANTOM_X: Mod = {
   id: 'PhantomX',
   name: 'Phantom-X',
-  version: '0.1.1',
+  version: '0.2.2',
   tagline:
     'Supreme Commander’s Phantom-X: everyone starts allied, until some of you secretly become phantoms.',
   features: [
@@ -376,6 +405,10 @@ export const PHANTOM_X: Mod = {
       text: 'Break or offer alliances, vote, volunteer and mark suspects from one panel, with notices when roles are revealed.',
     },
     {
+      title: 'The whole story in the replay',
+      text: 'Watch the match back and the panel shows everyone’s role, with a switch to keep the spoilers hidden.',
+    },
+    {
       title: 'Set it up your way',
       text: 'How many phantoms, when they’re picked, their bonus, paladins and reveals: 13 lobby options, with the original’s defaults.',
     },
@@ -386,8 +419,107 @@ export const PHANTOM_X: Mod = {
   ],
 };
 
+/** Unit Restrictions is Lua only too, with no map. Its unit picker in the
+ *  lobby is the Mod API's, which is why it needs Mod Manager 0.12.0. */
+export const UNIT_RESTRICTIONS: Mod = {
+  id: 'UnitRestrictions',
+  name: 'Unit Restrictions',
+  version: '0.1.1',
+  tagline: 'Take units out of the match: a whole section like air, or just one faction’s tank.',
+  features: [
+    {
+      title: 'Switch off a whole section',
+      text: 'No land, no air, no naval or no experimentals, one switch each. Engineers and commanders always stay, and so do the factories that build them.',
+    },
+    {
+      title: 'Pick units from a grid',
+      text: 'A column per faction and a row per kind of unit. Restrict just the EDA Puma, every T1 tank, or a whole faction or tech level in one click.',
+    },
+    {
+      title: 'Everyone sees the list',
+      text: 'Other players open the same grid in the lobby, so nobody finds out mid-match that their favourite unit is gone.',
+    },
+    {
+      title: 'Gone from every build menu',
+      text: 'Restricted units can’t be built, and the host turns one down if anything queues it anyway, AI included.',
+    },
+  ],
+};
+
+/** Remmy's Balance Patch is Lua only too: its release's -ModManager.zip is
+ *  the whole download, and it needs Mod Manager 0.13.0. Unlike the modes
+ *  above it changes the units rather than the rules, so it has a page of its
+ *  own, /balance-patch, listing every change against the game, and the unit
+ *  database can show its numbers. The version here must match
+ *  src/lib/balance-patch.json, the change list the site was built from
+ *  (`npm run balance-patch`); a test checks they agree. The features compare
+ *  with the game, not with the last release: (150) means the game's 150. */
+export const BALANCE_PATCH: Mod = {
+  id: 'BalancePatch',
+  name: 'Remmy’s Balance Patch',
+  version: '0.2.7',
+  tagline:
+    'A community balance pass for Sanctuary: a faster, map-driven early game, bombers, artillery and anti-air that hit moving targets, shields that stop aircraft, and fixes for units that shot the ground.',
+  features: [
+    {
+      title: 'An economy built on the map',
+      text: 'Commanders make 3 alloy and 30 energy a second (the game’s 5 and 50) and start with full storage, so income comes from taking the map. Extractors make 1 / 5 / 15 alloy (1 / 4 / 10), generators 20 / 600 / 2,500 energy (10 / 200 / 1,000).',
+    },
+    {
+      title: 'Paced for 256 and 512 maps',
+      text: 'Numbers chosen in an economy simulation that follows the game’s own rules: a 256 map over in 5–15 minutes, a 512 in 20–30, and nobody on T2 before about 7. Factories cost 200 alloy (150); the T2 upgrade 1,500 (500) and T3 4,000 (2,000).',
+    },
+    {
+      title: 'T4s that end games',
+      text: '10,000–25,000 alloy (the game’s 3,400–11,100), priced against T3 tanks with splash and range counted, so one is strong without outclassing an army its cost. They move at 2.25–3 (2), never faster than a T3 tank, and the Centaur’s railgun reaches 80 (40).',
+    },
+    {
+      title: 'T3 tanks that keep up',
+      text: 'The Kodiak, Glaive and Auger cost 30% less and move at 3.3 like a T1 tank (2.5–2.7), with guns that track much faster. The Guardian Nitro is quicker still, at 4.5, with 3,000 health (2,250).',
+    },
+    {
+      title: 'Shots that hit moving targets',
+      text: 'Artillery, bombers, anti-air and the EDA and Guardian commanders’ missiles aim where a target is going, not where it was.',
+    },
+    {
+      title: 'Anti-air that connects',
+      text: 'Anti-air shells fly 1.5–6× as fast and straight, missiles turn twice as fast, and aircraft hitboxes are 1.5× bigger, so weaving no longer dodges most of the flak. Guardian T2 anti-air, whose shots splash, does half damage.',
+    },
+    {
+      title: 'Point defences worth building',
+      text: 'T2 point defences have 3,000–3,800 health (2,000) and 1.5–1.9× the damage. The Chosen T3 one hits 2.2× as hard, with 7,000 health (6,500).',
+    },
+    {
+      title: 'Reclaim worth fighting over',
+      text: 'Wrecks reclaim three times as fast and last 6 minutes (3), so a won fight pays for the next one.',
+    },
+    {
+      title: 'Radar at a price',
+      text: 'T2 radar runs on 250 energy a second (150). T3 radar costs 2,800 alloy and 1,400 energy a second (700 and 350), and the EDA and Chosen ones see 750 and 850 (450 and 550).',
+    },
+    {
+      title: 'Raids that work',
+      text: 'Engineers have less than half their health. Land and naval units cost 6 energy per alloy (10), and Chosen aircraft cost what the other factions’ do.',
+    },
+    {
+      title: 'T2 beats its cost in T1',
+      text: 'The Chosen Jager toned down, the other T2 raiders brought up, and the three T1 tanks and T1 artillery brought level.',
+    },
+    {
+      title: 'Bugs fixed',
+      text: 'One broken bomber no longer freezes other units’ targeting, aircraft can’t fire from inside a shield at what it covers, and the Chosen T2 point defence stops shooting the ground.',
+    },
+    {
+      title: 'Every section is a switch',
+      text: 'Seven lobby options, all on by default. The host can turn off any part of the patch, from the economy to the fixes.',
+    },
+  ],
+};
+
 /** Every gameplay mod on /gameplay-mods, in the order shown. */
 export const GAMEPLAY_MODS: { mod: Mod; href: string; label: string }[] = [
   { mod: ZONE_CONTROL, href: zoneControlHref(), label: 'Download mod + map' },
   { mod: PHANTOM_X, href: managerHref(PHANTOM_X), label: 'Download' },
+  { mod: UNIT_RESTRICTIONS, href: managerHref(UNIT_RESTRICTIONS), label: 'Download' },
+  { mod: BALANCE_PATCH, href: managerHref(BALANCE_PATCH), label: 'Download' },
 ];

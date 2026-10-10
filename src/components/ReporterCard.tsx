@@ -30,7 +30,8 @@ export function ReporterCard() {
             </span>
             <strong>Mod Manager</strong> <span className="dim">v{MANAGER.version}</span>
             <p className="dim">
-              What every mod runs on, and a Mods page in the game menu. Already have it? Skip to 2.
+              What every mod runs on, and a Mods page in the game menu that keeps them up to date. Already
+              have it? Skip to 2.
             </p>
           </div>
           <a className="dl-btn" href={standaloneHref(MANAGER)}>
@@ -57,6 +58,13 @@ export function ReporterCard() {
           next to <code>Sanctuary.exe</code>, then launch the game and play ranked.
         </p>
         <CopyPath />
+        <div className="reporter-uploads">
+          <strong>Share your games.</strong> Press <kbd>F8</kbd> in game, open{' '}
+          <strong>Ladder Reporter</strong> and switch on <strong>Upload &rarr; Stats</strong> and{' '}
+          <strong>Replays</strong>. After each ranked game your stats and replay go up to its match page and
+          the <Link to="/replays">Replays</Link> list, for anyone to look through or download. Both are
+          public, and off until you switch them on.
+        </div>
         <p className="hint">
           Want every mod? <a href={EVERYTHING_HREF}>Download everything</a> in one zip instead &mdash; see{' '}
           <Link to="/mods">what&rsquo;s in it</Link>.

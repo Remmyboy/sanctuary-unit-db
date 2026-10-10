@@ -11,10 +11,11 @@ interface LiveCheck {
   upToDate: boolean | null;
 }
 
-// One lookup per page load, shared by every toolbar that mounts.
+// One lookup per page load, shared by every toolbar that mounts (and by the
+// match page, to tell whether a replay still plays on the live build).
 let pending: Promise<LiveCheck | null> | null = null;
 
-function checkLive(): Promise<LiveCheck | null> {
+export function checkLive(): Promise<LiveCheck | null> {
   pending ??= fetch('/api/game-version')
     .then((r) => (r.ok ? (r.json() as Promise<LiveCheck>) : null))
     .catch(() => null);

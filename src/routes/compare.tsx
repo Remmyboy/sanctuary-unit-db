@@ -13,18 +13,23 @@ import { GameVersion } from '../components/GameVersion';
 import { PageHead } from '../components/PageHead';
 import { WeaponBlock } from '../components/detail/WeaponsSection';
 import { ChaseSim } from '../components/ChaseSim';
+import { BalanceStrip, BalanceToggle } from '../components/BalanceToggle';
+import { parseBalance, type Balance } from '../lib/balance-patch';
 
 // Units side by side: a column each, a row per stat, the best value in each
 // row lit. The picks come from the Units board's compare mode and live in the
 // URL (?units=a,b,c), so a comparison is a link that can be shared.
 interface CompareSearch {
   units?: string;
+  /** Show the numbers with a balance mod applied; absent means the game's. */
+  balance?: Balance;
 }
 
 export const Route = createFileRoute('/compare')({
   ssr: false,
   validateSearch: (raw: Record<string, unknown>): CompareSearch => ({
     units: str(raw.units),
+    balance: parseBalance(raw.balance),
   }),
   head: () => ({
     meta: [
@@ -36,7 +41,8 @@ export const Route = createFileRoute('/compare')({
       },
     ],
   }),
-  loader: () => loadData(),
+  loaderDeps: ({ search }) => ({ balance: search.balance }),
+  loader: ({ deps }) => loadData(deps.balance),
   component: ComparePage,
 });
 
@@ -48,8 +54,12 @@ function ComparePage() {
   const ids = parseCompare(search.units, (id) => loaded.byId.has(id));
   const units = ids.map((id) => loaded.byId.get(id)!);
   const joined = ids.join(',') || undefined;
+  const balance = search.balance;
   const remove = (id: string) =>
-    navigate({ search: { units: ids.filter((x) => x !== id).join(',') || undefined }, replace: true });
+    navigate({
+      search: { units: ids.filter((x) => x !== id).join(',') || undefined, balance },
+      replace: true,
+    });
 
   const { copied, copy } = useCopyFeedback();
 
@@ -62,13 +72,19 @@ function ComparePage() {
 
       <div className="toolbar">
         <span>
-          <Link to="/" search={{ compare: joined }} className="linkish">
+          <Link to="/" search={{ compare: joined, balance }} className="linkish">
             ← Units
           </Link>
           {units.length ? ` · ${units.length} unit${units.length === 1 ? '' : 's'}` : null}
         </span>
         <div className="toolbar-controls">
           <GameVersion game={loaded.data.meta.game} generatedAt={loaded.data.meta.generatedAt} />
+          <BalanceToggle
+            on={!!balance}
+            onChange={(on) =>
+              navigate({ search: { units: joined, balance: on ? 'remmy' : undefined }, replace: true })
+            }
+          />
           {units.length > 0 && (
             <button type="button" className="linkish" onClick={() => copy(window.location.href)}>
               {copied ? 'Copied ✓' : 'Copy link'}
@@ -76,6 +92,13 @@ function ComparePage() {
           )}
         </div>
       </div>
+
+      {balance && (
+        <BalanceStrip
+          meta={loaded.data.meta}
+          onOff={() => navigate({ search: { units: joined }, replace: true })}
+        />
+      )}
 
       <main className="compare-page">
         {units.length < 2 ? (
@@ -85,13 +108,13 @@ function ComparePage() {
               Units page, press <strong>Compare</strong> in the toolbar and click the units you want side by
               side.
             </p>
-            <Link to="/" search={{ compare: joined }} className="btn primary">
+            <Link to="/" search={{ compare: joined, balance }} className="btn primary">
               Pick units
             </Link>
           </div>
         ) : (
           <>
-            <CompareTable units={units} loaded={loaded} ids={joined} onRemove={remove} />
+            <CompareTable units={units} loaded={loaded} ids={joined} balance={balance} onRemove={remove} />
             <ChaseSim units={units} loaded={loaded} />
             <Legend units={loaded.data.units} />
           </>
@@ -105,11 +128,13 @@ function CompareTable({
   units,
   loaded,
   ids,
+  balance,
   onRemove,
 }: {
   units: Unit[];
   loaded: LoadedData;
   ids: string | undefined;
+  balance?: Balance;
   onRemove: (id: string) => void;
 }) {
   const table = compareTable(units);
@@ -139,9 +164,12 @@ function CompareTable({
                   ×
                 </button>
                 <Render unit={u} loaded={loaded} />
-                <Link to="/" search={{ unit: u.id, compare: ids }} className="compare-name">
+                <Link to="/" search={{ unit: u.id, compare: ids, balance }} className="compare-name">
                   <FactionEmblem faction={u.faction} />
                   {u.name ?? shortName(u)}
+                  {u.balance && (
+                    <span className="bp-mark" title="Changed by the balance patch" aria-hidden="true" />
+                  )}
                 </Link>
                 <span className="compare-sub">{u.displayName}</span>
               </th>

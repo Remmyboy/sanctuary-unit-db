@@ -21,6 +21,7 @@ import {
   type Stock,
 } from '../../lib/calc';
 import type { LoadedData } from '../../lib/data';
+import type { Balance } from '../../lib/balance-patch';
 import { FACTION_ORDER } from '../../lib/faction-colours';
 import { isCommander } from '../../lib/format';
 import type { Faction, Unit } from '../../lib/types';
@@ -43,6 +44,8 @@ export interface CalcSearch {
   q?: string;
   b?: string;
   s?: string;
+  /** Work from a balance mod's numbers; absent means the game's. */
+  balance?: Balance;
 }
 
 /** Replaces the search params (the route's navigate, with replace: true). */
@@ -235,6 +238,7 @@ export function useCalculatorState({ data, byId }: LoadedData, search: CalcSearc
       q: packRows(queueRows),
       b: queueMode ? queueBuilder?.id : search.b,
       s: search.s,
+      balance: search.balance,
     }));
     await copy(window.location.href);
     // On refusal the address bar still holds the pinned URL, so copying by
@@ -243,7 +247,7 @@ export function useCalculatorState({ data, byId }: LoadedData, search: CalcSearc
 
   const reset = () => {
     setPanel(null);
-    setSearch(() => ({}));
+    setSearch(() => ({ balance: search.balance }));
   };
 
   return {

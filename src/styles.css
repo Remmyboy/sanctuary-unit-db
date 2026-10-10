@@ -3688,6 +3688,273 @@ img.unit-icon[data-muted='true'] {
   color: var(--text-dim);
 }
 
+/* After the result: LadderReporter's uploads (components/MatchUploads.tsx). */
+.uploads-hint {
+  font-size: 13px;
+}
+.replay-panel {
+  margin: 18px 0;
+  padding: 12px 14px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.replay-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.replay-warn {
+  margin: 10px 0 0;
+  color: var(--warn);
+  font-size: 13px;
+}
+.replay-help {
+  margin: 10px 0 0;
+  font-size: 12px;
+}
+.replay-help code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  word-break: break-all;
+  color: var(--text);
+}
+.match-stats {
+  margin-top: 22px;
+}
+.ms-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.ms-head h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+}
+.ms-head .dim {
+  font-size: 12px;
+}
+.ms-confirmed {
+  color: var(--good);
+}
+.ms-table-wrap {
+  overflow-x: auto;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.ms-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.ms-table thead th {
+  text-align: right;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border-strong);
+  white-space: nowrap;
+}
+.ms-swatch {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 7px;
+  border-radius: 2px;
+  background: var(--pc);
+  box-shadow: 0 0 6px var(--pc);
+}
+.ms-faction {
+  margin-left: 6px;
+  color: var(--text-faint);
+  font-weight: 500;
+  font-size: 11px;
+}
+.ms-table tbody th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--text-dim);
+  padding: 6px 12px;
+  white-space: nowrap;
+}
+.ms-table tbody td {
+  text-align: right;
+  padding: 6px 12px;
+}
+.ms-table tbody tr + tr > * {
+  border-top: 1px solid var(--border);
+}
+.ms-table tr[data-sub] th {
+  padding-left: 26px;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+.ms-table tr[data-sub] td {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.ms-table td[data-best] {
+  color: var(--text);
+  font-weight: 700;
+}
+@media (max-width: 520px) {
+  .ms-table thead th {
+    white-space: normal;
+    padding: 8px 8px;
+  }
+  .ms-table tbody th,
+  .ms-table tbody td {
+    padding: 6px 8px;
+  }
+  .ms-table tr[data-sub] th {
+    padding-left: 16px;
+  }
+  .ms-faction {
+    display: block;
+    margin: 2px 0 0;
+  }
+}
+.ms-chart-picker {
+  margin: 16px 0 8px;
+}
+.ms-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.ms-line {
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+}
+.ms-grid {
+  stroke: var(--border);
+  stroke-dasharray: 3 4;
+}
+.ms-baseline {
+  stroke: var(--border-strong);
+}
+.ms-axis {
+  fill: var(--text-faint);
+  font-size: 11px;
+}
+.hist-tag {
+  margin-left: 6px;
+  padding: 1px 5px;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  color: var(--text-dim);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.hist-date {
+  color: inherit;
+}
+a.chip {
+  text-decoration: none;
+}
+/* A table row that opens its match: the whole row is the target. */
+.lb-table tr.row-link {
+  cursor: pointer;
+}
+
+/* Replays: finished games, spoiler-free (routes/replays.tsx). */
+.replays {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 18px 16px 60px;
+}
+.replay-table td {
+  vertical-align: middle;
+}
+.replay-players {
+  font-weight: 600;
+}
+.replay-players .vs {
+  color: var(--text-faint);
+  font-weight: 400;
+}
+.replay-map {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.btn.replay-dl {
+  display: inline-block;
+  padding: 5px 10px;
+  font-size: 11px;
+  text-decoration: none;
+}
+.replay-more {
+  display: block;
+  margin: 16px auto 0;
+}
+/* Phones: each game becomes a card; the headings go, the cells stack. */
+@media (max-width: 640px) {
+  .replay-table thead {
+    display: none;
+  }
+  .replay-table,
+  .replay-table tbody,
+  .replay-table tr,
+  .replay-table td {
+    display: block;
+  }
+  .replay-table tr {
+    position: relative;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .replay-table td {
+    padding: 2px 0;
+    border: 0;
+  }
+  .replay-table td:nth-child(3),
+  .replay-table td:nth-child(4) {
+    display: inline-block;
+    margin-right: 10px;
+    font-size: 12px;
+  }
+  .replay-table td:nth-child(5) {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+  }
+  .replay-table td:nth-child(6) {
+    display: none; /* the row itself opens the game */
+  }
+  .replay-map {
+    max-width: calc(100% - 110px);
+  }
+}
+.spoiler-gate {
+  margin: 22px 0;
+  padding: 18px;
+  text-align: center;
+  background: var(--bg-raised);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+}
+.spoiler-gate p {
+  margin: 0 0 12px;
+  color: var(--text-dim);
+}
+
 /* Profile. */
 .profile {
   max-width: 760px;
@@ -4557,6 +4824,28 @@ html.modding-route {
 .reporter-install .hint a {
   color: var(--accent);
 }
+/* The nudge to switch on stats and replay uploads: off by default in the
+   mod, so it stands out from the dim hints around it. */
+.reporter-uploads {
+  margin: 12px 0 4px;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  background: var(--bg);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+.reporter-uploads a {
+  color: var(--accent);
+}
+.reporter-uploads kbd {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0 4px;
+}
 .reporter-install p code {
   font-family: var(--font-mono);
   font-size: 11.5px;
@@ -4797,6 +5086,37 @@ html.modding-route {
   white-space: nowrap;
 }
 
+/* Updating happens in the game now, so the rail says so before the install
+   detail: an accent bar, like the Play page's uploads callout. */
+.mods-updates {
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+}
+.mods-updates h2 {
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.mods-updates p {
+  margin: 0 0 8px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+.mods-updates p strong {
+  color: var(--text);
+}
+.mods-updates p.hint {
+  margin: 0;
+  font-size: 12px;
+}
+
 /* Where every zip goes: said once, beside both ways of installing, since the
    answer is the same for all of them. */
 .mods-where h2 {
@@ -4962,6 +5282,13 @@ html.modding-route {
 .mods-remove {
   margin: 0;
   font-size: 12px;
+}
+
+/* A rail taller than the window would hide its foot while it sticks. */
+@media (max-height: 860px) {
+  .mods-aside {
+    position: static;
+  }
 }
 
 @media (max-width: 1000px) {
@@ -6465,4 +6792,401 @@ html.modding-route {
     transform: translateY(-6px) rotate(8deg);
     opacity: 1;
   }
+}
+
+/* ---------------- Remmy's Balance Patch ---------------- */
+
+/* Its own colour, apart from the accent, so a patched number never reads as
+   a selection or a live-build signal. */
+:root {
+  --patch: #b896ff;
+  --patch-soft: color-mix(in srgb, var(--patch) 14%, transparent);
+}
+
+/* The toolbar switch: the Compare button's shape, lit in the patch's colour. */
+.balance-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--bg-sunken);
+  color: var(--text-dim);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.balance-toggle:hover {
+  color: var(--text);
+  border-color: var(--patch);
+}
+.balance-toggle[aria-pressed='true'] {
+  color: #12091f;
+  background: var(--patch);
+  border-color: var(--patch);
+}
+.balance-toggle:focus-visible {
+  outline: 2px solid var(--patch);
+  outline-offset: 1px;
+}
+.balance-toggle svg {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.3;
+  stroke-linejoin: round;
+}
+
+/* Under the toolbar while the patch is on: whose numbers these are. */
+.balance-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 18px;
+  padding: 7px 20px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  background: var(--patch-soft);
+  border-bottom: 1px solid color-mix(in srgb, var(--patch) 35%, transparent);
+}
+.balance-strip strong {
+  color: var(--patch);
+  font-weight: 600;
+}
+.balance-strip-links {
+  display: inline-flex;
+  gap: 16px;
+  white-space: nowrap;
+}
+.balance-strip-links a,
+.balance-strip-links .linkish {
+  color: var(--patch);
+  text-decoration: none;
+  font-size: 12.5px;
+}
+.balance-strip-links a:hover,
+.balance-strip-links .linkish:hover {
+  text-decoration: underline;
+}
+
+/* A patched unit: a small diamond, on cards, tiles and wherever its name is. */
+.bp-mark {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-left: 7px;
+  vertical-align: 2px;
+  background: var(--patch);
+  transform: rotate(45deg);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--patch) 25%, transparent);
+}
+.tile > .bp-mark {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  margin: 0;
+  width: 6px;
+  height: 6px;
+  pointer-events: none;
+}
+.balance-strip .bp-mark {
+  margin: 0 2px 0 4px;
+}
+
+/* A change: label, the game's value struck through, the patch's lit. */
+.bp-changes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.bp-changes li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+.bp-label {
+  color: var(--text-dim);
+}
+.bp-vals {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 6px;
+  font-variant-numeric: tabular-nums;
+}
+.bp-before {
+  color: var(--text-faint);
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, var(--text-faint) 70%, transparent);
+}
+.bp-arrow {
+  color: var(--text-faint);
+}
+.bp-after {
+  color: var(--text);
+  font-weight: 600;
+}
+.bp-pct {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+.bp-changes-detail li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0 10px;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--border);
+}
+.bp-changes-detail .bp-section-tag {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  color: var(--patch);
+  opacity: 0.8;
+}
+
+/* The patch's page. */
+.bp-features {
+  margin-top: 4px;
+}
+.bp-db {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+  margin-top: 22px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--patch) 40%, var(--border));
+  border-radius: var(--radius);
+  background: var(--patch-soft);
+}
+.bp-db p {
+  flex: 1 1 320px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-dim);
+}
+.bp-db strong {
+  color: var(--text);
+  font-weight: 600;
+}
+.bp-db em {
+  font-style: normal;
+  color: var(--patch);
+}
+.bp-page .mods-everything .dl-btn.ghost {
+  margin-top: -4px;
+}
+.bp-toc h2 {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.bp-toc ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+}
+.bp-toc li + li {
+  border-top: 1px solid var(--border);
+}
+.bp-toc a {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 12px;
+  font-size: 13px;
+  color: var(--text);
+  text-decoration: none;
+}
+.bp-toc a:hover {
+  color: var(--patch);
+}
+.bp-toc a span {
+  font-size: 11.5px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+.bp-legend {
+  margin: 32px 0 0;
+  font-size: 12.5px;
+}
+.bp-section {
+  scroll-margin-top: calc(var(--header-h) + 36px + 16px);
+}
+.bp-section .gm-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.bp-count {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-faint);
+}
+.bp-desc {
+  max-width: 80ch;
+  margin: 0 0 14px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+.bp-rules {
+  margin-bottom: 16px;
+}
+.bp-rows {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+}
+.bp-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 2fr) minmax(0, 3fr);
+  gap: 6px 20px;
+  padding: 9px 14px;
+}
+.bp-row + .bp-row {
+  border-top: 1px solid var(--border);
+}
+.bp-who {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.bp-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.bp-units {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+}
+.bp-unit {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-dim);
+  text-decoration: none;
+}
+.bp-unit .faction-emblem {
+  width: 13px;
+  height: 13px;
+}
+.bp-unit:hover {
+  color: var(--fc);
+  text-decoration: underline;
+}
+.bp-why {
+  margin-top: 12px;
+  font-size: 13px;
+}
+.bp-why summary {
+  cursor: pointer;
+  width: max-content;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--patch);
+}
+.bp-why ul {
+  max-width: 80ch;
+  margin: 10px 0 0;
+  padding-left: 20px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+.bp-why li + li {
+  margin-top: 6px;
+}
+.bp-foot {
+  margin-top: 36px;
+  font-size: 13px;
+  color: var(--text-faint);
+}
+
+/* On a phone the switch drops to its icon, like Compare beside it; the strip
+   under the toolbar still says the patch is on. */
+@media (max-width: 760px) {
+  .balance-toggle span {
+    display: none;
+  }
+  .balance-toggle {
+    padding: 3px 6px;
+  }
+  .toolbar-controls:has(.balance-toggle) {
+    gap: 10px;
+  }
+}
+
+@media (max-width: 620px) {
+  .bp-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .balance-strip {
+    padding: 7px 14px;
+  }
+}
+
+/* "×3": the same change on several of a unit's weapons. */
+.bp-count-n {
+  color: var(--text-faint);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Live games (routes/live.tsx, live_.$streamId.tsx). */
+.live-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--bad);
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.live-dot::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--bad);
+  box-shadow: 0 0 6px var(--bad);
+}
+.live-players {
+  margin: 6px 0 0;
+}
+.replay-help.live-before {
+  margin: 0 0 12px;
 }

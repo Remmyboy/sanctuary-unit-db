@@ -156,6 +156,39 @@ test('mods page lists every mod with live download links', async ({ page, reques
   expect(errors).toEqual([]);
 });
 
+test('balance patch page lists every section and the database follows the patch', async ({ page }) => {
+  const errors = collectErrors(page);
+
+  await page.goto('/balance-patch');
+  await expect(page.getByRole('heading', { name: 'Remmy’s Balance Patch', level: 1 })).toBeVisible();
+  await expect(page.locator('.mods-everything .dl-btn').first()).toHaveAttribute(
+    'href',
+    /BalancePatch-[\d.]+\/BalancePatch-[\d.]+-ModManager\.zip$/,
+  );
+  await expect(page.locator('.bp-section')).toHaveCount(7);
+  const engineers = page.locator('#economy .bp-row').filter({ hasText: 'T1 Engineer' });
+  await expect(engineers).toContainText('750');
+  await expect(engineers).toContainText('300');
+
+  // A unit's link opens it in the database with the patch on.
+  await page.locator('#units .bp-unit', { hasText: 'Puma' }).click();
+  await expect(page).toHaveURL(/[?&]balance=remmy/);
+  await expect(page.locator('.balance-strip')).toBeVisible();
+  await expect(page.locator('.detail h2')).toHaveText('Puma');
+  await expect(page.locator('.detail .bp-changes')).toContainText('health');
+  await expect(page.locator('.detail .statgrid')).toContainText('320');
+
+  // The switch follows to the calculator, and turns off again.
+  await expect(page.getByRole('link', { name: 'Calculator' })).toHaveAttribute('href', /balance=remmy/);
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Balance Patch', exact: true }).click();
+  await expect(page.locator('.balance-strip')).toHaveCount(0);
+  await expect(page.locator('.card .bp-mark')).toHaveCount(0);
+  expect(page.url()).not.toContain('balance=');
+
+  expect(errors).toEqual([]);
+});
+
 test('gameplay mods page sets up each mode and shows the map', async ({ page, request }) => {
   const errors = collectErrors(page);
 
@@ -173,7 +206,7 @@ test('gameplay mods page sets up each mode and shows the map', async ({ page, re
     'href',
     /ModManager-[\d.]+\/ModManager-[\d.]+-Standalone\.zip$/,
   );
-  await expect(page.locator('.mod-entry')).toHaveCount(2);
+  await expect(page.locator('.mod-entry')).toHaveCount(4);
   await expect(page.locator('#ZoneControl .mod-entry-head .dl-btn')).toHaveAttribute(
     'href',
     /ZoneControl-[\d.]+\/ZoneControl-[\d.]+-WithMap\.zip$/,
@@ -181,6 +214,14 @@ test('gameplay mods page sets up each mode and shows the map', async ({ page, re
   await expect(page.locator('#PhantomX .mod-entry-head .dl-btn')).toHaveAttribute(
     'href',
     /PhantomX-[\d.]+\/PhantomX-[\d.]+-ModManager\.zip$/,
+  );
+  await expect(page.locator('#UnitRestrictions .mod-entry-head .dl-btn')).toHaveAttribute(
+    'href',
+    /UnitRestrictions-[\d.]+\/UnitRestrictions-[\d.]+-ModManager\.zip$/,
+  );
+  await expect(page.locator('#BalancePatch .mod-entry-head .dl-btn')).toHaveAttribute(
+    'href',
+    /BalancePatch-[\d.]+\/BalancePatch-[\d.]+-ModManager\.zip$/,
   );
 
   // The preview is served, not a dead image.
@@ -216,7 +257,10 @@ test('modding docs honor the versioned routing and metadata contract', async ({ 
   await page.goto('/modding');
   await expect(page).toHaveURL(new RegExp(`${startPath}$`));
   await expect(page.getByRole('heading', { name: 'Modding the current playtest' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Modding', exact: true })).toHaveClass(/active/);
+  // Off the nav for now; the docs themselves stay up.
+  await expect(
+    page.getByRole('navigation', { name: 'Site' }).getByRole('link', { name: 'Modding' }),
+  ).toHaveCount(0);
 
   const overviewPath = `/modding/${snapshotId}/lua/overview`;
   const directResponse = await request.get(overviewPath);
@@ -337,7 +381,7 @@ test('modding ToC is usable on a narrow screen', async ({ page }) => {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
-test('ladder and play pages render their shells with no database', async ({ page }) => {
+test('ladder, play and replays pages render their shells with no database', async ({ page }) => {
   // No database is configured in this test environment, so both pages must
   // render signed-out/empty instead of crashing.
   await page.goto('/ladder');
@@ -348,6 +392,10 @@ test('ladder and play pages render their shells with no database', async ({ page
   await page.goto('/play');
   await expect(page.locator('.queue-card')).toHaveCount(3);
   await expect(page.locator('.play-signin')).toContainText('Sign in through Steam');
+
+  await page.goto('/replays');
+  await expect(page.getByRole('heading', { name: 'Replays', level: 1 })).toBeVisible();
+  await expect(page.locator('.replays .empty')).toContainText("aren't reachable");
 });
 
 test('lobbies page says Steam is unreachable rather than empty with no key', async ({ page }) => {

@@ -9,6 +9,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, createFileRoute } from '@tanstack/react-router';
 import { MapPreview } from '../components/MapPreview';
+import { MatchStatsPanel, ReplayPanel } from '../components/MatchUploads';
 import { loadMe } from '../lib/auth';
 import { stopMatchAlert, useMatchAlert } from '../lib/match-alert';
 import { isOpen, pollDelay, shouldPoll } from '../lib/match-poll';
@@ -358,6 +359,19 @@ function MatchRoom() {
         <p className="match-note">
           Result recorded. <Link to="/play">Play again</Link> · <Link to="/ladder">Standings</Link>
         </p>
+      )}
+
+      {/* LadderReporter's uploads follow the result: the replay, then the
+          stats. Both are opt-in for players, so either can be missing. */}
+      {match.status !== 'in_progress' && match.status !== 'cancelled' && (
+        <>
+          <ReplayPanel
+            matchId={matchId}
+            replay={match.replay}
+            canEnable={mine !== undefined && match.stats === null}
+          />
+          {match.stats && <MatchStatsPanel stats={match.stats} participants={match.participants} />}
+        </>
       )}
 
       {error && <p className="queue-error">{error}</p>}
