@@ -259,6 +259,12 @@ nothing arrived); the reservation is released, so start again from
 Public: redirects to a five-minute download link that saves the file under
 the game's own name. 404 when there is no ready replay.
 
+## Live replays
+
+`POST /api/mm/live`, `POST /api/mm/live/{id}/chunk/{seq}`,
+`POST /api/mm/live/{id}/end` (bearer) and the public `GET /api/live/{id}`:
+see [live-replays.md](live-replays.md).
+
 ## Why a match went manual
 
 Every 1v1 match that could have been auto but wasn't carries the reason in

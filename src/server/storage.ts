@@ -67,6 +67,19 @@ export async function objectSize(key: string): Promise<number | null> {
   return Number(res.headers.get('content-length') ?? 0);
 }
 
+// A small object written by the server itself: a live replay chunk, which is
+// capped well under a function's body limit. Overwriting is fine (a retry of
+// the same chunk carries the same bytes).
+export async function putObject(key: string, body: Uint8Array<ArrayBuffer>): Promise<void> {
+  const res = await client().client.fetch(objectUrl(key), {
+    method: 'PUT',
+    body,
+    headers: { 'Content-Type': 'application/octet-stream' },
+    signal: AbortSignal.timeout(TIMEOUT_MS),
+  });
+  if (!res.ok) throw new Error(`R2 PUT ${key}: ${res.status}`);
+}
+
 // Deleting a missing object succeeds (S3 semantics), so this is idempotent.
 export async function deleteObject(key: string): Promise<void> {
   const res = await client().client.fetch(objectUrl(key), {
