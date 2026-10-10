@@ -134,6 +134,12 @@ Unchanged, plus an optional `matchId`. When it names an open match between
 the two reported players, that match takes the result; otherwise it is
 ignored and the newest open match between them is used as before.
 
+Like `/api/mm/session`, the ticket must be minted with identity
+`sanctuarydb-ladder` (`identity` in the body is optional and only checked for
+equality), and a banned reporter is answered `403` rather than changing an
+open match. Both routes answer `429` past 20 requests a minute from one IP —
+far above what the mod sends.
+
 The 200 answer now also names the match the result went to:
 `{ "outcome": "reported" | "applied" | "disputed", "matchId": "<uuid>" }`.
 That is how a manually hosted game gets the id its uploads need.
