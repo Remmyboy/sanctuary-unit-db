@@ -9,6 +9,7 @@ import {
   CHUNK_URL_TTL_S,
   CHUNKS_PER_POLL,
   KEEP_ENDED_H,
+  LIVE_DAILY_MAX_BYTES,
   LIVE_DELAY_S,
   liveChunkKey,
   liveMapName,
@@ -44,6 +45,15 @@ async function loadStream(id: string): Promise<StreamRow | null> {
 }
 
 // ---- the streaming player --------------------------------------------------
+
+// What the caller has streamed in the last day, for LIVE_DAILY_MAX_BYTES:
+// every Steam account with the mod can stream, so R2 needs a per-player cap.
+export async function overDailyQuota(uploaderId: string): Promise<boolean> {
+  const [row] = await sql()<{ bytes: string }[]>`
+    select coalesce(sum(bytes), 0)::bigint as bytes from live_streams
+    where uploader_id = ${uploaderId} and started_at > now() - interval '1 day'`;
+  return Number(row.bytes) >= LIVE_DAILY_MAX_BYTES;
+}
 
 // A new stream for the caller. One at a time: anything they still had live
 // is over (a crash, then a new game).
@@ -174,8 +184,12 @@ export async function viewerPoll(id: string, from: number): Promise<ViewerPoll |
     from live_chunks where stream_id = ${id} and seq = 0`;
   const next = from + chunks.length;
   const over = streamOver(s.status, s.last_chunk_at, new Date());
+  const complete = over && next >= s.chunks;
+  // Not for a stream that ended before sending anything: that one is complete.
   const startsInS =
-    from === 0 && chunks.length === 0 ? Math.max(1, Math.ceil(first?.wait_s ?? LIVE_DELAY_S)) : null;
+    from === 0 && chunks.length === 0 && !complete
+      ? Math.max(1, Math.ceil(first?.wait_s ?? LIVE_DELAY_S))
+      : null;
   return {
     id: s.id,
     gameVersion: s.game_version,
@@ -190,7 +204,7 @@ export async function viewerPoll(id: string, from: number): Promise<ViewerPoll |
         url: await presign('GET', liveChunkKey(id, c.seq), CHUNK_URL_TTL_S),
       })),
     ),
-    complete: over && next >= s.chunks,
+    complete,
     startsInS,
   };
 }
@@ -198,15 +212,19 @@ export async function viewerPoll(id: string, from: number): Promise<ViewerPoll |
 // ---- retention -------------------------------------------------------------
 
 // A day after a stream ends (or goes quiet), its chunks and rows go. At most
-// once an hour, a bounded batch, from the start of a new stream: there is no
-// cron. A finished game's real replay is the post-game upload, not this.
-const PRUNE_STREAMS = 10;
+// every 15 minutes, a bounded batch, from the start of a new stream: there is
+// no cron, so the batch has to stay quick (it holds up the streamer's start).
+// An hour of game is about 240 chunks. A finished game's real replay is the
+// post-game upload, not this.
+const PRUNE_EVERY = '15 minutes';
+const PRUNE_OBJECTS = 400; // R2 deletes per run, at least one whole stream
+const PRUNE_PARALLEL = 25;
 
 export async function pruneLive(): Promise<void> {
   if (!storageConfigured()) return;
   const claimed = await sql()`
     update site_jobs set last_run_at = now()
-    where name = 'live_prune' and last_run_at < now() - interval '1 hour'
+    where name = 'live_prune' and last_run_at < now() - ${PRUNE_EVERY}::interval
     returning name`;
   if (claimed.length === 0) return;
 
@@ -215,13 +233,16 @@ export async function pruneLive(): Promise<void> {
     where coalesce(ended_at, last_chunk_at) < now() - (interval '1 hour' * ${KEEP_ENDED_H})
       and (status = 'ended' or last_chunk_at < now() - (interval '1 second' * ${STALE_S}))
     order by started_at
-    limit ${PRUNE_STREAMS}`;
+    limit 50`;
 
+  let budget = PRUNE_OBJECTS;
   for (const s of due) {
+    if (budget <= 0) break;
+    budget -= s.chunks;
     try {
-      for (let seq = 0; seq < s.chunks; seq += 10) {
+      for (let seq = 0; seq < s.chunks; seq += PRUNE_PARALLEL) {
         const batch = [];
-        for (let i = seq; i < Math.min(s.chunks, seq + 10); i++)
+        for (let i = seq; i < Math.min(s.chunks, seq + PRUNE_PARALLEL); i++)
           batch.push(deleteObject(liveChunkKey(s.id, i)));
         await Promise.all(batch);
       }

@@ -16,6 +16,9 @@ export const LIVE_DELAY_S = 180;
 export const CHUNK_MAX_BYTES = 4 * 1024 * 1024;
 export const STREAM_MAX_BYTES = 64 * 1024 * 1024;
 export const SIDECAR_MAX_BYTES = 256 * 1024;
+// What one player may stream in a day (about thirty big games): any Steam
+// account with the mod can stream, and R2's free tier is 10 GB.
+export const LIVE_DAILY_MAX_BYTES = 1024 * 1024 * 1024;
 // A live stream that hasn't sent a chunk for this long is over: the game
 // crashed, or the connection went, without a goodbye.
 export const STALE_S = 180;

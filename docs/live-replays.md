@@ -45,8 +45,11 @@ POST /api/mm/live/{id}/end ───────►   status 'ended'            
   chunk has come out of the delay; the mod then lets the replay end.
 - **One stream per player at a time.** Starting a new one ends the last.
 - **Retention.** A day after a stream ends (`KEEP_ENDED_H`), the lazy prune
-  (`site_jobs` row `live_prune`, at most hourly, from `/api/mm/live`)
-  deletes its R2 objects and rows. The finished replay of a ranked game is
+  (`site_jobs` row `live_prune`, at most every 15 minutes and 400 R2
+  deletes, from `/api/mm/live`) deletes its R2 objects and rows.
+- **Quota.** Any Steam account with the mod can stream, so one player may
+  stream at most `LIVE_DAILY_MAX_BYTES` (1 GiB) a day; past it a new
+  stream is refused (403). The finished replay of a ranked game is
   the post-game upload, not this.
 - **Who.** The players list comes from the streaming player's lobby: names,
   teams, player/AI/observer; no Steam ids. Streaming needs the mod's bearer
@@ -70,7 +73,8 @@ POST /api/mm/live/{id}/end ───────►   status 'ended'            
 }
 ```
 
-→ `{ id, url, delayS }`. `sidecar` is the recording's `.mods.json` for a
+→ `{ id, url, delayS }` · 403 when the player has streamed
+`LIVE_DAILY_MAX_BYTES` (1 GiB) in the last day. `sidecar` is the recording's `.mods.json` for a
 modded game (without its notes), which a viewer's ModApi needs to apply the
 same mods.
 
@@ -92,7 +96,7 @@ same mods.
   "mapPath": "…",
   "fileName": "…",
   "sidecar": null,
-  "delayS": 60,
+  "delayS": 180,
   "chunks": [{ "seq": 0, "sizeBytes": 2097431, "url": "https://…r2…" }],
   "complete": false,
   "startsInS": null
@@ -100,7 +104,8 @@ same mods.
 ```
 
 At most 60 chunks per answer; ask again from the next. `startsInS` is set
-while chunk 0 is still inside the delay.
+while chunk 0 is still inside the delay. The CDN caches an answer for 10 s
+(the mod polls without a bearer), which only ever makes it later.
 
 ### Local bridge: `POST /watch`
 

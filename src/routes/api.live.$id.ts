@@ -1,6 +1,9 @@
 // What a watching game polls (docs/live-replays.md): the stream's header
 // facts and the chunks from `from` on that are past the delay, each with a
 // short-lived R2 URL. Public, like the live page; no sign-in needed to watch.
+// Every viewer of a stream polls the same `from` once caught up, so the CDN
+// holds an answer for ten seconds: one function call per region per stream,
+// not one per viewer. A cached answer is only ever later, so the delay holds.
 //
 //   GET /api/live/{id}?from=n
 //   → { id, gameVersion, mapPath, fileName, sidecar, delayS, chunks: [{ seq, sizeBytes, url }],
@@ -22,7 +25,7 @@ export const Route = createFileRoute('/api/live/$id')({
         if (!poll) return bad(404, 'No such stream.');
         return new Response(JSON.stringify(poll), {
           status: 200,
-          headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+          headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=0, s-maxage=10' },
         });
       },
     },

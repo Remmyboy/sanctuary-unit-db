@@ -2,10 +2,10 @@
 // in (docs/live-replays.md). The chunks follow on /api/mm/live/{id}/chunk/{seq}.
 //
 //   POST /api/mm/live  { mapPath, gameVersion, buildId, fileName, players, sidecar }
-//   → { id, url, delayS }
+//   → { id, url, delayS } | 403 (over the day's LIVE_DAILY_MAX_BYTES)
 
 import { createFileRoute } from '@tanstack/react-router';
-import { startStream, pruneLive } from '../server/live-replays';
+import { overDailyQuota, pruneLive, startStream } from '../server/live-replays';
 import { authenticate, bad, json, readJsonCapped } from '../server/mm';
 import { storageConfigured } from '../server/storage';
 import { LIVE_DELAY_S, parseLiveStart, SIDECAR_MAX_BYTES } from '../lib/live-replay';
@@ -24,6 +24,10 @@ export const Route = createFileRoute('/api/mm/live')({
           return bad(read.status, read.status === 413 ? 'Too large.' : 'Body is not JSON.');
         const start = parseLiveStart(read.body);
         if (typeof start === 'string') return bad(400, `Malformed live stream: ${start}.`);
+
+        // 403, not 429: the mod gives up on a 4xx rather than retrying every beat.
+        if (await overDailyQuota(me.playerId))
+          return bad(403, "You've streamed as much as one player can in a day; try again tomorrow.");
 
         await pruneLive().catch((e: Error) => console.warn(`[live] prune failed: ${e.message}`));
         const id = await startStream(me.playerId, start);
