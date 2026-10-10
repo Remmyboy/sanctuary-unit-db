@@ -75,7 +75,7 @@ describe('launchProgress', () => {
 });
 
 // Pinned so a change here is a deliberate one made together with the SQL.
-it('pins the timings mirrored in 0009_matchmaking.sql', () => {
+it('pins the timings mirrored in the matchmaking SQL', () => {
   expect(COUNTDOWN_S).toBe(10);
   expect(LAUNCHABLE_WINDOW_S).toBe(15);
 });

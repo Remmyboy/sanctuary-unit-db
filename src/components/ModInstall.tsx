@@ -3,9 +3,9 @@
 // Both pages install into the same folder the same way, so they say it the
 // same way.
 
-import { useState, type ReactNode } from 'react';
-import { copyText } from '../lib/clipboard';
+import type { ReactNode } from 'react';
 import { ENGINE_PATH } from '../lib/mods';
+import { useCopyFeedback } from '../lib/use-copy-feedback';
 
 export function StepHead({ n, id, children }: { n: number; id: string; children: ReactNode }) {
   return (
@@ -19,21 +19,12 @@ export function StepHead({ n, id, children }: { n: number; id: string; children:
 }
 
 export function CopyPath({ text = ENGINE_PATH }: { text?: string }) {
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useCopyFeedback();
 
   return (
     <div className="install-path">
       <code>{text}</code>
-      <button
-        type="button"
-        className="linkish"
-        onClick={async () => {
-          if (await copyText(text)) {
-            setCopied(true);
-            setTimeout(() => setCopied(false), 1500);
-          }
-        }}
-      >
+      <button type="button" className="linkish" onClick={() => copy(text)}>
         {copied ? 'Copied ✓' : 'Copy'}
       </button>
     </div>

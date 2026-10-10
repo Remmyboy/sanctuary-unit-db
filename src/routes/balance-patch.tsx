@@ -10,7 +10,7 @@
 import { Link, createFileRoute } from '@tanstack/react-router';
 import { CopyPath } from '../components/ModInstall';
 import { FactionEmblem } from '../components/FactionEmblem';
-import { FACTION_COLOURS } from '../components/UnitIcon';
+import { FACTION_COLOURS } from '../lib/faction-colours';
 import { HeadStat, PageHead } from '../components/PageHead';
 import {
   BALANCE_PATCH,
