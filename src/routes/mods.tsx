@@ -12,7 +12,7 @@
 
 import { Link, createFileRoute } from '@tanstack/react-router';
 import { ModCard } from '../components/ModCard';
-import { CopyPath, StepHead } from '../components/ModInstall';
+import { CopyPath, LINUX_LAUNCH_OPTIONS, StepHead } from '../components/ModInstall';
 import { HeadStat, PageHead } from '../components/PageHead';
 import { EVERYTHING_HREF, MODS, MODS_REPO, managerHref, mod, standaloneHref } from '../lib/mods';
 
@@ -92,6 +92,16 @@ function ModsPage() {
               here:
             </p>
             <CopyPath />
+          </div>
+
+          <div className="mods-where">
+            <h2>On Linux?</h2>
+            <p>
+              Set the launch options. In Steam, go to <strong>Sanctuary</strong> &rarr;{' '}
+              <strong>Properties</strong> &rarr; <strong>General</strong> &rarr;{' '}
+              <strong>Launch Options</strong> and enter:
+            </p>
+            <CopyPath text={LINUX_LAUNCH_OPTIONS} />
           </div>
 
           <p className="mods-remove hint">
