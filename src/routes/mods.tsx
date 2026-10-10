@@ -12,7 +12,7 @@
 
 import { Link, createFileRoute } from '@tanstack/react-router';
 import { ModCard } from '../components/ModCard';
-import { CopyPath, StepHead } from '../components/ModInstall';
+import { CopyPath, LinuxLaunchOptions, StepHead } from '../components/ModInstall';
 import { HeadStat, PageHead } from '../components/PageHead';
 import { EVERYTHING_HREF, MODS, MODS_REPO, managerHref, mod, standaloneHref } from '../lib/mods';
 
@@ -93,6 +93,8 @@ function ModsPage() {
             </p>
             <CopyPath />
           </div>
+
+          <LinuxLaunchOptions />
 
           <p className="mods-remove hint">
             To remove the lot, delete <code>engine\winhttp.dll</code>, <code>engine\BepInEx\</code> and{' '}

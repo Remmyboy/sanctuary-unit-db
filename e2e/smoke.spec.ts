@@ -119,7 +119,11 @@ test('mods page lists every mod with live download links', async ({ page, reques
   // mods have a page of their own.
   expect(await page.locator('.mod-entry').count()).toBe(8);
   await expect(page.locator('#ZoneControl')).toHaveCount(0);
-  await expect(page.locator('.install-path code')).toContainText('Playtest\\engine');
+  // Two copyable lines in the rail: the engine path, then the Linux launch options.
+  await expect(page.locator('.install-path code').first()).toContainText('Playtest\\engine');
+  await expect(page.locator('.install-path code').nth(1)).toHaveText(
+    'WINEDLLOVERRIDES="winhttp=n,b" %command%',
+  );
 
   // Step 1 is the Mod Manager's Standalone zip; every other mod's button is
   // its drop-in zip. Only the manager has a Standalone any more.
