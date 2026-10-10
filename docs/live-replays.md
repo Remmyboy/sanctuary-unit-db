@@ -1,14 +1,17 @@
 # Live replays
 
-Status: built 10 October 2026 (site: this branch; mod: LadderReporter 0.5.0,
-sanctuary-mods branch `claude/live-game-replay-streaming-96c601`). Needs
-migration `0016_live_replays.sql` on the live database before it works.
+Status: live since 10 October 2026 (site PR #68, migration
+`0016_live_replays.sql`; mod: LadderReporter 0.5.0, sanctuary-mods PR #26).
 
-A player who switched on `Live.Stream` in LadderReporter streams the game
-they are playing to the site while it runs. Anyone can open it from
+A player who switched on streaming in LadderReporter streams the game they
+are playing to the site while it runs. Anyone can open it from
 [/live](https://www.sanctuarydb.net/live) and press **Watch in game**: their
 own LadderReporter downloads the stream and plays it with the game's replay
 player, a fixed delay (`LIVE_DELAY_S`, 180 s) behind the players.
+
+Streaming is two settings, both off by default, in F8 > Ladder Reporter >
+Live: `Live.StreamLadder` for ladder games and `Live.StreamOther` for any
+other game (custom lobbies, skirmishes, games the player observes).
 
 ## How it fits together
 

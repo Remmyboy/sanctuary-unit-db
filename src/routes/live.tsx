@@ -1,7 +1,8 @@
 // Games being streamed live by players who opted in (LadderReporter's
-// Live.Stream), and ones that ended in the last day — still watchable from
-// the start. Watching happens in the game: each row opens the stream's page,
-// whose button hands the stream to the mod (live_.$streamId.tsx).
+// Live.StreamLadder and Live.StreamOther), and ones that ended in the last
+// day — still watchable from the start. Watching happens in the game: each
+// row opens the stream's page, whose button hands the stream to the mod
+// (live_.$streamId.tsx).
 
 import { useEffect, useState } from 'react';
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
@@ -51,15 +52,17 @@ function LivePage() {
   return (
     <>
       <PageHead art="replays" eyebrow="Multiplayer" title="Live games">
-        Games players are streaming right now, {formatDelay(LIVE_DELAY_S)} behind. Open one and press Watch in
-        game: it plays in Sanctuary like a replay that keeps going.
+        Games players are streaming right now, {formatDelay(LIVE_DELAY_S)} behind. Open Sanctuary to the main
+        menu, then pick a game here and press Watch in game: it plays in Sanctuary like a replay that keeps
+        going.
       </PageHead>
       <main className="replays">
         {rows === undefined ? null : rows === null ? (
           <p className="empty">Live games aren't reachable right now — they'll be back shortly.</p>
         ) : rows.length === 0 ? (
           <p className="empty">
-            Nobody is streaming right now. Players can switch on Live.Stream in LadderReporter's settings.
+            Nobody is streaming right now. To stream your own games, switch on StreamLadder (ladder games) or
+            StreamOther (any other game) in F8 &gt; Ladder Reporter &gt; Live. Both are off until you do.
           </p>
         ) : (
           <table className="lb-table replay-table">

@@ -7145,3 +7145,6 @@ html.modding-route {
 .live-players {
   margin: 6px 0 0;
 }
+.replay-help.live-before {
+  margin: 0 0 12px;
+}
