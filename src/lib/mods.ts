@@ -229,7 +229,7 @@ export const MODS: Mod[] = [
   {
     id: 'LadderReporter',
     name: 'Ladder Reporter',
-    version: '0.4.0',
+    version: '0.5.0',
     tagline: 'Queue for a ranked 1v1 on the site, and the ladder does the rest.',
     features: [
       {
@@ -243,6 +243,10 @@ export const MODS: Mod[] = [
       {
         title: 'Your stats and replay on the match page',
         text: 'Switch on uploads and every ranked game’s stats and replay land on its ladder page, for anyone to look through or download. Off until you choose.',
+      },
+      {
+        title: 'Stream your games live',
+        text: 'Switch on streaming and the game you’re playing shows up on the Live page while it runs. Anyone can watch it in their own game, three minutes behind. Off until you choose.',
       },
       {
         title: 'Nothing to set up',

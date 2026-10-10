@@ -108,6 +108,13 @@ function LiveGame({ streamId }: { streamId: string }) {
       </div>
 
       <div className="replay-panel">
+        {/* The mod only takes a stream in the menu (or over a replay, which
+            it closes); in a game or a lobby it refuses. */}
+        {!started && (
+          <p className="replay-help live-before">
+            <strong>Before you press Watch in game,</strong> open Sanctuary and leave it on the main menu.
+          </p>
+        )}
         <div className="replay-row">
           <button
             type="button"
@@ -126,7 +133,7 @@ function LiveGame({ streamId }: { streamId: string }) {
         {watch.kind === 'failed' && (
           <p className="replay-warn">
             {watch.error ??
-              "Couldn't reach your game. Open Sanctuary with LadderReporter 0.5.0 or newer, and allow this site to connect to your local network if your browser asks."}
+              "Couldn't reach your game. Open Sanctuary with LadderReporter 0.5.0 or newer and go to the main menu, then try again. If your browser asks, allow this site to connect to your local network."}
           </p>
         )}
         <p className="replay-help">
