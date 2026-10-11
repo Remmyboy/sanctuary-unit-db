@@ -76,8 +76,8 @@ export const MOD_SHOTS: Record<string, readonly ModShot[]> = {
       slug: 'gameplay-mods',
       parts: [frame('07 ModManager/mods page - gameplay mods.png')],
       kind: 'frame',
-      alt: 'The Mods page’s gameplay tab, listing installed gameplay mods and community AIs',
-      caption: 'Gameplay mods and community AIs you’ve installed, with what’s in each.',
+      alt: 'The Mods page’s gameplay tab, listing installed gameplay mods',
+      caption: 'Gameplay mods you’ve installed, with what’s in each.',
     },
   ],
 

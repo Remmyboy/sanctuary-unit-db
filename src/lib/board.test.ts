@@ -124,10 +124,16 @@ describe('extracted data invariants (pinned from the game formulas)', () => {
     expect(data.units.find((u) => u.name === 'Stitcher')!.weapons.map((w) => w.cycleTime)).toEqual([0.6]);
   });
 
-  it('a weapon is a beam only if it has a beam table — the Engraver fires projectiles', () => {
+  it('a weapon is a beam only if it has a beam table — the Roc / Phoenix fires projectiles', () => {
+    const roc = byId.get('uea4001')!;
+    expect(roc.weapons[0].isBeam).toBe(false);
+    expect(roc.weapons[0].dps).toBeCloseTo(1500, 1);
+  });
+
+  it('a continuous beam deals its damage every tick — Engraver 33.33 x 10', () => {
     const engraver = data.units.find((u) => u.name === 'Engraver')!;
-    expect(engraver.weapons[0].isBeam).toBe(false);
-    expect(engraver.dps).toBeCloseTo(303.03, 1);
+    expect(engraver.weapons[0].beamMode).toBe('continuous');
+    expect(engraver.dps).toBeCloseTo(333.33, 1);
   });
 
   it('damage over time is never applied by the game, so it adds nothing — Onager is ~520, not 925', () => {
@@ -135,8 +141,8 @@ describe('extracted data invariants (pinned from the game formulas)', () => {
   });
 
   it('bomber weapons with no muzzles report null DPS, not a confident zero', () => {
-    const talen = data.units.find((u) => u.name === 'TALEN')!;
-    expect(talen.weapons.some((w) => w.dps === null)).toBe(true);
+    const meteor = data.units.find((u) => u.name === 'Meteor')!;
+    expect(meteor.weapons.some((w) => w.dps === null)).toBe(true);
   });
 
   it('exactly the commanders, engineers and stations can assist a construction', () => {

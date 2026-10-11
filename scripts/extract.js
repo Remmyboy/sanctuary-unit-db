@@ -679,9 +679,10 @@ function unreadWeaponFields(w, where) {
 function toWeapon(w, where, projectiles) {
   const groups = w.muzzleGroups ?? [];
   // The game's own test (common/utilities/beams.lua): a weapon is a beam when
-  // it has a `beam` table. beamLifetime alone decides nothing — the Engraver
-  // keeps a stale beamLifetime of -1 from when it was a beam, but fires
+  // it has a `beam` table. beamLifetime alone decides nothing — until build
+  // 25856019 the Engraver kept a stale beamLifetime of -1 but fired
   // projectiles, and reading it as a beam put it at 3,333 DPS instead of ~300.
+  // The Roc / Phoenix's launchers still carry one.
   const isBeam = w.beam != null;
   if (!isBeam && w.beamLifetime != null && w.category !== 'DeathExplosion') {
     issues.push(`${where} has a beamLifetime but no beam — the game fires it as a projectile`);

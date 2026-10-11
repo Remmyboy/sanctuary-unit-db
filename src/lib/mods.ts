@@ -51,7 +51,7 @@ export const MODS: Mod[] = [
   {
     id: 'ModManager',
     name: 'Mod Manager',
-    version: '0.16.0',
+    version: '0.17.0',
     tagline:
       'A Mods page in the game menu for switching mods on and off and keeping them up to date, and a Mods panel in the lobby for the host’s gameplay mods.',
     features: [
@@ -76,10 +76,6 @@ export const MODS: Mod[] = [
         text: 'The host switches on the mods for the match in the lobby’s Mods panel, and Start waits until everyone has the same copies. Every lobby starts vanilla, so you can still join anyone.',
       },
       {
-        title: 'Play against community AIs',
-        text: 'Drop an AI author’s folder in as it is, and the host can give each AI seat its own AI from the lobby. Plain “AI” is still the game’s own.',
-      },
-      {
         title: 'Spots a bad install',
         text: 'A zip nobody extracted, or a mod one folder too deep, shows up on the Mods page with what’s wrong.',
       },
@@ -89,7 +85,7 @@ export const MODS: Mod[] = [
   {
     id: 'SanctuaryHud',
     name: 'SanctuaryDB HUD',
-    version: '0.17.1',
+    version: '0.18.0',
     tagline:
       'A mini-map, a proper economy readout, reclaim values, build timers, alerts and post-match stats.',
     features: [
@@ -155,7 +151,7 @@ export const MODS: Mod[] = [
   {
     id: 'EcoManager',
     name: 'Eco Manager',
-    version: '0.9.1',
+    version: '0.9.2',
     tagline: 'See what’s eating your economy, and upgrade extractors without babysitting them.',
     features: [
       {
@@ -183,7 +179,7 @@ export const MODS: Mod[] = [
   {
     id: 'IdleEngineers',
     name: 'Idle Engineers',
-    version: '0.7.1',
+    version: '0.7.2',
     tagline: 'Never lose track of an engineer or factory with nothing to do.',
     features: [
       {
@@ -241,7 +237,7 @@ export const MODS: Mod[] = [
   {
     id: 'LadderReporter',
     name: 'Ladder Reporter',
-    version: '0.5.0',
+    version: '0.5.1',
     tagline: 'Queue for a ranked 1v1 on the site, and the ladder does the rest.',
     features: [
       {
@@ -269,7 +265,7 @@ export const MODS: Mod[] = [
   {
     id: 'ReplayManager',
     name: 'Replay Manager',
-    version: '0.5.2',
+    version: '0.5.3',
     tagline: 'Watch replays properly: any player’s view, no fog, every economy.',
     features: [
       {
@@ -290,7 +286,7 @@ export const MODS: Mod[] = [
   {
     id: 'CameraUtilities',
     name: 'Camera Utilities',
-    version: '0.2.1',
+    version: '0.2.2',
     tagline: 'A clean picture for screenshots, videos and casting.',
     features: [
       {
@@ -383,12 +379,13 @@ const zoneControlHref = (): string =>
 
 /** Phantom-X is Lua only, with no map: its release's -ModManager.zip is the
  *  whole download, and it plays on any map. Its panel is drawn by the Mod API,
- *  and since 0.2.1 its host side runs on the API's Lua helpers, which is why
- *  it needs Mod Manager 0.13.0. Zone Control 0.5.1 needs the same. */
+ *  and since 0.2.1 its host side runs on the API's Lua helpers. Since game
+ *  0.0.1.21.1 (11 October 2026) every gameplay mod needs Mod Manager 0.17.0:
+ *  0.16.0's lobby code reads a list the new lobby no longer has. */
 export const PHANTOM_X: Mod = {
   id: 'PhantomX',
   name: 'Phantom-X',
-  version: '0.2.2',
+  version: '0.2.3',
   tagline:
     'Supreme Commander’s Phantom-X: everyone starts allied, until some of you secretly become phantoms.',
   features: [
@@ -424,7 +421,7 @@ export const PHANTOM_X: Mod = {
 export const UNIT_RESTRICTIONS: Mod = {
   id: 'UnitRestrictions',
   name: 'Unit Restrictions',
-  version: '0.1.1',
+  version: '0.1.2',
   tagline: 'Take units out of the match: a whole section like air, or just one faction’s tank.',
   features: [
     {
@@ -447,7 +444,7 @@ export const UNIT_RESTRICTIONS: Mod = {
 };
 
 /** Remmy's Balance Patch is Lua only too: its release's -ModManager.zip is
- *  the whole download, and it needs Mod Manager 0.13.0. Unlike the modes
+ *  the whole download, and it needs Mod Manager 0.17.0. Unlike the modes
  *  above it changes the units rather than the rules, so it has a page of its
  *  own, /balance-patch, listing every change against the game, and the unit
  *  database can show its numbers. The version here must match
