@@ -186,9 +186,9 @@ function BalancePatchPage() {
                 most.
               </li>
               <li>
-                <strong>Four units still deal no damage</strong>
-                The Guardian T1 and T3 bombers, the Chosen T3 bomber and the EDA T2 raider: their models lack
-                the weapon bones. The patch stops them freezing everyone else&rsquo;s targeting.
+                <strong>Five units still deal no damage</strong>
+                The Guardian T1 and T3 bombers, the Chosen T3 bomber, the EDA T2 raider and the TALEN: their
+                models lack the weapon bones. The patch stops them freezing everyone else&rsquo;s targeting.
               </li>
               <li>
                 <strong>Not in the lists below</strong>
