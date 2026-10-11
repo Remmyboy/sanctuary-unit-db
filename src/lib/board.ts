@@ -98,7 +98,7 @@ export function matches(unit: Unit, f: BoardFilters): boolean {
 //
 // The id numbering is *nearly* tier-aligned, but not reliably: uel3002 "Hyena"
 // is TECH2 (internally EDAT2FastUnit2 — EDA's second T2 raider) despite the 3,
-// and uga3011 "TALEN" is TECH1. Grouping on the id alone therefore stranded
+// and uga3011 "TALEN" was TECH1 until build 25856019. Grouping on the id alone therefore stranded
 // Hyena in the T3 row, away from the other T2 raiders.
 //
 // So: bucket by id slot, split any slot spanning several tiers, then merge

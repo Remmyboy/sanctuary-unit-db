@@ -524,10 +524,11 @@ sights and every shot landing. It started as a port of the AI's
    `N` burst — N ticks per volley. Auger is a continuous beam: 25.64 x 10 =
    **256.4 DPS**, not 25.64/3 = 8.5.
 2. **A weapon is a beam only if it has a `beam` table.** That is the game's own
-   test (`common/utilities/beams.lua`). `beamLifetime` alone means nothing: the
-   Engraver keeps a stale `-1` from when it was a beam but fires projectiles,
+   test (`common/utilities/beams.lua`). `beamLifetime` alone means nothing:
+   until build 25856019 the Engraver kept a stale `-1` but fired projectiles,
    and reading it as a beam listed it at 3,333 DPS instead of 303 — ten times
-   its sibling AA turrets.
+   its sibling AA turrets. (It is a real continuous beam now, at 333.33.) The
+   Roc / Phoenix's four launchers still carry a `beamLifetime` with no beam.
 3. **Salvo indices wrap around the muzzle groups.** A weapon with a salvo of 20
    over 1 group fires that group 20 times a cycle. Capping at the group count
    put Quasar at 18.75 DPS instead of 375.
@@ -571,11 +572,11 @@ sights and every shot landing. It started as a port of the AI's
 
 The extractor reports each template that trips 2 or 6 in `meta.dataIssues`.
 The pinned values in `board.test.ts` (Kodiak 342.91, Chosen Commander 90.91,
-Engraver 303.03, Onager 519.8, Jager 0.6s) move only with a real balance
+Engraver 333.33, Onager 519.8, Jager 0.6s) move only with a real balance
 change or a regression.
 
-**Weapons that can't fire.** Four bomber weapons (Meteor, Inertia, Impulse,
-TALEN) declare an empty `muzzles` list, the Laser Bomber's weapon has no muzzle
+**Weapons that can't fire.** Three bomber weapons (Meteor, Inertia, Impulse)
+declare an empty `muzzles` list, the Laser Bomber's weapon has no muzzle
 groups at all, and the Spitter fires a projectile (`pei211`) that isn't in the
 build. None of them can put a shot out, but that's a template gap rather than a
 genuine zero, so they report `dps: null` and render as "dps unknown".
