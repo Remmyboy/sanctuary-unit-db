@@ -183,7 +183,7 @@ function ZoneControlGuide() {
         <ol className="gm-steps">
           <li>
             Extract the zip into your <code>engine</code> folder. It holds the mod and its map, and lands both
-            where the game looks for them. It needs Mod Manager 0.13.0 or later, for every player.
+            where the game looks for them. It needs Mod Manager 0.17.0 or later, for every player.
           </li>
           <li>
             Host a lobby and pick the map <strong>{ZONE_CONTROL_MAP}</strong>.
@@ -397,7 +397,7 @@ function PhantomXGuide() {
         </h4>
         <ol className="gm-steps">
           <li>
-            Extract the zip into your <code>engine</code> folder. It needs Mod Manager 0.13.0 or later, for
+            Extract the zip into your <code>engine</code> folder. It needs Mod Manager 0.17.0 or later, for
             every player.
           </li>
           <li>Host a lobby on any map. It&rsquo;s best with three or more players.</li>
@@ -505,7 +505,7 @@ function UnitRestrictionsGuide() {
         </h4>
         <ol className="gm-steps">
           <li>
-            Extract the zip into your <code>engine</code> folder. It needs Mod Manager 0.12.0 or later, for
+            Extract the zip into your <code>engine</code> folder. It needs Mod Manager 0.17.0 or later, for
             every player in the lobby.
           </li>
           <li>Host a lobby on any map.</li>
@@ -580,7 +580,7 @@ function BalancePatchGuide() {
         <ol className="gm-steps">
           <li>
             Delete any older <code>SanctuaryMods\BalancePatch\</code> folder, then extract the zip into your{' '}
-            <code>engine</code> folder. It needs Mod Manager 0.13.0 or later, for every player in the lobby.
+            <code>engine</code> folder. It needs Mod Manager 0.17.0 or later, for every player in the lobby.
           </li>
           <li>Host a lobby on any map.</li>
           <li>

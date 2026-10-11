@@ -83,7 +83,7 @@ function BalancePatchPage() {
               <h2 id="bp-get">Balance Patch {BALANCE_PATCH.version}</h2>
               <p>
                 A gameplay mod: the lobby&rsquo;s host switches it on, and everyone in the match needs it and
-                the <strong>Mod Manager</strong> 0.13.0 or later.
+                the <strong>Mod Manager</strong> 0.17.0 or later.
               </p>
             </div>
             <a className="dl-btn" href={managerHref(BALANCE_PATCH)}>
@@ -160,7 +160,7 @@ function BalancePatchPage() {
                 <Link to="/gameplay-mods" className="gm-more">
                   Mod Manager
                 </Link>{' '}
-                0.13.0 or later. Every player in the lobby needs both.
+                0.17.0 or later. Every player in the lobby needs both.
               </li>
               <li>Host a lobby on any map.</li>
               <li>
