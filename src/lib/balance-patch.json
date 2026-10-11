@@ -3,24 +3,24 @@
  "mod": {
   "id": "sanctuarymods.balancepatch",
   "name": "Balance Patch",
-  "version": "0.2.7"
+  "version": "0.2.9"
  },
  "game": {
-  "version": "0.0.1.20",
-  "steamBuild": "25474094"
+  "version": "0.1.21.1",
+  "steamBuild": "25856019"
  },
- "generated": "2026-10-10T11:40:35.120Z",
+ "generated": "2026-10-11T07:43:40.787Z",
  "sections": [
   {
    "key": "fixes",
    "label": "Fixes",
-   "description": "Bugs: a bomber with no muzzles stopped other units' targeting; aircraft inside a shield's bubble hit everything under it; the Chosen T2 point defence and the EDA T3 anti-air fighter shot the ground; bombs expired before they could land; the TALEN gunship was labelled tier 1.",
+   "description": "Bugs: a bomber with no muzzles stopped other units' targeting; aircraft inside a shield's bubble hit everything under it; the Chosen T2 point defence couldn't raise its barrel above level; bombs expired before they could land.",
    "default": true
   },
   {
    "key": "economy",
    "label": "Economy",
-   "description": "Commanders make 3 alloys and 30 energy a second (were 5 and 50) and start you with full storage, 500 alloys and 5000 energy (was half, 250 and 2500). T2 and T3 extractors make 5 and 15 (were 4 and 10); generators make 20/600/2500 energy (were 10/200/1000), and T3 ones cost 2800 alloys (were 5000). Factories cost 200 alloys (were 150), upgrading one to T2 costs 1500 (was 500) and to T3 4000 (was 2000), and T3 tanks and the Guardian T3 raider cost 30% less. T2 radar uses 250 energy a second (was 150) and T3 radar costs 2800 alloys (was 700) and 1400 energy a second (was 350); EDA and Chosen T3 radar see 750 and 850 (were 450 and 550). Wrecks reclaim 3x as fast and last 6 minutes (were 3). Land units cost 6 energy per alloy (were 10), Chosen aircraft as much energy as the others, and engineers have less than half their health.",
+   "description": "Commanders make 3 alloys and 30 energy a second (were 5 and 50) and start you with full storage, 500 alloys and 5000 energy (was half, 250 and 2500). T2 and T3 extractors make 5 and 15 (were 4 and 10); T1 and T2 generators make 20 and 600 energy (were 10 and 300), and T3 ones cost 2800 alloys (were 5000). Factories cost 200 alloys (were 150), upgrading one to T2 costs 1000 (was 500) over 90 s (was 80) and to T3 4000 (was 2000), and T3 tanks and the Guardian T3 raider cost 30% less. T2 radar uses 250 energy a second (was 150) and T3 radar costs 2800 alloys (was 700) and 1400 energy a second (was 350); EDA and Chosen T3 radar see 750 and 850 (were 450 and 550). Wrecks reclaim 3x as fast and last 6 minutes (were 3). Land units cost 6 energy per alloy (were 10), Chosen aircraft as much energy as the others, and engineers have less than half their health.",
    "default": true
   },
   {
@@ -50,34 +50,11 @@
   {
    "key": "units",
    "label": "Unit tuning",
-   "description": "The Chosen Jager toned down and the other T2 raiders brought up, so T2 beats its cost in T1 without crushing it; the three T1 tanks brought level; T3 tanks move as fast as T1 tanks with quicker guns, and the Guardian T3 raider is faster still and lighter; T4 bots move at 2.25-3 (were 2; none faster than T3 tanks) and are game enders: 10000-25000 alloys with health and damage to match, less for the ones whose splash and range already win fights; the EDA railgun sniper reaches 80.",
+   "description": "The Chosen Jager toned down and the other T2 raiders brought up, so T2 beats its cost in T1 without crushing it; the three T1 tanks brought level; T3 tanks move as fast as T1 tanks with quicker guns, and the Guardian T3 raider is faster still and lighter; T4 bots move at 2.25-3 (were 2; none faster than T3 tanks; the Chosen big bot keeps the game's 1) and are game enders: 10000-25000 alloys with health and damage to match, less for the ones whose splash and range already win fights; the EDA railgun sniper reaches 80.",
    "default": true
   }
  ],
  "changes": [
-  {
-   "kind": "unit",
-   "id": "uea3201",
-   "name": "Peregrine",
-   "displayName": "Tier 3: Anti-Air Fighter",
-   "faction": "EDA",
-   "field": "weapons.2.layerTargetLimits",
-   "label": "weapon 2 targets",
-   "before": [
-    "Land",
-    "WaterSurface"
-   ],
-   "after": [
-    "Air",
-    "LandedAir"
-   ],
-   "sections": [
-    "fixes"
-   ],
-   "why": [
-    "The EDA T3 anti-air fighter's second launcher fired at land and sea. It now fires at aircraft like the first, which also puts its anti-air damage level with the other factions' T3 fighters."
-   ]
-  },
   {
    "kind": "unit",
    "id": "uca3001",
@@ -131,23 +108,6 @@
   },
   {
    "kind": "unit",
-   "id": "uca1001",
-   "name": "Comet",
-   "displayName": "Tier 1: Bomber",
-   "faction": "Chosen",
-   "field": "weapons.1.projectileLifetime",
-   "label": "projectile lifetime (s)",
-   "before": 2,
-   "after": 4,
-   "sections": [
-    "fixes"
-   ],
-   "why": [
-    "Likewise for T1 bombs."
-   ]
-  },
-  {
-   "kind": "unit",
    "id": "uga1001",
    "name": "Inertia",
    "displayName": "Tier 1: Bomber",
@@ -160,24 +120,7 @@
     "fixes"
    ],
    "why": [
-    "Likewise for T1 bombs."
-   ]
-  },
-  {
-   "kind": "unit",
-   "id": "ucs2001",
-   "name": "Redoubt",
-   "displayName": "Tier 2: Point Defence",
-   "faction": "Chosen",
-   "field": "weapons.1.aimControllers.1.yawBone",
-   "label": "yaw bone",
-   "before": "Turret01",
-   "after": "Turret01_Yaw01",
-   "sections": [
-    "fixes"
-   ],
-   "why": [
-    "The Chosen T2 point defence (Redoubt) shot the ground: its model's barrel bone rests about 55 degrees nose-down, and it may only pitch up 45, so it could never raise the barrel to level. It never came on target (0% in tests at 20-47 range, other T2 point defences 48-94%). It may pitch up 100 now, rests level, and turns the model's real yaw bone (it named Turret01, which the model doesn't have)."
+    "Likewise for T1 bombs. Not the Chosen Comet, which the game reworked in 0.1.21.1 to drop its bomb from 10."
    ]
   },
   {
@@ -188,13 +131,13 @@
    "faction": "Chosen",
    "field": "weapons.1.aimControllers.1.pitchMax",
    "label": "max barrel elevation (deg)",
-   "before": 45,
+   "before": 55,
    "after": 100,
    "sections": [
     "fixes"
    ],
    "why": [
-    "The Chosen T2 point defence (Redoubt) shot the ground: its model's barrel bone rests about 55 degrees nose-down, and it may only pitch up 45, so it could never raise the barrel to level. It never came on target (0% in tests at 20-47 range, other T2 point defences 48-94%). It may pitch up 100 now, rests level, and turns the model's real yaw bone (it named Turret01, which the model doesn't have)."
+    "The Chosen T2 point defence (Redoubt) shot the ground: its model's barrel bone rests about 55 degrees nose-down, and it may only pitch up 45, so it could never raise the barrel to level. It never came on target (0% in tests at 20-47 range, other T2 point defences 48-94%). It may pitch up 100 now and rests level. (Game 0.1.21.1 turns the model's real yaw bone, which this patch used to fix, and lets it pitch up 55: just enough to reach level, never above it.)"
    ]
   },
   {
@@ -211,59 +154,7 @@
     "fixes"
    ],
    "why": [
-    "The Chosen T2 point defence (Redoubt) shot the ground: its model's barrel bone rests about 55 degrees nose-down, and it may only pitch up 45, so it could never raise the barrel to level. It never came on target (0% in tests at 20-47 range, other T2 point defences 48-94%). It may pitch up 100 now, rests level, and turns the model's real yaw bone (it named Turret01, which the model doesn't have)."
-   ]
-  },
-  {
-   "kind": "unit",
-   "id": "uga3011",
-   "name": "TALEN",
-   "displayName": "Tier 1: Gunship",
-   "faction": "Guardian",
-   "field": "general.displayName",
-   "label": "name",
-   "before": "Tier 1: Gunship",
-   "after": "Tier 3: Gunship",
-   "sections": [
-    "fixes"
-   ],
-   "why": [
-    "The Guardian TALEN gunship is built by T3 air factories at T3 cost but was tagged and labelled tier 1."
-   ]
-  },
-  {
-   "kind": "unit",
-   "id": "uga3011",
-   "name": "TALEN",
-   "displayName": "Tier 1: Gunship",
-   "faction": "Guardian",
-   "field": "tags",
-   "label": "tags",
-   "before": [
-    "AIR",
-    "ANTI_SURFACE",
-    "BUILDABLE_BY_T3_FACTORY",
-    "DIRECT_FIRE",
-    "GUARD",
-    "GUNSHIP",
-    "MOBILE",
-    "TECH1"
-   ],
-   "after": [
-    "AIR",
-    "ANTI_SURFACE",
-    "BUILDABLE_BY_T3_FACTORY",
-    "DIRECT_FIRE",
-    "GUARD",
-    "GUNSHIP",
-    "MOBILE",
-    "TECH3"
-   ],
-   "sections": [
-    "fixes"
-   ],
-   "why": [
-    "The Guardian TALEN gunship is built by T3 air factories at T3 cost but was tagged and labelled tier 1."
+    "The Chosen T2 point defence (Redoubt) shot the ground: its model's barrel bone rests about 55 degrees nose-down, and it may only pitch up 45, so it could never raise the barrel to level. It never came on target (0% in tests at 20-47 range, other T2 point defences 48-94%). It may pitch up 100 now and rests level. (Game 0.1.21.1 turns the model's real yaw bone, which this patch used to fix, and lets it pitch up 55: just enough to reach level, never above it.)"
    ]
   },
   {
@@ -547,13 +438,13 @@
    "faction": "Chosen",
    "field": "economy.production.energy",
    "label": "energy/s",
-   "before": 200,
+   "before": 300,
    "after": 600,
    "sections": [
     "economy"
    ],
    "why": [
-    "T2 generators give 1.5x the energy per cost of T1 ones (were equal): 600 a second."
+    "T2 generators give 1.5x the energy per cost of T1 ones: 600 a second (the game makes 300 since 0.1.21.1, was 200)."
    ]
   },
   {
@@ -564,13 +455,13 @@
    "faction": "EDA",
    "field": "economy.production.energy",
    "label": "energy/s",
-   "before": 200,
+   "before": 300,
    "after": 600,
    "sections": [
     "economy"
    ],
    "why": [
-    "T2 generators give 1.5x the energy per cost of T1 ones (were equal): 600 a second."
+    "T2 generators give 1.5x the energy per cost of T1 ones: 600 a second (the game makes 300 since 0.1.21.1, was 200)."
    ]
   },
   {
@@ -581,30 +472,13 @@
    "faction": "Guardian",
    "field": "economy.production.energy",
    "label": "energy/s",
-   "before": 200,
+   "before": 300,
    "after": 600,
    "sections": [
     "economy"
    ],
    "why": [
-    "T2 generators give 1.5x the energy per cost of T1 ones (were equal): 600 a second."
-   ]
-  },
-  {
-   "kind": "unit",
-   "id": "ucs3611",
-   "name": null,
-   "displayName": "Tier 3: Energy Generator",
-   "faction": "Chosen",
-   "field": "economy.production.energy",
-   "label": "energy/s",
-   "before": 1000,
-   "after": 2500,
-   "sections": [
-    "economy"
-   ],
-   "why": [
-    "T3 generators make 2500 energy a second (were 1000) and cost 2800 alloys and 28000 energy (were 5000 and 50000; build time 2800, was 5000): about 2.25x the energy per cost of T1 ones (were equal), in a smaller step that feeds two or three Alloy Furnaces."
+    "T2 generators give 1.5x the energy per cost of T1 ones: 600 a second (the game makes 300 since 0.1.21.1, was 200)."
    ]
   },
   {
@@ -627,7 +501,7 @@
     "economy"
    ],
    "why": [
-    "T3 generators make 2500 energy a second (were 1000) and cost 2800 alloys and 28000 energy (were 5000 and 50000; build time 2800, was 5000): about 2.25x the energy per cost of T1 ones (were equal), in a smaller step that feeds two or three Alloy Furnaces."
+    "T3 generators cost 2800 alloys and 28000 energy (were 5000 and 50000; build time 2800, was 5000): with the game's 2750 energy a second (since 0.1.21.1, was 1000) that is about 2.5x the energy per cost of T1 ones, in a smaller step that feeds two or three Alloy Furnaces."
    ]
   },
   {
@@ -644,24 +518,7 @@
     "economy"
    ],
    "why": [
-    "T3 generators make 2500 energy a second (were 1000) and cost 2800 alloys and 28000 energy (were 5000 and 50000; build time 2800, was 5000): about 2.25x the energy per cost of T1 ones (were equal), in a smaller step that feeds two or three Alloy Furnaces."
-   ]
-  },
-  {
-   "kind": "unit",
-   "id": "ues3611",
-   "name": null,
-   "displayName": "Tier 3: Energy Generator",
-   "faction": "EDA",
-   "field": "economy.production.energy",
-   "label": "energy/s",
-   "before": 1000,
-   "after": 2500,
-   "sections": [
-    "economy"
-   ],
-   "why": [
-    "T3 generators make 2500 energy a second (were 1000) and cost 2800 alloys and 28000 energy (were 5000 and 50000; build time 2800, was 5000): about 2.25x the energy per cost of T1 ones (were equal), in a smaller step that feeds two or three Alloy Furnaces."
+    "T3 generators cost 2800 alloys and 28000 energy (were 5000 and 50000; build time 2800, was 5000): with the game's 2750 energy a second (since 0.1.21.1, was 1000) that is about 2.5x the energy per cost of T1 ones, in a smaller step that feeds two or three Alloy Furnaces."
    ]
   },
   {
@@ -684,7 +541,7 @@
     "economy"
    ],
    "why": [
-    "T3 generators make 2500 energy a second (were 1000) and cost 2800 alloys and 28000 energy (were 5000 and 50000; build time 2800, was 5000): about 2.25x the energy per cost of T1 ones (were equal), in a smaller step that feeds two or three Alloy Furnaces."
+    "T3 generators cost 2800 alloys and 28000 energy (were 5000 and 50000; build time 2800, was 5000): with the game's 2750 energy a second (since 0.1.21.1, was 1000) that is about 2.5x the energy per cost of T1 ones, in a smaller step that feeds two or three Alloy Furnaces."
    ]
   },
   {
@@ -701,24 +558,7 @@
     "economy"
    ],
    "why": [
-    "T3 generators make 2500 energy a second (were 1000) and cost 2800 alloys and 28000 energy (were 5000 and 50000; build time 2800, was 5000): about 2.25x the energy per cost of T1 ones (were equal), in a smaller step that feeds two or three Alloy Furnaces."
-   ]
-  },
-  {
-   "kind": "unit",
-   "id": "ugs3611",
-   "name": null,
-   "displayName": "Tier 3: Energy Generator",
-   "faction": "Guardian",
-   "field": "economy.production.energy",
-   "label": "energy/s",
-   "before": 1000,
-   "after": 2500,
-   "sections": [
-    "economy"
-   ],
-   "why": [
-    "T3 generators make 2500 energy a second (were 1000) and cost 2800 alloys and 28000 energy (were 5000 and 50000; build time 2800, was 5000): about 2.25x the energy per cost of T1 ones (were equal), in a smaller step that feeds two or three Alloy Furnaces."
+    "T3 generators cost 2800 alloys and 28000 energy (were 5000 and 50000; build time 2800, was 5000): with the game's 2750 energy a second (since 0.1.21.1, was 1000) that is about 2.5x the energy per cost of T1 ones, in a smaller step that feeds two or three Alloy Furnaces."
    ]
   },
   {
@@ -741,7 +581,7 @@
     "economy"
    ],
    "why": [
-    "T3 generators make 2500 energy a second (were 1000) and cost 2800 alloys and 28000 energy (were 5000 and 50000; build time 2800, was 5000): about 2.25x the energy per cost of T1 ones (were equal), in a smaller step that feeds two or three Alloy Furnaces."
+    "T3 generators cost 2800 alloys and 28000 energy (were 5000 and 50000; build time 2800, was 5000): with the game's 2750 energy a second (since 0.1.21.1, was 1000) that is about 2.5x the energy per cost of T1 ones, in a smaller step that feeds two or three Alloy Furnaces."
    ]
   },
   {
@@ -758,7 +598,7 @@
     "economy"
    ],
    "why": [
-    "T3 generators make 2500 energy a second (were 1000) and cost 2800 alloys and 28000 energy (were 5000 and 50000; build time 2800, was 5000): about 2.25x the energy per cost of T1 ones (were equal), in a smaller step that feeds two or three Alloy Furnaces."
+    "T3 generators cost 2800 alloys and 28000 energy (were 5000 and 50000; build time 2800, was 5000): with the game's 2750 energy a second (since 0.1.21.1, was 1000) that is about 2.5x the energy per cost of T1 ones, in a smaller step that feeds two or three Alloy Furnaces."
    ]
   },
   {
@@ -1032,14 +872,31 @@
     "energy": 5000
    },
    "after": {
-    "alloys": 1500,
-    "energy": 15000
+    "alloys": 1000,
+    "energy": 10000
    },
    "sections": [
     "economy"
    ],
    "why": [
-    "Upgrading a factory to T2 costs 1500 alloys and 15000 energy (was 500 and 5000; same build time), so T2 has to be paid for without being out of reach."
+    "Upgrading a factory to T2 costs 1000 alloys and 10000 energy (was 500 and 5000) and takes 90 s (was 80): about 11 alloys a second while it runs, so T2 has to be paid for without losing the game to T1 spam first."
+   ]
+  },
+  {
+   "kind": "unit",
+   "id": "ucs2511",
+   "name": null,
+   "displayName": "Tier 2: Land Factory",
+   "faction": "Chosen",
+   "field": "economy.buildTime",
+   "label": "build time",
+   "before": 800,
+   "after": 900,
+   "sections": [
+    "economy"
+   ],
+   "why": [
+    "Upgrading a factory to T2 costs 1000 alloys and 10000 energy (was 500 and 5000) and takes 90 s (was 80): about 11 alloys a second while it runs, so T2 has to be paid for without losing the game to T1 spam first."
    ]
   },
   {
@@ -1055,14 +912,31 @@
     "energy": 5000
    },
    "after": {
-    "alloys": 1500,
-    "energy": 15000
+    "alloys": 1000,
+    "energy": 10000
    },
    "sections": [
     "economy"
    ],
    "why": [
-    "Upgrading a factory to T2 costs 1500 alloys and 15000 energy (was 500 and 5000; same build time), so T2 has to be paid for without being out of reach."
+    "Upgrading a factory to T2 costs 1000 alloys and 10000 energy (was 500 and 5000) and takes 90 s (was 80): about 11 alloys a second while it runs, so T2 has to be paid for without losing the game to T1 spam first."
+   ]
+  },
+  {
+   "kind": "unit",
+   "id": "ucs2512",
+   "name": null,
+   "displayName": "Tier 2: Air Factory",
+   "faction": "Chosen",
+   "field": "economy.buildTime",
+   "label": "build time",
+   "before": 800,
+   "after": 900,
+   "sections": [
+    "economy"
+   ],
+   "why": [
+    "Upgrading a factory to T2 costs 1000 alloys and 10000 energy (was 500 and 5000) and takes 90 s (was 80): about 11 alloys a second while it runs, so T2 has to be paid for without losing the game to T1 spam first."
    ]
   },
   {
@@ -1078,14 +952,31 @@
     "energy": 5000
    },
    "after": {
-    "alloys": 1500,
-    "energy": 15000
+    "alloys": 1000,
+    "energy": 10000
    },
    "sections": [
     "economy"
    ],
    "why": [
-    "Upgrading a factory to T2 costs 1500 alloys and 15000 energy (was 500 and 5000; same build time), so T2 has to be paid for without being out of reach."
+    "Upgrading a factory to T2 costs 1000 alloys and 10000 energy (was 500 and 5000) and takes 90 s (was 80): about 11 alloys a second while it runs, so T2 has to be paid for without losing the game to T1 spam first."
+   ]
+  },
+  {
+   "kind": "unit",
+   "id": "ucs2513",
+   "name": null,
+   "displayName": "Tier 2: Naval Factory",
+   "faction": "Chosen",
+   "field": "economy.buildTime",
+   "label": "build time",
+   "before": 800,
+   "after": 900,
+   "sections": [
+    "economy"
+   ],
+   "why": [
+    "Upgrading a factory to T2 costs 1000 alloys and 10000 energy (was 500 and 5000) and takes 90 s (was 80): about 11 alloys a second while it runs, so T2 has to be paid for without losing the game to T1 spam first."
    ]
   },
   {
@@ -1101,14 +992,31 @@
     "energy": 5000
    },
    "after": {
-    "alloys": 1500,
-    "energy": 15000
+    "alloys": 1000,
+    "energy": 10000
    },
    "sections": [
     "economy"
    ],
    "why": [
-    "Upgrading a factory to T2 costs 1500 alloys and 15000 energy (was 500 and 5000; same build time), so T2 has to be paid for without being out of reach."
+    "Upgrading a factory to T2 costs 1000 alloys and 10000 energy (was 500 and 5000) and takes 90 s (was 80): about 11 alloys a second while it runs, so T2 has to be paid for without losing the game to T1 spam first."
+   ]
+  },
+  {
+   "kind": "unit",
+   "id": "ues2511",
+   "name": null,
+   "displayName": "Tier 2: Land Factory",
+   "faction": "EDA",
+   "field": "economy.buildTime",
+   "label": "build time",
+   "before": 800,
+   "after": 900,
+   "sections": [
+    "economy"
+   ],
+   "why": [
+    "Upgrading a factory to T2 costs 1000 alloys and 10000 energy (was 500 and 5000) and takes 90 s (was 80): about 11 alloys a second while it runs, so T2 has to be paid for without losing the game to T1 spam first."
    ]
   },
   {
@@ -1124,14 +1032,31 @@
     "energy": 5000
    },
    "after": {
-    "alloys": 1500,
-    "energy": 15000
+    "alloys": 1000,
+    "energy": 10000
    },
    "sections": [
     "economy"
    ],
    "why": [
-    "Upgrading a factory to T2 costs 1500 alloys and 15000 energy (was 500 and 5000; same build time), so T2 has to be paid for without being out of reach."
+    "Upgrading a factory to T2 costs 1000 alloys and 10000 energy (was 500 and 5000) and takes 90 s (was 80): about 11 alloys a second while it runs, so T2 has to be paid for without losing the game to T1 spam first."
+   ]
+  },
+  {
+   "kind": "unit",
+   "id": "ues2512",
+   "name": null,
+   "displayName": "Tier 2: Air Factory",
+   "faction": "EDA",
+   "field": "economy.buildTime",
+   "label": "build time",
+   "before": 800,
+   "after": 900,
+   "sections": [
+    "economy"
+   ],
+   "why": [
+    "Upgrading a factory to T2 costs 1000 alloys and 10000 energy (was 500 and 5000) and takes 90 s (was 80): about 11 alloys a second while it runs, so T2 has to be paid for without losing the game to T1 spam first."
    ]
   },
   {
@@ -1147,14 +1072,31 @@
     "energy": 5000
    },
    "after": {
-    "alloys": 1500,
-    "energy": 15000
+    "alloys": 1000,
+    "energy": 10000
    },
    "sections": [
     "economy"
    ],
    "why": [
-    "Upgrading a factory to T2 costs 1500 alloys and 15000 energy (was 500 and 5000; same build time), so T2 has to be paid for without being out of reach."
+    "Upgrading a factory to T2 costs 1000 alloys and 10000 energy (was 500 and 5000) and takes 90 s (was 80): about 11 alloys a second while it runs, so T2 has to be paid for without losing the game to T1 spam first."
+   ]
+  },
+  {
+   "kind": "unit",
+   "id": "ues2513",
+   "name": null,
+   "displayName": "Tier 2: Naval Factory",
+   "faction": "EDA",
+   "field": "economy.buildTime",
+   "label": "build time",
+   "before": 800,
+   "after": 900,
+   "sections": [
+    "economy"
+   ],
+   "why": [
+    "Upgrading a factory to T2 costs 1000 alloys and 10000 energy (was 500 and 5000) and takes 90 s (was 80): about 11 alloys a second while it runs, so T2 has to be paid for without losing the game to T1 spam first."
    ]
   },
   {
@@ -1170,14 +1112,31 @@
     "energy": 5000
    },
    "after": {
-    "alloys": 1500,
-    "energy": 15000
+    "alloys": 1000,
+    "energy": 10000
    },
    "sections": [
     "economy"
    ],
    "why": [
-    "Upgrading a factory to T2 costs 1500 alloys and 15000 energy (was 500 and 5000; same build time), so T2 has to be paid for without being out of reach."
+    "Upgrading a factory to T2 costs 1000 alloys and 10000 energy (was 500 and 5000) and takes 90 s (was 80): about 11 alloys a second while it runs, so T2 has to be paid for without losing the game to T1 spam first."
+   ]
+  },
+  {
+   "kind": "unit",
+   "id": "ugs2511",
+   "name": null,
+   "displayName": "Tier 2: Land Factory",
+   "faction": "Guardian",
+   "field": "economy.buildTime",
+   "label": "build time",
+   "before": 800,
+   "after": 900,
+   "sections": [
+    "economy"
+   ],
+   "why": [
+    "Upgrading a factory to T2 costs 1000 alloys and 10000 energy (was 500 and 5000) and takes 90 s (was 80): about 11 alloys a second while it runs, so T2 has to be paid for without losing the game to T1 spam first."
    ]
   },
   {
@@ -1193,14 +1152,31 @@
     "energy": 5000
    },
    "after": {
-    "alloys": 1500,
-    "energy": 15000
+    "alloys": 1000,
+    "energy": 10000
    },
    "sections": [
     "economy"
    ],
    "why": [
-    "Upgrading a factory to T2 costs 1500 alloys and 15000 energy (was 500 and 5000; same build time), so T2 has to be paid for without being out of reach."
+    "Upgrading a factory to T2 costs 1000 alloys and 10000 energy (was 500 and 5000) and takes 90 s (was 80): about 11 alloys a second while it runs, so T2 has to be paid for without losing the game to T1 spam first."
+   ]
+  },
+  {
+   "kind": "unit",
+   "id": "ugs2512",
+   "name": null,
+   "displayName": "Tier 2: Air Factory",
+   "faction": "Guardian",
+   "field": "economy.buildTime",
+   "label": "build time",
+   "before": 800,
+   "after": 900,
+   "sections": [
+    "economy"
+   ],
+   "why": [
+    "Upgrading a factory to T2 costs 1000 alloys and 10000 energy (was 500 and 5000) and takes 90 s (was 80): about 11 alloys a second while it runs, so T2 has to be paid for without losing the game to T1 spam first."
    ]
   },
   {
@@ -1216,14 +1192,31 @@
     "energy": 5000
    },
    "after": {
-    "alloys": 1500,
-    "energy": 15000
+    "alloys": 1000,
+    "energy": 10000
    },
    "sections": [
     "economy"
    ],
    "why": [
-    "Upgrading a factory to T2 costs 1500 alloys and 15000 energy (was 500 and 5000; same build time), so T2 has to be paid for without being out of reach."
+    "Upgrading a factory to T2 costs 1000 alloys and 10000 energy (was 500 and 5000) and takes 90 s (was 80): about 11 alloys a second while it runs, so T2 has to be paid for without losing the game to T1 spam first."
+   ]
+  },
+  {
+   "kind": "unit",
+   "id": "ugs2513",
+   "name": null,
+   "displayName": "Tier 2: Naval Factory",
+   "faction": "Guardian",
+   "field": "economy.buildTime",
+   "label": "build time",
+   "before": 800,
+   "after": 900,
+   "sections": [
+    "economy"
+   ],
+   "why": [
+    "Upgrading a factory to T2 costs 1000 alloys and 10000 energy (was 500 and 5000) and takes 90 s (was 80): about 11 alloys a second while it runs, so T2 has to be paid for without losing the game to T1 spam first."
    ]
   },
   {
@@ -1839,8 +1832,8 @@
    "faction": "Chosen",
    "field": "economy.cost.energy",
    "label": "energy",
-   "before": 200,
-   "after": 120,
+   "before": 336,
+   "after": 202,
    "sections": [
     "economy"
    ],
@@ -2249,8 +2242,8 @@
    "faction": "EDA",
    "field": "economy.cost.energy",
    "label": "energy",
-   "before": 200,
-   "after": 120,
+   "before": 336,
+   "after": 202,
    "sections": [
     "economy"
    ],
@@ -2623,8 +2616,8 @@
    "faction": "Guardian",
    "field": "economy.cost.energy",
    "label": "energy",
-   "before": 200,
-   "after": 120,
+   "before": 336,
+   "after": 202,
    "sections": [
     "economy"
    ],
@@ -4130,40 +4123,6 @@
   },
   {
    "kind": "unit",
-   "id": "uca3201",
-   "name": "Mistral",
-   "displayName": "Tier 3: Anti-Air Fighter",
-   "faction": "Chosen",
-   "field": "weapons.1.aimControllers.1.leadTarget",
-   "label": "leads its target",
-   "before": false,
-   "after": true,
-   "sections": [
-    "air"
-   ],
-   "why": [
-    "Anti-air weapons lead their targets. The T3 fighters, the T3 anti-air towers and others shot at where an aircraft was, so a moving plane was mostly missed: against weaving T1 bombers the T3 fighters went from 23-58% to 54-78%, the EDA T3 tower from 39% to 50%. Not the EDA T2 mobile anti-air (Komodo): leading, its shells fell from 71% to 1%. Not the beams (the EDA T2 mobile anti-air and T2 tower, the Guardian T1 tower and mobile anti-air): a beam hits at once, so aiming ahead of a crossing plane misses it (the EDA Komodo fell from 71% to 1% leading; 0.1.0-0.2.5 had the other three leading by mistake)."
-   ]
-  },
-  {
-   "kind": "unit",
-   "id": "uca3201",
-   "name": "Mistral",
-   "displayName": "Tier 3: Anti-Air Fighter",
-   "faction": "Chosen",
-   "field": "weapons.2.aimControllers.1.leadTarget",
-   "label": "leads its target",
-   "before": false,
-   "after": true,
-   "sections": [
-    "air"
-   ],
-   "why": [
-    "Anti-air weapons lead their targets. The T3 fighters, the T3 anti-air towers and others shot at where an aircraft was, so a moving plane was mostly missed: against weaving T1 bombers the T3 fighters went from 23-58% to 54-78%, the EDA T3 tower from 39% to 50%. Not the EDA T2 mobile anti-air (Komodo): leading, its shells fell from 71% to 1%. Not the beams (the EDA T2 mobile anti-air and T2 tower, the Guardian T1 tower and mobile anti-air): a beam hits at once, so aiming ahead of a crossing plane misses it (the EDA Komodo fell from 71% to 1% leading; 0.1.0-0.2.5 had the other three leading by mistake)."
-   ]
-  },
-  {
-   "kind": "unit",
    "id": "ucl4003",
    "name": "Djinn",
    "displayName": "Tier 4: Bot Hover",
@@ -4176,7 +4135,7 @@
     "air"
    ],
    "why": [
-    "Anti-air weapons lead their targets. The T3 fighters, the T3 anti-air towers and others shot at where an aircraft was, so a moving plane was mostly missed: against weaving T1 bombers the T3 fighters went from 23-58% to 54-78%, the EDA T3 tower from 39% to 50%. Not the EDA T2 mobile anti-air (Komodo): leading, its shells fell from 71% to 1%. Not the beams (the EDA T2 mobile anti-air and T2 tower, the Guardian T1 tower and mobile anti-air): a beam hits at once, so aiming ahead of a crossing plane misses it (the EDA Komodo fell from 71% to 1% leading; 0.1.0-0.2.5 had the other three leading by mistake)."
+    "Anti-air weapons lead their targets. The T3 fighters, the T3 anti-air towers and others shot at where an aircraft was, so a moving plane was mostly missed: against weaving T1 bombers the T3 fighters went from 23-58% to 54-78%, the EDA T3 tower from 39% to 50%. Not the EDA T2 mobile anti-air (Komodo): leading, its shells fell from 71% to 1%. Not the beams (the EDA T2 mobile anti-air and T2 tower, the Guardian T1 tower and mobile anti-air, and since game 0.1.21.1 the Guardian T3 tower): a beam hits at once, so aiming ahead of a crossing plane misses it (the EDA Komodo fell from 71% to 1% leading; 0.1.0-0.2.5 had the other three leading by mistake)."
    ]
   },
   {
@@ -4193,7 +4152,7 @@
     "air"
    ],
    "why": [
-    "Anti-air weapons lead their targets. The T3 fighters, the T3 anti-air towers and others shot at where an aircraft was, so a moving plane was mostly missed: against weaving T1 bombers the T3 fighters went from 23-58% to 54-78%, the EDA T3 tower from 39% to 50%. Not the EDA T2 mobile anti-air (Komodo): leading, its shells fell from 71% to 1%. Not the beams (the EDA T2 mobile anti-air and T2 tower, the Guardian T1 tower and mobile anti-air): a beam hits at once, so aiming ahead of a crossing plane misses it (the EDA Komodo fell from 71% to 1% leading; 0.1.0-0.2.5 had the other three leading by mistake)."
+    "Anti-air weapons lead their targets. The T3 fighters, the T3 anti-air towers and others shot at where an aircraft was, so a moving plane was mostly missed: against weaving T1 bombers the T3 fighters went from 23-58% to 54-78%, the EDA T3 tower from 39% to 50%. Not the EDA T2 mobile anti-air (Komodo): leading, its shells fell from 71% to 1%. Not the beams (the EDA T2 mobile anti-air and T2 tower, the Guardian T1 tower and mobile anti-air, and since game 0.1.21.1 the Guardian T3 tower): a beam hits at once, so aiming ahead of a crossing plane misses it (the EDA Komodo fell from 71% to 1% leading; 0.1.0-0.2.5 had the other three leading by mistake)."
    ]
   },
   {
@@ -4210,7 +4169,7 @@
     "air"
    ],
    "why": [
-    "Anti-air weapons lead their targets. The T3 fighters, the T3 anti-air towers and others shot at where an aircraft was, so a moving plane was mostly missed: against weaving T1 bombers the T3 fighters went from 23-58% to 54-78%, the EDA T3 tower from 39% to 50%. Not the EDA T2 mobile anti-air (Komodo): leading, its shells fell from 71% to 1%. Not the beams (the EDA T2 mobile anti-air and T2 tower, the Guardian T1 tower and mobile anti-air): a beam hits at once, so aiming ahead of a crossing plane misses it (the EDA Komodo fell from 71% to 1% leading; 0.1.0-0.2.5 had the other three leading by mistake)."
+    "Anti-air weapons lead their targets. The T3 fighters, the T3 anti-air towers and others shot at where an aircraft was, so a moving plane was mostly missed: against weaving T1 bombers the T3 fighters went from 23-58% to 54-78%, the EDA T3 tower from 39% to 50%. Not the EDA T2 mobile anti-air (Komodo): leading, its shells fell from 71% to 1%. Not the beams (the EDA T2 mobile anti-air and T2 tower, the Guardian T1 tower and mobile anti-air, and since game 0.1.21.1 the Guardian T3 tower): a beam hits at once, so aiming ahead of a crossing plane misses it (the EDA Komodo fell from 71% to 1% leading; 0.1.0-0.2.5 had the other three leading by mistake)."
    ]
   },
   {
@@ -4227,7 +4186,7 @@
     "air"
    ],
    "why": [
-    "Anti-air weapons lead their targets. The T3 fighters, the T3 anti-air towers and others shot at where an aircraft was, so a moving plane was mostly missed: against weaving T1 bombers the T3 fighters went from 23-58% to 54-78%, the EDA T3 tower from 39% to 50%. Not the EDA T2 mobile anti-air (Komodo): leading, its shells fell from 71% to 1%. Not the beams (the EDA T2 mobile anti-air and T2 tower, the Guardian T1 tower and mobile anti-air): a beam hits at once, so aiming ahead of a crossing plane misses it (the EDA Komodo fell from 71% to 1% leading; 0.1.0-0.2.5 had the other three leading by mistake)."
+    "Anti-air weapons lead their targets. The T3 fighters, the T3 anti-air towers and others shot at where an aircraft was, so a moving plane was mostly missed: against weaving T1 bombers the T3 fighters went from 23-58% to 54-78%, the EDA T3 tower from 39% to 50%. Not the EDA T2 mobile anti-air (Komodo): leading, its shells fell from 71% to 1%. Not the beams (the EDA T2 mobile anti-air and T2 tower, the Guardian T1 tower and mobile anti-air, and since game 0.1.21.1 the Guardian T3 tower): a beam hits at once, so aiming ahead of a crossing plane misses it (the EDA Komodo fell from 71% to 1% leading; 0.1.0-0.2.5 had the other three leading by mistake)."
    ]
   },
   {
@@ -4244,7 +4203,7 @@
     "air"
    ],
    "why": [
-    "Anti-air weapons lead their targets. The T3 fighters, the T3 anti-air towers and others shot at where an aircraft was, so a moving plane was mostly missed: against weaving T1 bombers the T3 fighters went from 23-58% to 54-78%, the EDA T3 tower from 39% to 50%. Not the EDA T2 mobile anti-air (Komodo): leading, its shells fell from 71% to 1%. Not the beams (the EDA T2 mobile anti-air and T2 tower, the Guardian T1 tower and mobile anti-air): a beam hits at once, so aiming ahead of a crossing plane misses it (the EDA Komodo fell from 71% to 1% leading; 0.1.0-0.2.5 had the other three leading by mistake)."
+    "Anti-air weapons lead their targets. The T3 fighters, the T3 anti-air towers and others shot at where an aircraft was, so a moving plane was mostly missed: against weaving T1 bombers the T3 fighters went from 23-58% to 54-78%, the EDA T3 tower from 39% to 50%. Not the EDA T2 mobile anti-air (Komodo): leading, its shells fell from 71% to 1%. Not the beams (the EDA T2 mobile anti-air and T2 tower, the Guardian T1 tower and mobile anti-air, and since game 0.1.21.1 the Guardian T3 tower): a beam hits at once, so aiming ahead of a crossing plane misses it (the EDA Komodo fell from 71% to 1% leading; 0.1.0-0.2.5 had the other three leading by mistake)."
    ]
   },
   {
@@ -4261,7 +4220,7 @@
     "air"
    ],
    "why": [
-    "Anti-air weapons lead their targets. The T3 fighters, the T3 anti-air towers and others shot at where an aircraft was, so a moving plane was mostly missed: against weaving T1 bombers the T3 fighters went from 23-58% to 54-78%, the EDA T3 tower from 39% to 50%. Not the EDA T2 mobile anti-air (Komodo): leading, its shells fell from 71% to 1%. Not the beams (the EDA T2 mobile anti-air and T2 tower, the Guardian T1 tower and mobile anti-air): a beam hits at once, so aiming ahead of a crossing plane misses it (the EDA Komodo fell from 71% to 1% leading; 0.1.0-0.2.5 had the other three leading by mistake)."
+    "Anti-air weapons lead their targets. The T3 fighters, the T3 anti-air towers and others shot at where an aircraft was, so a moving plane was mostly missed: against weaving T1 bombers the T3 fighters went from 23-58% to 54-78%, the EDA T3 tower from 39% to 50%. Not the EDA T2 mobile anti-air (Komodo): leading, its shells fell from 71% to 1%. Not the beams (the EDA T2 mobile anti-air and T2 tower, the Guardian T1 tower and mobile anti-air, and since game 0.1.21.1 the Guardian T3 tower): a beam hits at once, so aiming ahead of a crossing plane misses it (the EDA Komodo fell from 71% to 1% leading; 0.1.0-0.2.5 had the other three leading by mistake)."
    ]
   },
   {
@@ -4278,7 +4237,7 @@
     "air"
    ],
    "why": [
-    "Anti-air weapons lead their targets. The T3 fighters, the T3 anti-air towers and others shot at where an aircraft was, so a moving plane was mostly missed: against weaving T1 bombers the T3 fighters went from 23-58% to 54-78%, the EDA T3 tower from 39% to 50%. Not the EDA T2 mobile anti-air (Komodo): leading, its shells fell from 71% to 1%. Not the beams (the EDA T2 mobile anti-air and T2 tower, the Guardian T1 tower and mobile anti-air): a beam hits at once, so aiming ahead of a crossing plane misses it (the EDA Komodo fell from 71% to 1% leading; 0.1.0-0.2.5 had the other three leading by mistake)."
+    "Anti-air weapons lead their targets. The T3 fighters, the T3 anti-air towers and others shot at where an aircraft was, so a moving plane was mostly missed: against weaving T1 bombers the T3 fighters went from 23-58% to 54-78%, the EDA T3 tower from 39% to 50%. Not the EDA T2 mobile anti-air (Komodo): leading, its shells fell from 71% to 1%. Not the beams (the EDA T2 mobile anti-air and T2 tower, the Guardian T1 tower and mobile anti-air, and since game 0.1.21.1 the Guardian T3 tower): a beam hits at once, so aiming ahead of a crossing plane misses it (the EDA Komodo fell from 71% to 1% leading; 0.1.0-0.2.5 had the other three leading by mistake)."
    ]
   },
   {
@@ -4295,41 +4254,7 @@
     "air"
    ],
    "why": [
-    "Anti-air weapons lead their targets. The T3 fighters, the T3 anti-air towers and others shot at where an aircraft was, so a moving plane was mostly missed: against weaving T1 bombers the T3 fighters went from 23-58% to 54-78%, the EDA T3 tower from 39% to 50%. Not the EDA T2 mobile anti-air (Komodo): leading, its shells fell from 71% to 1%. Not the beams (the EDA T2 mobile anti-air and T2 tower, the Guardian T1 tower and mobile anti-air): a beam hits at once, so aiming ahead of a crossing plane misses it (the EDA Komodo fell from 71% to 1% leading; 0.1.0-0.2.5 had the other three leading by mistake)."
-   ]
-  },
-  {
-   "kind": "unit",
-   "id": "uga3201",
-   "name": "Contrail",
-   "displayName": "Tier 3: Anti-Air Fighter",
-   "faction": "Guardian",
-   "field": "weapons.1.aimControllers.1.leadTarget",
-   "label": "leads its target",
-   "before": false,
-   "after": true,
-   "sections": [
-    "air"
-   ],
-   "why": [
-    "Anti-air weapons lead their targets. The T3 fighters, the T3 anti-air towers and others shot at where an aircraft was, so a moving plane was mostly missed: against weaving T1 bombers the T3 fighters went from 23-58% to 54-78%, the EDA T3 tower from 39% to 50%. Not the EDA T2 mobile anti-air (Komodo): leading, its shells fell from 71% to 1%. Not the beams (the EDA T2 mobile anti-air and T2 tower, the Guardian T1 tower and mobile anti-air): a beam hits at once, so aiming ahead of a crossing plane misses it (the EDA Komodo fell from 71% to 1% leading; 0.1.0-0.2.5 had the other three leading by mistake)."
-   ]
-  },
-  {
-   "kind": "unit",
-   "id": "ugs3201",
-   "name": "Engraver",
-   "displayName": "Tier 3: Anti-Air",
-   "faction": "Guardian",
-   "field": "weapons.1.aimControllers.1.leadTarget",
-   "label": "leads its target",
-   "before": false,
-   "after": true,
-   "sections": [
-    "air"
-   ],
-   "why": [
-    "Anti-air weapons lead their targets. The T3 fighters, the T3 anti-air towers and others shot at where an aircraft was, so a moving plane was mostly missed: against weaving T1 bombers the T3 fighters went from 23-58% to 54-78%, the EDA T3 tower from 39% to 50%. Not the EDA T2 mobile anti-air (Komodo): leading, its shells fell from 71% to 1%. Not the beams (the EDA T2 mobile anti-air and T2 tower, the Guardian T1 tower and mobile anti-air): a beam hits at once, so aiming ahead of a crossing plane misses it (the EDA Komodo fell from 71% to 1% leading; 0.1.0-0.2.5 had the other three leading by mistake)."
+    "Anti-air weapons lead their targets. The T3 fighters, the T3 anti-air towers and others shot at where an aircraft was, so a moving plane was mostly missed: against weaving T1 bombers the T3 fighters went from 23-58% to 54-78%, the EDA T3 tower from 39% to 50%. Not the EDA T2 mobile anti-air (Komodo): leading, its shells fell from 71% to 1%. Not the beams (the EDA T2 mobile anti-air and T2 tower, the Guardian T1 tower and mobile anti-air, and since game 0.1.21.1 the Guardian T3 tower): a beam hits at once, so aiming ahead of a crossing plane misses it (the EDA Komodo fell from 71% to 1% leading; 0.1.0-0.2.5 had the other three leading by mistake)."
    ]
   },
   {
@@ -4381,7 +4306,7 @@
    ],
    "why": [
     "The Chosen T3 anti-air tower's missile turned at 10 degrees a second and lived 2 seconds (about 45 range out of 60), so it landed 9% on weaving T1 bombers. It turns like the EDA one (60) and reaches its range: 16-18%.",
-    "Anti-air missiles fly 1.5x as fast at most (EDA 30, was 20; Chosen 37.5, was 25) and turn twice as fast (120 degrees a second, was 60), so a dodging plane doesn't outturn them. The EDA T3 air scout shares the EDA missile."
+    "The Chosen anti-air missile turns twice as fast again (120 degrees a second), so a dodging plane doesn't outturn it. Game 0.1.21.1 raised both anti-air missiles' top speed to 50 (Chosen was 25, EDA 20) and the EDA one's turn rate to 180, past what this patch did, so those are left alone."
    ]
   },
   {
@@ -4403,144 +4328,6 @@
   },
   {
    "kind": "unit",
-   "id": "ugs3201",
-   "name": "Engraver",
-   "displayName": "Tier 3: Anti-Air",
-   "faction": "Guardian",
-   "field": "weapons.1.aimControllers.1.projectileSpeed",
-   "label": "muzzle speed",
-   "before": 20,
-   "after": 120,
-   "sections": [
-    "air"
-   ],
-   "why": [
-    "The Guardian T3 anti-air tower aimed its slow, falling shells (speed 20) straight at its target and hit nothing: 0% on weaving T1 bombers, 3% on a hovering gunship. It fires faster shells and aims for their fall: 18% and 13%. Still the weakest T3 anti-air tower.",
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight.",
-    "The slowest anti-air shells (T2 towers and mobile anti-air, the Chosen and Guardian T3 fighters, the Guardian T3 tower, the Chosen big bot) fly twice as fast again, and lose their spread (up to 3 degrees, 1-3 units off at range 50, wider than the hitbox): in the same model they went from 23-49% to 59-72% against moved aircraft."
-   ]
-  },
-  {
-   "kind": "unit",
-   "id": "ugs3201",
-   "name": "Engraver",
-   "displayName": "Tier 3: Anti-Air",
-   "faction": "Guardian",
-   "field": "weapons.1.aimControllers.1.solverType",
-   "label": "aim (NoArc straight, LowArc for the fall)",
-   "before": "NoArc",
-   "after": "LowArc",
-   "sections": [
-    "air"
-   ],
-   "why": [
-    "The Guardian T3 anti-air tower aimed its slow, falling shells (speed 20) straight at its target and hit nothing: 0% on weaving T1 bombers, 3% on a hovering gunship. It fires faster shells and aims for their fall: 18% and 13%. Still the weakest T3 anti-air tower."
-   ]
-  },
-  {
-   "kind": "unit",
-   "id": "uca1201",
-   "name": "Zephyr",
-   "displayName": "Tier 1: Anti-Air Fighter",
-   "faction": "Chosen",
-   "field": "weapons.1.projectileLifetime",
-   "label": "weapon 1 projectile lifetime (s)",
-   "before": 0.5,
-   "after": 0.75,
-   "sections": [
-    "air"
-   ],
-   "why": [
-    "T1 fighters' bullets lived exactly long enough to reach their range (0.5 s at speed 50 for 25), so anything pulling away outran them."
-   ]
-  },
-  {
-   "kind": "unit",
-   "id": "uca1201",
-   "name": "Zephyr",
-   "displayName": "Tier 1: Anti-Air Fighter",
-   "faction": "Chosen",
-   "field": "weapons.2.projectileLifetime",
-   "label": "weapon 2 projectile lifetime (s)",
-   "before": 0.5,
-   "after": 0.75,
-   "sections": [
-    "air"
-   ],
-   "why": [
-    "T1 fighters' bullets lived exactly long enough to reach their range (0.5 s at speed 50 for 25), so anything pulling away outran them."
-   ]
-  },
-  {
-   "kind": "unit",
-   "id": "uea1201",
-   "name": "Shrike",
-   "displayName": "Tier 1: Anti-Air Fighter",
-   "faction": "EDA",
-   "field": "weapons.1.projectileLifetime",
-   "label": "projectile lifetime (s)",
-   "before": 0.5,
-   "after": 0.75,
-   "sections": [
-    "air"
-   ],
-   "why": [
-    "T1 fighters' bullets lived exactly long enough to reach their range (0.5 s at speed 50 for 25), so anything pulling away outran them."
-   ]
-  },
-  {
-   "kind": "unit",
-   "id": "uga1201",
-   "name": "Aerofoil",
-   "displayName": "Tier 1: Anti-Air Fighter",
-   "faction": "Guardian",
-   "field": "weapons.1.projectileLifetime",
-   "label": "weapon 1 projectile lifetime (s)",
-   "before": 0.5,
-   "after": 0.75,
-   "sections": [
-    "air"
-   ],
-   "why": [
-    "T1 fighters' bullets lived exactly long enough to reach their range (0.5 s at speed 50 for 25), so anything pulling away outran them."
-   ]
-  },
-  {
-   "kind": "unit",
-   "id": "uga1201",
-   "name": "Aerofoil",
-   "displayName": "Tier 1: Anti-Air Fighter",
-   "faction": "Guardian",
-   "field": "weapons.2.projectileLifetime",
-   "label": "weapon 2 projectile lifetime (s)",
-   "before": 0.5,
-   "after": 0.75,
-   "sections": [
-    "air"
-   ],
-   "why": [
-    "T1 fighters' bullets lived exactly long enough to reach their range (0.5 s at speed 50 for 25), so anything pulling away outran them."
-   ]
-  },
-  {
-   "kind": "unit",
-   "id": "uga1201",
-   "name": "Aerofoil",
-   "displayName": "Tier 1: Anti-Air Fighter",
-   "faction": "Guardian",
-   "field": "movement.speed",
-   "label": "speed",
-   "before": 12,
-   "after": 15,
-   "sections": [
-    "air"
-   ],
-   "why": [
-    "The Guardian T1 fighter (Aerofoil) was the slowest fighter (12 against 15) and lost every fight with the other T1 fighters without killing any: as fast as them, and more damage."
-   ]
-  },
-  {
-   "kind": "unit",
    "id": "uga1201",
    "name": "Aerofoil",
    "displayName": "Tier 1: Anti-Air Fighter",
@@ -4553,7 +4340,7 @@
     "air"
    ],
    "why": [
-    "The Guardian T1 fighter (Aerofoil) was the slowest fighter (12 against 15) and lost every fight with the other T1 fighters without killing any: as fast as them, and more damage."
+    "The Guardian T1 fighter (Aerofoil) lost every fight with the other T1 fighters without killing any: more damage. (Game 0.1.21.1 made it as fast as them, 15, which this patch used to do.)"
    ]
   },
   {
@@ -4570,7 +4357,7 @@
     "air"
    ],
    "why": [
-    "The Guardian T1 fighter (Aerofoil) was the slowest fighter (12 against 15) and lost every fight with the other T1 fighters without killing any: as fast as them, and more damage."
+    "The Guardian T1 fighter (Aerofoil) lost every fight with the other T1 fighters without killing any: more damage. (Game 0.1.21.1 made it as fast as them, 15, which this patch used to do.)"
    ]
   },
   {
@@ -4592,23 +4379,6 @@
   },
   {
    "kind": "unit",
-   "id": "uca1001",
-   "name": "Comet",
-   "displayName": "Tier 1: Bomber",
-   "faction": "Chosen",
-   "field": "weapons.1.damageRadius",
-   "label": "splash radius",
-   "before": 0,
-   "after": 3,
-   "sections": [
-    "air"
-   ],
-   "why": [
-    "Bombs with no splash do nothing when they land beside a target: T1 bombs get some (the EDA one already had plenty)."
-   ]
-  },
-  {
-   "kind": "unit",
    "id": "uga1001",
    "name": "Inertia",
    "displayName": "Tier 1: Bomber",
@@ -4621,7 +4391,7 @@
     "air"
    ],
    "why": [
-    "Bombs with no splash do nothing when they land beside a target: T1 bombs get some (the EDA one already had plenty)."
+    "Bombs with no splash do nothing when they land beside a target: T1 bombs get some (the EDA one already had plenty, and game 0.1.21.1 gave the Chosen Comet 1.5)."
    ]
   },
   {
@@ -4689,7 +4459,7 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
    ]
   },
   {
@@ -4706,43 +4476,7 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
-   ]
-  },
-  {
-   "kind": "unit",
-   "id": "uca3201",
-   "name": "Mistral",
-   "displayName": "Tier 3: Anti-Air Fighter",
-   "faction": "Chosen",
-   "field": "weapons.1.aimControllers.1.projectileSpeed",
-   "label": "muzzle speed",
-   "before": 20,
-   "after": 60,
-   "sections": [
-    "air"
-   ],
-   "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight.",
-    "The slowest anti-air shells (T2 towers and mobile anti-air, the Chosen and Guardian T3 fighters, the Guardian T3 tower, the Chosen big bot) fly twice as fast again, and lose their spread (up to 3 degrees, 1-3 units off at range 50, wider than the hitbox): in the same model they went from 23-49% to 59-72% against moved aircraft."
-   ]
-  },
-  {
-   "kind": "unit",
-   "id": "uca3201",
-   "name": "Mistral",
-   "displayName": "Tier 3: Anti-Air Fighter",
-   "faction": "Chosen",
-   "field": "weapons.2.aimControllers.1.projectileSpeed",
-   "label": "muzzle speed",
-   "before": 20,
-   "after": 60,
-   "sections": [
-    "air"
-   ],
-   "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight.",
-    "The slowest anti-air shells (T2 towers and mobile anti-air, the Chosen and Guardian T3 fighters, the Guardian T3 tower, the Chosen big bot) fly twice as fast again, and lose their spread (up to 3 degrees, 1-3 units off at range 50, wider than the hitbox): in the same model they went from 23-49% to 59-72% against moved aircraft."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
    ]
   },
   {
@@ -4759,7 +4493,7 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
    ]
   },
   {
@@ -4776,8 +4510,8 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight.",
-    "The slowest anti-air shells (T2 towers and mobile anti-air, the Chosen and Guardian T3 fighters, the Guardian T3 tower, the Chosen big bot) fly twice as fast again, and lose their spread (up to 3 degrees, 1-3 units off at range 50, wider than the hitbox): in the same model they went from 23-49% to 59-72% against moved aircraft."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight.",
+    "The slowest anti-air shells (T2 towers and mobile anti-air, the Chosen big bot) fly twice as fast again, and lose their spread (up to 3 degrees, 1-3 units off at range 50, wider than the hitbox): in the same model they went from 23-49% to 59-72% against moved aircraft. The Guardian T2 tower's (40 since game 0.1.21.1, was 20) come to 120 in all."
    ]
   },
   {
@@ -4794,7 +4528,7 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
    ]
   },
   {
@@ -4811,7 +4545,7 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
    ]
   },
   {
@@ -4828,8 +4562,8 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight.",
-    "The slowest anti-air shells (T2 towers and mobile anti-air, the Chosen and Guardian T3 fighters, the Guardian T3 tower, the Chosen big bot) fly twice as fast again, and lose their spread (up to 3 degrees, 1-3 units off at range 50, wider than the hitbox): in the same model they went from 23-49% to 59-72% against moved aircraft."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight.",
+    "The slowest anti-air shells (T2 towers and mobile anti-air, the Chosen big bot) fly twice as fast again, and lose their spread (up to 3 degrees, 1-3 units off at range 50, wider than the hitbox): in the same model they went from 23-49% to 59-72% against moved aircraft. The Guardian T2 tower's (40 since game 0.1.21.1, was 20) come to 120 in all."
    ]
   },
   {
@@ -4846,8 +4580,8 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight.",
-    "The slowest anti-air shells (T2 towers and mobile anti-air, the Chosen and Guardian T3 fighters, the Guardian T3 tower, the Chosen big bot) fly twice as fast again, and lose their spread (up to 3 degrees, 1-3 units off at range 50, wider than the hitbox): in the same model they went from 23-49% to 59-72% against moved aircraft."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight.",
+    "The slowest anti-air shells (T2 towers and mobile anti-air, the Chosen big bot) fly twice as fast again, and lose their spread (up to 3 degrees, 1-3 units off at range 50, wider than the hitbox): in the same model they went from 23-49% to 59-72% against moved aircraft. The Guardian T2 tower's (40 since game 0.1.21.1, was 20) come to 120 in all."
    ]
   },
   {
@@ -4864,7 +4598,7 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
    ]
   },
   {
@@ -4881,7 +4615,7 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
    ]
   },
   {
@@ -4898,7 +4632,7 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
    ]
   },
   {
@@ -4915,7 +4649,7 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
    ]
   },
   {
@@ -4932,8 +4666,8 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight.",
-    "The slowest anti-air shells (T2 towers and mobile anti-air, the Chosen and Guardian T3 fighters, the Guardian T3 tower, the Chosen big bot) fly twice as fast again, and lose their spread (up to 3 degrees, 1-3 units off at range 50, wider than the hitbox): in the same model they went from 23-49% to 59-72% against moved aircraft."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight.",
+    "The slowest anti-air shells (T2 towers and mobile anti-air, the Chosen big bot) fly twice as fast again, and lose their spread (up to 3 degrees, 1-3 units off at range 50, wider than the hitbox): in the same model they went from 23-49% to 59-72% against moved aircraft. The Guardian T2 tower's (40 since game 0.1.21.1, was 20) come to 120 in all."
    ]
   },
   {
@@ -4950,7 +4684,7 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
    ]
   },
   {
@@ -4967,41 +4701,7 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
-   ]
-  },
-  {
-   "kind": "unit",
-   "id": "uea3201",
-   "name": "Peregrine",
-   "displayName": "Tier 3: Anti-Air Fighter",
-   "faction": "EDA",
-   "field": "weapons.1.aimControllers.1.projectileSpeed",
-   "label": "muzzle speed",
-   "before": 20,
-   "after": 30,
-   "sections": [
-    "air"
-   ],
-   "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
-   ]
-  },
-  {
-   "kind": "unit",
-   "id": "uea3201",
-   "name": "Peregrine",
-   "displayName": "Tier 3: Anti-Air Fighter",
-   "faction": "EDA",
-   "field": "weapons.2.aimControllers.1.projectileSpeed",
-   "label": "muzzle speed",
-   "before": 20,
-   "after": 30,
-   "sections": [
-    "air"
-   ],
-   "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
    ]
   },
   {
@@ -5018,7 +4718,7 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
    ]
   },
   {
@@ -5035,7 +4735,7 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
    ]
   },
   {
@@ -5052,7 +4752,7 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
    ]
   },
   {
@@ -5069,7 +4769,7 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
    ]
   },
   {
@@ -5086,7 +4786,7 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
    ]
   },
   {
@@ -5103,7 +4803,7 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
    ]
   },
   {
@@ -5120,7 +4820,7 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
    ]
   },
   {
@@ -5137,7 +4837,7 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
    ]
   },
   {
@@ -5154,7 +4854,7 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
    ]
   },
   {
@@ -5171,7 +4871,7 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
    ]
   },
   {
@@ -5188,7 +4888,7 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
    ]
   },
   {
@@ -5205,7 +4905,7 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
    ]
   },
   {
@@ -5222,7 +4922,7 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
    ]
   },
   {
@@ -5239,25 +4939,7 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
-   ]
-  },
-  {
-   "kind": "unit",
-   "id": "uga3201",
-   "name": "Contrail",
-   "displayName": "Tier 3: Anti-Air Fighter",
-   "faction": "Guardian",
-   "field": "weapons.1.aimControllers.1.projectileSpeed",
-   "label": "muzzle speed",
-   "before": 20,
-   "after": 60,
-   "sections": [
-    "air"
-   ],
-   "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight.",
-    "The slowest anti-air shells (T2 towers and mobile anti-air, the Chosen and Guardian T3 fighters, the Guardian T3 tower, the Chosen big bot) fly twice as fast again, and lose their spread (up to 3 degrees, 1-3 units off at range 50, wider than the hitbox): in the same model they went from 23-49% to 59-72% against moved aircraft."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
    ]
   },
   {
@@ -5274,7 +4956,7 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
    ]
   },
   {
@@ -5291,8 +4973,8 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight.",
-    "The slowest anti-air shells (T2 towers and mobile anti-air, the Chosen and Guardian T3 fighters, the Guardian T3 tower, the Chosen big bot) fly twice as fast again, and lose their spread (up to 3 degrees, 1-3 units off at range 50, wider than the hitbox): in the same model they went from 23-49% to 59-72% against moved aircraft."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight.",
+    "The slowest anti-air shells (T2 towers and mobile anti-air, the Chosen big bot) fly twice as fast again, and lose their spread (up to 3 degrees, 1-3 units off at range 50, wider than the hitbox): in the same model they went from 23-49% to 59-72% against moved aircraft. The Guardian T2 tower's (40 since game 0.1.21.1, was 20) come to 120 in all."
    ]
   },
   {
@@ -5309,7 +4991,7 @@
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight."
    ]
   },
   {
@@ -5320,66 +5002,14 @@
    "faction": "Guardian",
    "field": "weapons.1.aimControllers.1.projectileSpeed",
    "label": "muzzle speed",
-   "before": 20,
+   "before": 40,
    "after": 120,
    "sections": [
     "air"
    ],
    "why": [
-    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight.",
-    "The slowest anti-air shells (T2 towers and mobile anti-air, the Chosen and Guardian T3 fighters, the Guardian T3 tower, the Chosen big bot) fly twice as fast again, and lose their spread (up to 3 degrees, 1-3 units off at range 50, wider than the hitbox): in the same model they went from 23-49% to 59-72% against moved aircraft.",
-    "The Guardian T2 anti-air tower's shells (20 in the game) need twice as much again to reach most of its 50 range in time: 120 in all (12% to 69% in the model)."
-   ]
-  },
-  {
-   "kind": "projectile",
-   "id": "pca341",
-   "name": null,
-   "displayName": null,
-   "faction": null,
-   "field": "movement.speedMax",
-   "label": "top speed",
-   "before": 25,
-   "after": 37.5,
-   "sections": [
-    "air"
-   ],
-   "why": [
-    "Anti-air missiles fly 1.5x as fast at most (EDA 30, was 20; Chosen 37.5, was 25) and turn twice as fast (120 degrees a second, was 60), so a dodging plane doesn't outturn them. The EDA T3 air scout shares the EDA missile."
-   ]
-  },
-  {
-   "kind": "projectile",
-   "id": "pea341",
-   "name": null,
-   "displayName": null,
-   "faction": null,
-   "field": "movement.rotationSpeed",
-   "label": "turn rate (deg/s)",
-   "before": 60,
-   "after": 120,
-   "sections": [
-    "air"
-   ],
-   "why": [
-    "Anti-air missiles fly 1.5x as fast at most (EDA 30, was 20; Chosen 37.5, was 25) and turn twice as fast (120 degrees a second, was 60), so a dodging plane doesn't outturn them. The EDA T3 air scout shares the EDA missile."
-   ]
-  },
-  {
-   "kind": "projectile",
-   "id": "pea341",
-   "name": null,
-   "displayName": null,
-   "faction": null,
-   "field": "movement.speedMax",
-   "label": "top speed",
-   "before": 20,
-   "after": 30,
-   "sections": [
-    "air"
-   ],
-   "why": [
-    "Anti-air missiles fly 1.5x as fast at most (EDA 30, was 20; Chosen 37.5, was 25) and turn twice as fast (120 degrees a second, was 60), so a dodging plane doesn't outturn them. The EDA T3 air scout shares the EDA missile."
+    "Anti-air should hit most of the time against a plane that is being moved around, not miss most of it. Projectiles hit by a zero-width ray each tick against the aircraft's box, so a projectile's own size never counts; what decides it is how long the shot is in the air, whether it falls, and the size of the box. Anti-air shells and missiles leave 1.5x as fast (each weapon's aim speed; beams unchanged). Not the T3 fighters: game 0.1.21.1 raised theirs past what this patch did (Chosen and Guardian 75, EDA 35; were 20). Not the Guardian T3 tower, a beam since 0.1.21.1. In an offline model of every anti-air weapon against five aircraft (my model of the game's shot and hit code, not played), this with the changes below takes the average hit rate from 27% to about 62% against aircraft moved around every 1-2 s, and from 38% to 71% against ones flying straight.",
+    "The slowest anti-air shells (T2 towers and mobile anti-air, the Chosen big bot) fly twice as fast again, and lose their spread (up to 3 degrees, 1-3 units off at range 50, wider than the hitbox): in the same model they went from 23-49% to 59-72% against moved aircraft. The Guardian T2 tower's (40 since game 0.1.21.1, was 20) come to 120 in all."
    ]
   },
   {
@@ -7521,7 +7151,7 @@
    "kind": "unit",
    "id": "uga3011",
    "name": "TALEN",
-   "displayName": "Tier 1: Gunship",
+   "displayName": "Tier 3: Gunship",
    "faction": "Guardian",
    "field": "collisionInfo.collisionSize.x",
    "label": "collisionInfo.collisionSize.x",
@@ -7538,7 +7168,7 @@
    "kind": "unit",
    "id": "uga3011",
    "name": "TALEN",
-   "displayName": "Tier 1: Gunship",
+   "displayName": "Tier 3: Gunship",
    "faction": "Guardian",
    "field": "collisionInfo.collisionSize.y",
    "label": "collisionInfo.collisionSize.y",
@@ -7555,7 +7185,7 @@
    "kind": "unit",
    "id": "uga3011",
    "name": "TALEN",
-   "displayName": "Tier 1: Gunship",
+   "displayName": "Tier 3: Gunship",
    "faction": "Guardian",
    "field": "collisionInfo.collisionSize.z",
    "label": "collisionInfo.collisionSize.z",
@@ -7786,7 +7416,7 @@
     "air"
    ],
    "why": [
-    "The slowest anti-air shells (T2 towers and mobile anti-air, the Chosen and Guardian T3 fighters, the Guardian T3 tower, the Chosen big bot) fly twice as fast again, and lose their spread (up to 3 degrees, 1-3 units off at range 50, wider than the hitbox): in the same model they went from 23-49% to 59-72% against moved aircraft."
+    "The slowest anti-air shells (T2 towers and mobile anti-air, the Chosen big bot) fly twice as fast again, and lose their spread (up to 3 degrees, 1-3 units off at range 50, wider than the hitbox): in the same model they went from 23-49% to 59-72% against moved aircraft. The Guardian T2 tower's (40 since game 0.1.21.1, was 20) come to 120 in all."
    ]
   },
   {
@@ -7803,7 +7433,7 @@
     "air"
    ],
    "why": [
-    "The slowest anti-air shells (T2 towers and mobile anti-air, the Chosen and Guardian T3 fighters, the Guardian T3 tower, the Chosen big bot) fly twice as fast again, and lose their spread (up to 3 degrees, 1-3 units off at range 50, wider than the hitbox): in the same model they went from 23-49% to 59-72% against moved aircraft."
+    "The slowest anti-air shells (T2 towers and mobile anti-air, the Chosen big bot) fly twice as fast again, and lose their spread (up to 3 degrees, 1-3 units off at range 50, wider than the hitbox): in the same model they went from 23-49% to 59-72% against moved aircraft. The Guardian T2 tower's (40 since game 0.1.21.1, was 20) come to 120 in all."
    ]
   },
   {
@@ -7820,7 +7450,7 @@
     "air"
    ],
    "why": [
-    "The slowest anti-air shells (T2 towers and mobile anti-air, the Chosen and Guardian T3 fighters, the Guardian T3 tower, the Chosen big bot) fly twice as fast again, and lose their spread (up to 3 degrees, 1-3 units off at range 50, wider than the hitbox): in the same model they went from 23-49% to 59-72% against moved aircraft."
+    "The slowest anti-air shells (T2 towers and mobile anti-air, the Chosen big bot) fly twice as fast again, and lose their spread (up to 3 degrees, 1-3 units off at range 50, wider than the hitbox): in the same model they went from 23-49% to 59-72% against moved aircraft. The Guardian T2 tower's (40 since game 0.1.21.1, was 20) come to 120 in all."
    ]
   },
   {
@@ -7837,7 +7467,7 @@
     "air"
    ],
    "why": [
-    "The slowest anti-air shells (T2 towers and mobile anti-air, the Chosen and Guardian T3 fighters, the Guardian T3 tower, the Chosen big bot) fly twice as fast again, and lose their spread (up to 3 degrees, 1-3 units off at range 50, wider than the hitbox): in the same model they went from 23-49% to 59-72% against moved aircraft."
+    "The slowest anti-air shells (T2 towers and mobile anti-air, the Chosen big bot) fly twice as fast again, and lose their spread (up to 3 degrees, 1-3 units off at range 50, wider than the hitbox): in the same model they went from 23-49% to 59-72% against moved aircraft. The Guardian T2 tower's (40 since game 0.1.21.1, was 20) come to 120 in all."
    ]
   },
   {
@@ -7854,7 +7484,7 @@
     "air"
    ],
    "why": [
-    "The slowest anti-air shells (T2 towers and mobile anti-air, the Chosen and Guardian T3 fighters, the Guardian T3 tower, the Chosen big bot) fly twice as fast again, and lose their spread (up to 3 degrees, 1-3 units off at range 50, wider than the hitbox): in the same model they went from 23-49% to 59-72% against moved aircraft."
+    "The slowest anti-air shells (T2 towers and mobile anti-air, the Chosen big bot) fly twice as fast again, and lose their spread (up to 3 degrees, 1-3 units off at range 50, wider than the hitbox): in the same model they went from 23-49% to 59-72% against moved aircraft. The Guardian T2 tower's (40 since game 0.1.21.1, was 20) come to 120 in all."
    ]
   },
   {
@@ -7899,13 +7529,13 @@
    "faction": "Chosen",
    "field": "intel.visionRadius",
    "label": "vision",
-   "before": 15,
-   "after": 25,
+   "before": 20,
+   "after": 27,
    "sections": [
     "defences"
    ],
    "why": [
-    "T1 point defences saw 15 but shot 25, so T1 tanks (range 20) could kill one from outside its sight. They now see their full range: still more than a tank's, less than T1 artillery's 30."
+    "T1 point defences see less than they shoot (since game 0.1.21.1 the Chosen one sees 20, the others 22, and all shoot 27), so T1 tanks (range 20) can get shots in from outside their sight. They now see their full range: still more than a tank's, less than T1 artillery's 30."
    ]
   },
   {
@@ -7916,13 +7546,13 @@
    "faction": "EDA",
    "field": "intel.visionRadius",
    "label": "vision",
-   "before": 15,
-   "after": 25,
+   "before": 22,
+   "after": 27,
    "sections": [
     "defences"
    ],
    "why": [
-    "T1 point defences saw 15 but shot 25, so T1 tanks (range 20) could kill one from outside its sight. They now see their full range: still more than a tank's, less than T1 artillery's 30."
+    "Likewise for the EDA and Guardian ones."
    ]
   },
   {
@@ -7933,13 +7563,13 @@
    "faction": "Guardian",
    "field": "intel.visionRadius",
    "label": "vision",
-   "before": 15,
-   "after": 25,
+   "before": 22,
+   "after": 27,
    "sections": [
     "defences"
    ],
    "why": [
-    "T1 point defences saw 15 but shot 25, so T1 tanks (range 20) could kill one from outside its sight. They now see their full range: still more than a tank's, less than T1 artillery's 30."
+    "Likewise for the EDA and Guardian ones."
    ]
   },
   {
@@ -9384,7 +9014,7 @@
     "units"
    ],
    "why": [
-    "Long-range and heaviest T4s move at 2.25 (were 2) and turn at 50 (were 40): the EDA Centaur railgun sniper, the Guardian Quasar artillery, the Chosen Tripod (100 range) and the Chosen big bot (100000 health, the most firepower). They stay the slowest, as snipers and artillery should."
+    "Long-range T4s move at 2.25 (were 2) and turn at 50 (were 40): the EDA Centaur railgun sniper, the Guardian Quasar artillery and the Chosen Tripod (100 range). They stay the slowest, as snipers and artillery should. (The Chosen big bot was in this list; game 0.1.21.1 slowed it to 1, and that is left as the game has it.)"
    ]
   },
   {
@@ -9401,7 +9031,7 @@
     "units"
    ],
    "why": [
-    "Long-range and heaviest T4s move at 2.25 (were 2) and turn at 50 (were 40): the EDA Centaur railgun sniper, the Guardian Quasar artillery, the Chosen Tripod (100 range) and the Chosen big bot (100000 health, the most firepower). They stay the slowest, as snipers and artillery should."
+    "Long-range T4s move at 2.25 (were 2) and turn at 50 (were 40): the EDA Centaur railgun sniper, the Guardian Quasar artillery and the Chosen Tripod (100 range). They stay the slowest, as snipers and artillery should. (The Chosen big bot was in this list; game 0.1.21.1 slowed it to 1, and that is left as the game has it.)"
    ]
   },
   {
@@ -9418,58 +9048,7 @@
     "units"
    ],
    "why": [
-    "Long-range and heaviest T4s move at 2.25 (were 2) and turn at 50 (were 40): the EDA Centaur railgun sniper, the Guardian Quasar artillery, the Chosen Tripod (100 range) and the Chosen big bot (100000 health, the most firepower). They stay the slowest, as snipers and artillery should."
-   ]
-  },
-  {
-   "kind": "unit",
-   "id": "ucl4004",
-   "name": null,
-   "displayName": "Tier 4: Bot Big",
-   "faction": "Chosen",
-   "field": "movement.speed",
-   "label": "speed",
-   "before": 2,
-   "after": 2.25,
-   "sections": [
-    "units"
-   ],
-   "why": [
-    "Long-range and heaviest T4s move at 2.25 (were 2) and turn at 50 (were 40): the EDA Centaur railgun sniper, the Guardian Quasar artillery, the Chosen Tripod (100 range) and the Chosen big bot (100000 health, the most firepower). They stay the slowest, as snipers and artillery should."
-   ]
-  },
-  {
-   "kind": "unit",
-   "id": "ucl4004",
-   "name": null,
-   "displayName": "Tier 4: Bot Big",
-   "faction": "Chosen",
-   "field": "movement.acceleration",
-   "label": "acceleration",
-   "before": 2,
-   "after": 2.25,
-   "sections": [
-    "units"
-   ],
-   "why": [
-    "Long-range and heaviest T4s move at 2.25 (were 2) and turn at 50 (were 40): the EDA Centaur railgun sniper, the Guardian Quasar artillery, the Chosen Tripod (100 range) and the Chosen big bot (100000 health, the most firepower). They stay the slowest, as snipers and artillery should."
-   ]
-  },
-  {
-   "kind": "unit",
-   "id": "ucl4004",
-   "name": null,
-   "displayName": "Tier 4: Bot Big",
-   "faction": "Chosen",
-   "field": "movement.rotationSpeed",
-   "label": "turn rate (deg/s)",
-   "before": 40,
-   "after": 50,
-   "sections": [
-    "units"
-   ],
-   "why": [
-    "Long-range and heaviest T4s move at 2.25 (were 2) and turn at 50 (were 40): the EDA Centaur railgun sniper, the Guardian Quasar artillery, the Chosen Tripod (100 range) and the Chosen big bot (100000 health, the most firepower). They stay the slowest, as snipers and artillery should."
+    "Long-range T4s move at 2.25 (were 2) and turn at 50 (were 40): the EDA Centaur railgun sniper, the Guardian Quasar artillery and the Chosen Tripod (100 range). They stay the slowest, as snipers and artillery should. (The Chosen big bot was in this list; game 0.1.21.1 slowed it to 1, and that is left as the game has it.)"
    ]
   },
   {
@@ -9486,7 +9065,7 @@
     "units"
    ],
    "why": [
-    "Long-range and heaviest T4s move at 2.25 (were 2) and turn at 50 (were 40): the EDA Centaur railgun sniper, the Guardian Quasar artillery, the Chosen Tripod (100 range) and the Chosen big bot (100000 health, the most firepower). They stay the slowest, as snipers and artillery should."
+    "Long-range T4s move at 2.25 (were 2) and turn at 50 (were 40): the EDA Centaur railgun sniper, the Guardian Quasar artillery and the Chosen Tripod (100 range). They stay the slowest, as snipers and artillery should. (The Chosen big bot was in this list; game 0.1.21.1 slowed it to 1, and that is left as the game has it.)"
    ]
   },
   {
@@ -9503,7 +9082,7 @@
     "units"
    ],
    "why": [
-    "Long-range and heaviest T4s move at 2.25 (were 2) and turn at 50 (were 40): the EDA Centaur railgun sniper, the Guardian Quasar artillery, the Chosen Tripod (100 range) and the Chosen big bot (100000 health, the most firepower). They stay the slowest, as snipers and artillery should."
+    "Long-range T4s move at 2.25 (were 2) and turn at 50 (were 40): the EDA Centaur railgun sniper, the Guardian Quasar artillery and the Chosen Tripod (100 range). They stay the slowest, as snipers and artillery should. (The Chosen big bot was in this list; game 0.1.21.1 slowed it to 1, and that is left as the game has it.)"
    ]
   },
   {
@@ -9520,7 +9099,7 @@
     "units"
    ],
    "why": [
-    "Long-range and heaviest T4s move at 2.25 (were 2) and turn at 50 (were 40): the EDA Centaur railgun sniper, the Guardian Quasar artillery, the Chosen Tripod (100 range) and the Chosen big bot (100000 health, the most firepower). They stay the slowest, as snipers and artillery should."
+    "Long-range T4s move at 2.25 (were 2) and turn at 50 (were 40): the EDA Centaur railgun sniper, the Guardian Quasar artillery and the Chosen Tripod (100 range). They stay the slowest, as snipers and artillery should. (The Chosen big bot was in this list; game 0.1.21.1 slowed it to 1, and that is left as the game has it.)"
    ]
   },
   {
@@ -9537,7 +9116,7 @@
     "units"
    ],
    "why": [
-    "Long-range and heaviest T4s move at 2.25 (were 2) and turn at 50 (were 40): the EDA Centaur railgun sniper, the Guardian Quasar artillery, the Chosen Tripod (100 range) and the Chosen big bot (100000 health, the most firepower). They stay the slowest, as snipers and artillery should."
+    "Long-range T4s move at 2.25 (were 2) and turn at 50 (were 40): the EDA Centaur railgun sniper, the Guardian Quasar artillery and the Chosen Tripod (100 range). They stay the slowest, as snipers and artillery should. (The Chosen big bot was in this list; game 0.1.21.1 slowed it to 1, and that is left as the game has it.)"
    ]
   },
   {
@@ -9554,7 +9133,7 @@
     "units"
    ],
    "why": [
-    "Long-range and heaviest T4s move at 2.25 (were 2) and turn at 50 (were 40): the EDA Centaur railgun sniper, the Guardian Quasar artillery, the Chosen Tripod (100 range) and the Chosen big bot (100000 health, the most firepower). They stay the slowest, as snipers and artillery should."
+    "Long-range T4s move at 2.25 (were 2) and turn at 50 (were 40): the EDA Centaur railgun sniper, the Guardian Quasar artillery and the Chosen Tripod (100 range). They stay the slowest, as snipers and artillery should. (The Chosen big bot was in this list; game 0.1.21.1 slowed it to 1, and that is left as the game has it.)"
    ]
   },
   {
@@ -9571,7 +9150,7 @@
     "units"
    ],
    "why": [
-    "Long-range and heaviest T4s move at 2.25 (were 2) and turn at 50 (were 40): the EDA Centaur railgun sniper, the Guardian Quasar artillery, the Chosen Tripod (100 range) and the Chosen big bot (100000 health, the most firepower). They stay the slowest, as snipers and artillery should."
+    "Long-range T4s move at 2.25 (were 2) and turn at 50 (were 40): the EDA Centaur railgun sniper, the Guardian Quasar artillery and the Chosen Tripod (100 range). They stay the slowest, as snipers and artillery should. (The Chosen big bot was in this list; game 0.1.21.1 slowed it to 1, and that is left as the game has it.)"
    ]
   },
   {
@@ -10425,7 +10004,7 @@
  "optional": {},
  "skipped": [],
  "notes": [
-  "Targeting (append to host/units/weaponsClasses/weaponsBaseClass.lua, with \"fixes\" on): a weapon whose muzzles aren't in its model (the Guardian T1 and T3 bombers, the Chosen T3 bomber, the EDA T2 raider, the TALEN) picks no target. Before, its target search threw an error that stopped every weapon queued after it from picking a new target, every tick, for as long as it had an enemy in range. Not a template change.",
+  "Targeting (append to host/units/weaponsClasses/weaponsBaseClass.lua, with \"fixes\" on): a weapon whose muzzles aren't in its model (the Guardian T1 and T3 bombers, the Chosen T3 bomber, the EDA T2 raider; the TALEN until game 0.1.21.1) picks no target. Before, its target search threw an error that stopped every weapon queued after it from picking a new target, every tick, for as long as it had an enemy in range. Not a template change.",
   "Shields (balancepatch/shields.lua, with the \"fixes\" section on): an aircraft's projectile that starts inside an enemy shield's bubble and lands inside it hits the shield instead, and so does an aircraft's beam fired from inside one. Before, gunships and bombers flew inside T3 bubbles and hit everything under them. Units on the ground inside a bubble shoot as before. Not a template change.",
   "AI: the stock AI's energy-to-alloy income targets (LessThan/MoreThanEnergyToResourceRatioIncome in AI/AIFunctions.lua) are scaled by 0.7 when the \"economy\" section is on. Not a template change."
  ]
