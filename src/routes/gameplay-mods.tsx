@@ -13,7 +13,7 @@
 
 import { Link, createFileRoute } from '@tanstack/react-router';
 import { ModCard } from '../components/ModCard';
-import { CopyPath, StepHead } from '../components/ModInstall';
+import { CopyPath, LinuxLaunchOptions, StepHead } from '../components/ModInstall';
 import { HeadStat, PageHead } from '../components/PageHead';
 import {
   BALANCE_PATCH,
@@ -114,6 +114,8 @@ function GameplayModsPage() {
               <code>Sanctuary_Data\Maps\Zone_Control_for_FAF_8P_V2\</code> (the map)
             </p>
           </div>
+
+          <LinuxLaunchOptions />
 
           <p className="mods-remove hint">
             Everyone in the match needs the same copies. To remove one, delete its folder.
