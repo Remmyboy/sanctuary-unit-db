@@ -145,6 +145,24 @@ describe('extracted data invariants (pinned from the game formulas)', () => {
     expect(meteor.weapons.some((w) => w.dps === null)).toBe(true);
   });
 
+  it('a unit is in the game when the build menu offers it, not when the QA list says so', () => {
+    // The QA list still had the Dart off in 0.0.1.21.1; its demo tag was gone,
+    // and players build it.
+    expect(byId.get('ucl1201')!.status).toBe('in-game');
+    // Every naval factory is demo-only: a blank button in the build menu ...
+    expect(byId.get('ucs1513')).toMatchObject({ status: 'in-progress', statusReason: 'Demo only' });
+    // ... so the ships only they build are out of reach, demo tag or not.
+    expect(byId.get('ucn1001')).toMatchObject({
+      demoOnly: false,
+      status: 'in-progress',
+      statusReason: 'No builder outside the demo',
+    });
+    for (const u of data.units.filter((x) => x.status === 'in-game')) {
+      expect(u.demoOnly, u.id).toBe(false);
+      expect(u.hasModel, u.id).toBe(true);
+    }
+  });
+
   it('exactly the commanders, engineers and stations can assist a construction', () => {
     const withRange = data.units.filter((u) => u.buildRange != null && u.buildRange > 0);
     expect(withRange.length).toBe(22);

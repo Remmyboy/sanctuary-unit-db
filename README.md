@@ -621,34 +621,32 @@ u[ecgw][lans]\d{4}(?=_lod\d)
 226 of 283 units. `extract.js` does this itself in about a second — a plain
 string scan, no asset tooling. That's the `hasModel` field.
 
-**Signal 2 — is it signed off?** The engine tree's `availableUnits.lua` is a
-live QA tracker, not the stale list the prototype tree carries. Its reason codes
-line up with the shipped art almost exactly:
+**Signal 2 — would the build menu offer it?** The player's build menu
+(`client/ui/constructionPanel.lua`) shows a unit tagged `DEMO_UI_ONLY` as a
+blank button that can't be clicked. So a unit is in the game when it has art,
+isn't demo-only, and can be built from a commander through builders that are
+themselves in the game (an upgrade counts). That last part matters for navy:
+the Playtest tags every naval factory demo-only, so the ships they build are out
+of reach even where they carry no demo tag themselves. `resolveStatuses` in
+`extract.js` walks the build tree to settle it.
 
-| Reason                        | Count | Have art |
-| ----------------------------- | ----- | -------- |
-| `OK` / true                   | 140   | 140      |
-| `OK_PENDING_APPROVAL` / false | 64    | 64       |
-| `NO_MODEL` / false            | 61    | 5        |
-| `OK` / false                  | 9     | 9        |
-| `BONE_MISSMATCH` / false      | 7     | 7        |
-| `BATTLE_NO_DAMAGE` / false    | 1     | 1        |
-
-So the boolean means _"signed off and enabled"_, not _"exists"_ — the non-`OK`
-codes describe units that are modelled but gated. Crossing the two gives:
-
-- **`in-game`** (140) — has art, signed off and enabled
-- **`in-progress`** (86) — has art, but gated: pending approval, rigging
-  mismatch, or no damage state. `statusReason` carries which.
-- **`no-model`** (57) — nothing to render
+- **`in-game`** (172 in build 25856019) — the build menu offers it
+- **`in-progress`** (68) — has art, but it's demo-only, or nothing outside the
+  demo builds it. `statusReason` says which.
+- **`no-model`** (55) — nothing to render
 
 The Availability filter defaults to `in-game`. In-progress units keep their
 faction colour and carry a `WIP` tag with the reason on hover, since they have
 real art and real numbers — only `no-model` units are dimmed.
 
-Note the prototype tree's copy of this file is _not_ usable this way: it uses
-freeform notes that contradict themselves (`ugl2002 = false, -- model exist`).
-The three-way split only works against the engine tree.
+**Not the QA tracker.** `common/units/availableUnits.lua` lists units as
+`true`/`false` with reason codes (`OK`, `OK_PENDING_APPROVAL`, `BONE_MISSMATCH`…),
+and the site used it for `in-game` until October 2026. The game doesn't use it
+for players: `templateLoader.lua` has `useAvailableUnitsList = false`, and only
+the AI and dev tools import it. A dev tool regenerates it (its header says to
+before using it), and in 0.0.1.21.1 it was stale: it still had the Chosen Dart
+off after the patch dropped its demo tag, and players could build it. It still
+names units (`internalName`) and gives the reason for units with no model.
 
 ### Which weapon block is live
 
