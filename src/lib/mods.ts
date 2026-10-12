@@ -454,21 +454,21 @@ export const UNIT_RESTRICTIONS: Mod = {
 export const BALANCE_PATCH: Mod = {
   id: 'BalancePatch',
   name: 'Remmy’s Balance Patch',
-  version: '0.2.7',
+  version: '0.2.9',
   tagline:
-    'A community balance pass for Sanctuary: a faster, map-driven early game, bombers, artillery and anti-air that hit moving targets, shields that stop aircraft, and fixes for units that shot the ground.',
+    'A community balance pass for Sanctuary: a faster, map-driven early game, artillery and commanders’ missiles that hit moving targets, shields that stop aircraft, and fixes for units that shot the ground.',
   features: [
     {
       title: 'An economy built on the map',
-      text: 'Commanders make 3 alloy and 30 energy a second (the game’s 5 and 50) and start with full storage, so income comes from taking the map. Extractors make 1 / 5 / 15 alloy (1 / 4 / 10), generators 20 / 600 / 2,500 energy (10 / 200 / 1,000).',
+      text: 'Commanders make 3 alloy and 30 energy a second (the game’s 5 and 50) and start with full storage, so income comes from taking the map. Extractors make 1 / 5 / 15 alloy (1 / 4 / 10), T1 and T2 generators 20 / 600 energy (10 / 300), and T3 ones cost 2,800 alloy (5,000).',
     },
     {
       title: 'Paced for 256 and 512 maps',
-      text: 'Numbers chosen in an economy simulation that follows the game’s own rules: a 256 map over in 5–15 minutes, a 512 in 20–30, and nobody on T2 before about 7. Factories cost 200 alloy (150); the T2 upgrade 1,500 (500) and T3 4,000 (2,000).',
+      text: 'Numbers chosen in an economy simulation that follows the game’s own rules: a 256 map over in 5–15 minutes, a 512 in 20–30, and nobody on T2 before about 7. Factories cost 200 alloy (150); the T2 upgrade 1,000 (500) over 90 s (80) and T3 4,000 (2,000).',
     },
     {
       title: 'T4s that end games',
-      text: '10,000–25,000 alloy (the game’s 3,400–11,100), priced against T3 tanks with splash and range counted, so one is strong without outclassing an army its cost. They move at 2.25–3 (2), never faster than a T3 tank, and the Centaur’s railgun reaches 80 (40).',
+      text: '10,000–25,000 alloy (the game’s 3,400–11,100), priced against T3 tanks with splash and range counted, so one is strong without outclassing an army its cost. Most move at 2.25–3 (2), never faster than a T3 tank, and the Centaur’s railgun reaches 80 (40).',
     },
     {
       title: 'T3 tanks that keep up',
@@ -476,11 +476,15 @@ export const BALANCE_PATCH: Mod = {
     },
     {
       title: 'Shots that hit moving targets',
-      text: 'Artillery, bombers, anti-air and the EDA and Guardian commanders’ missiles aim where a target is going, not where it was.',
+      text: 'Artillery and the EDA and Guardian commanders’ missiles aim where a target is going, not where it was.',
     },
     {
-      title: 'Anti-air that connects',
-      text: 'Anti-air shells fly 1.5–6× as fast and straight, missiles turn twice as fast, and aircraft hitboxes are 1.5× bigger, so weaving no longer dodges most of the flak. Guardian T2 anti-air, whose shots splash, does half damage.',
+      title: 'Air paid for in energy',
+      text: 'T1–T3 aircraft cost 40 energy per alloy (20, the Chosen ones 10), so air is built from your base while land is built from the map. Otherwise air plays as the game has it.',
+    },
+    {
+      title: 'Shields with a price',
+      text: 'T2 shields cost 300 alloy for 6,000 strength (150 for 10,000) and T3 ones 1,000 for 15,000 (600 for 20,000), and both take twice the energy to run.',
     },
     {
       title: 'Point defences worth building',
@@ -495,8 +499,12 @@ export const BALANCE_PATCH: Mod = {
       text: 'T2 radar runs on 250 energy a second (150). T3 radar costs 2,800 alloy and 1,400 energy a second (700 and 350), and the EDA and Chosen ones see 750 and 850 (450 and 550).',
     },
     {
+      title: 'Late-game economy at a late-game price',
+      text: 'Alloy Furnaces run on 2,000 energy a second (1,000), and the Guardian Crucible costs three times as much (150,000 alloy), with a death blast of 50,000 damage out to 40.',
+    },
+    {
       title: 'Raids that work',
-      text: 'Engineers have less than half their health. Land and naval units cost 6 energy per alloy (10), and Chosen aircraft cost what the other factions’ do.',
+      text: 'Engineers have less than half their health. Land and naval units cost 6 energy per alloy (10).',
     },
     {
       title: 'T2 beats its cost in T1',
@@ -508,7 +516,7 @@ export const BALANCE_PATCH: Mod = {
     },
     {
       title: 'Every section is a switch',
-      text: 'Seven lobby options, all on by default. The host can turn off any part of the patch, from the economy to the fixes.',
+      text: 'Six lobby options, all on by default. The host can turn off any part of the patch, from the economy to the fixes.',
     },
   ],
 };

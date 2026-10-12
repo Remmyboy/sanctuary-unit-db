@@ -28,13 +28,33 @@ npm run typecheck # tsc
 npm run build     # prerender the content pages, bundle the server into .output/
 npm run verify    # check public/ data + art are complete (no game needed)
 
-npm run refresh   # extract + icons + diff: regenerate data from a local game install
+npm run refresh   # extract + icons + diff + patches: regenerate data from a local game install
 ```
 
 `refresh` is `npm run extract` (game data → `public/data/units.json`), then
 `npm run icons` (`icons-src/` → `public/icons/`, plus both manifests), then
 `npm run diff`, which reports what changed against the committed units.json —
-balance tweaks and new units by name, so an extractor regression stands out.
+balance tweaks and new units by name, so an extractor regression stands out —
+and `npm run patches`, which records a new game build's changes for `/patches`.
+
+### Patch history
+
+`/patches` shows what each game patch changed, unit by unit, from
+`public/data/patches.json`. `scripts/patches.js` writes it with
+`src/lib/patch-diff.ts`: a patch is the extract before the update against the
+extract after it, made by the same extractor, so what moved is the game and
+not the extractor. A field is only compared when both extracts have it.
+
+- After a refresh onto a new Steam build, `npm run patches` (part of `refresh`)
+  diffs the new units.json against the committed one and adds that patch.
+- Once the update's commit merges, add it to `HISTORY` in `scripts/patches.js`;
+  `npm run patches -- --rebuild` regenerates every patch from those commits.
+- Write the patch's notes in `src/lib/patch-notes.ts`: its version name (the
+  mods' release notes give it), a title, and what changed outside the unit list
+  (projectiles, flight, the lobby). A test fails until every patch has notes.
+
+History starts at the Playtest's late-August extract; the Demo before it is a
+different game build, and its extracts came from a different file layout.
 
 `extract` finds the game automatically by reading Steam's `libraryfolders.vdf`,
 preferring the Playtest branch over the older Demo when both are installed. If
@@ -148,6 +168,7 @@ match room and player profiles render on request.
 | `/`                         | `index.tsx`                   | Unit database — the aligned faction board                   |
 | `/compare`                  | `compare.tsx`                 | Units side by side, best value lit                          |
 | `/calculator`               | `calculator.tsx`              | Build time, drain and economy planning                      |
+| `/patches`                  | `patches.tsx`                 | What each game patch changed, unit by unit; any two builds  |
 | `/mods`                     | `mods.tsx`                    | UI mods: the sanctuary-mods catalogue and installs          |
 | `/gameplay-mods`            | `gameplay-mods.tsx`           | Zone Control and Phantom-X (`/zone-control` redirects here) |
 | `/lobbies`                  | `lobbies.tsx`                 | Open custom-game lobbies, live from Steam's server list     |
@@ -937,6 +958,7 @@ scripts/            local-only data pipeline, plain Node
                     simulation, DPS, grouping) and tag-expression.js (canBuild)
                     for extract.js, db-ssl.js for db-migrate.js
   diff-data.js      what a re-extract changed vs the committed units.json
+  patches.js        each game patch's changes -> public/data/patches.json
   png.js            zero-dep 8-bit PNG decode/encode against node:zlib
   build-icons.js    icons-src/ -> per-faction PNGs
   ladder-previews.js  ranked pool art -> public/ladder-maps/

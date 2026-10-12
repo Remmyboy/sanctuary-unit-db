@@ -1,9 +1,10 @@
 // Which game build the numbers on the page came from, and whether that is
 // still what Steam is serving. Sits in the toolbar of every data page so a
 // reader can tell at a glance if a patch has landed that the site hasn't
-// caught up with yet.
+// caught up with yet. It links to /patches, which says what the build changed.
 
 import { useEffect, useState } from 'react';
+import { Link } from '@tanstack/react-router';
 import type { GameBuild } from '../lib/types';
 
 interface LiveCheck {
@@ -56,10 +57,10 @@ export function GameVersion({ game, generatedAt }: { game: GameBuild | null; gen
         : `Steam build ${game.buildId}, installed ${day(game.updatedAt)}, data extracted ${day(generatedAt)}.`;
 
   return (
-    <span className={`gamever ${state}`} title={title}>
+    <Link to="/patches" className={`gamever ${state}`} title={`${title} What this build changed →`}>
       <span className="dot" aria-hidden="true" />
       Build {game.buildId} · {day(generatedAt)}
       {state === 'stale' && <em>patch pending</em>}
-    </span>
+    </Link>
   );
 }

@@ -16,6 +16,7 @@ const NAV = [
     links: [
       ['/', 'Units'],
       ['/calculator', 'Calculator'],
+      ['/patches', 'Patches'],
     ],
   },
   {
@@ -100,7 +101,7 @@ export function Header() {
               <Link
                 key={to}
                 to={to}
-                search={group.label === 'Database' && balance ? { balance } : undefined}
+                search={group.label === 'Database' && to !== '/patches' && balance ? { balance } : undefined}
                 className={to === '/' && onCompare ? 'navlink active' : 'navlink'}
                 activeOptions={{ exact: to === '/', includeSearch: false }}
                 activeProps={{ className: 'navlink active' }}
