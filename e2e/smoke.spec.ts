@@ -169,7 +169,7 @@ test('balance patch page lists every section and the database follows the patch'
     'href',
     /BalancePatch-[\d.]+\/BalancePatch-[\d.]+-ModManager\.zip$/,
   );
-  await expect(page.locator('.bp-section')).toHaveCount(7);
+  await expect(page.locator('.bp-section')).toHaveCount(6);
   const engineers = page.locator('#economy .bp-row').filter({ hasText: 'T1 Engineer' });
   await expect(engineers).toContainText('750');
   await expect(engineers).toContainText('300');
@@ -189,6 +189,37 @@ test('balance patch page lists every section and the database follows the patch'
   await expect(page.locator('.balance-strip')).toHaveCount(0);
   await expect(page.locator('.card .bp-mark')).toHaveCount(0);
   expect(page.url()).not.toContain('balance=');
+
+  expect(errors).toEqual([]);
+});
+
+test('patches page shows the latest patch, picks another, and folds a range', async ({ page }) => {
+  const errors = collectErrors(page);
+
+  await page.goto('/patches');
+  await expect(page.getByRole('heading', { name: 'Game patches', level: 1 })).toBeVisible();
+  await expect(page.locator('.pt-patch')).toHaveCount(4);
+  await expect(page.locator('.pt-patch.active')).toContainText('0.0.1.21.1');
+  const dart = page.locator('.pt-row', { hasText: 'Dart' });
+  await expect(dart).toContainText('health');
+  await expect(dart.locator('.pt-pct.buff', { hasText: '+10%' })).toBeVisible();
+
+  // Another patch from the timeline: 0.0.1.20 changed only factories and the Spitter.
+  await page.locator('.pt-patch', { hasText: '0.0.1.20' }).click();
+  await expect(page).toHaveURL(/from=25135612&to=25474094/);
+  await expect(page.locator('.pt-row', { hasText: 'Air Factory' }).first()).toContainText('builds');
+
+  // A range folds every patch in it; the filters narrow it.
+  await page.getByRole('button', { name: /Everything since/ }).click();
+  await expect(page.locator('.pt-cards li')).toHaveCount(12);
+  await page.getByRole('button', { name: 'Naval', exact: true }).click();
+  await expect(page.locator('.bp-section')).toHaveCount(1);
+  await expect(page).toHaveURL(/domain=Naval/);
+
+  // A unit opens in the database.
+  await page.goto('/patches');
+  await page.locator('.pt-row a.pt-name', { hasText: 'Dart' }).click();
+  await expect(page.locator('.detail h2')).toHaveText('Dart');
 
   expect(errors).toEqual([]);
 });
