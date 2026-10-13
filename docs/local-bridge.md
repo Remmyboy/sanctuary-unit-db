@@ -129,6 +129,22 @@ was: the mod drops back to idle.
 `{ "stream": "<id>" }`: watch a live game in the game's replay player. See
 [live-replays.md](live-replays.md).
 
+### `POST /queue` (LadderReporter 0.6)
+
+`{ "join"?: ["1v1"], "leave"?: ["2v2"], "factions"?: ["EDA"] }`: the Play
+page's Queue and Leave buttons, when the game can take them. The game
+queues through its own session (`POST /api/mm/queue` in
+[matchmaking-api.md](matchmaking-api.md)) and holds the queue from then
+on, so the tab can close and a 1v1 still launches. `409` with a sentence
+when it can't (matchmaking off, no Steam, a game being played).
+
+`/status` says the game can queue by carrying a `queue` key (null when it
+holds none) and `steamId`, the account it runs as. While it holds a queue,
+`queue` is `{ status, ageS }`: the site's last answer to the game's poll
+and how old it is. The page uses the game for queueing only when
+`steamId` is the signed-in account, and while the game holds a queue the
+app-wide queue watch shows this answer instead of polling the site.
+
 ### CORS and origin
 
 Browsers treat `https://www.sanctuarydb.net` → `http://127.0.0.1` as a

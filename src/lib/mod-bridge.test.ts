@@ -42,6 +42,9 @@ describe('mod-bridge', () => {
       gameVersion: '1.0',
       match: null,
       watching: null,
+      steamId: null,
+      canQueue: false,
+      queue: null,
     });
   });
 
@@ -69,7 +72,49 @@ describe('mod-bridge', () => {
       gameVersion: null,
       match: { id: 'm1', status: 'launch', phase: 'HostWaiting' },
       watching: null,
+      steamId: null,
+      canQueue: false,
+      queue: null,
     });
+  });
+
+  it('reads the queue a game holds, and that it can queue', async () => {
+    const idle = { inQueue: false, queuedSeconds: null, searchRadius: null, waiting: 1, needed: 4 };
+    const status = {
+      matchId: null,
+      settlingMatchId: null,
+      queues: { '1v1': { ...idle, inQueue: true, queuedSeconds: 30, needed: 2 }, '2v2': idle, '3v3': idle },
+      liveGames: 2,
+      factions: ['EDA'],
+    };
+    vi.stubGlobal(
+      'fetch',
+      reply({ state: 'menu', steamId: '76561190000000001', queue: { status, ageS: 3 } }),
+    );
+    const bridge = await fresh();
+    const seen = await bridge.probe();
+    expect(seen?.steamId).toBe('76561190000000001');
+    expect(seen?.canQueue).toBe(true);
+    expect(seen?.queue).toEqual({ status, ageS: 3 });
+  });
+
+  it('can queue with no queue held, and ignores a queue it cannot read', async () => {
+    vi.stubGlobal('fetch', reply({ state: 'menu', queue: null }));
+    let bridge = await fresh();
+    expect(await bridge.probe()).toMatchObject({ canQueue: true, queue: null });
+
+    vi.stubGlobal('fetch', reply({ state: 'menu', queue: { status: { queues: { '1v1': {} } } } }));
+    bridge = await fresh();
+    expect(await bridge.probe()).toMatchObject({ canQueue: true, queue: null });
+  });
+
+  it('never hands the game a queue click before opting in', async () => {
+    const fetch = reply({ ok: true });
+    vi.stubGlobal('fetch', fetch);
+    const bridge = await fresh();
+    if (bridge.bridgeSnapshot().enabled) bridge.disableBridge();
+    expect(await bridge.pushQueue({ join: ['1v1'] })).toBe(false);
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it('treats an unknown state as no mod', async () => {

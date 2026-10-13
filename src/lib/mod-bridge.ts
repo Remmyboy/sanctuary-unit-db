@@ -16,7 +16,16 @@
 // not look like a closed game.
 
 import { useSyncExternalStore } from 'react';
-import { MOD_BRIDGE_PORT, isModState, type ModMatch, type ModSignal, type ModState } from './mm';
+import { MODES, type Mode } from './ladder-modes';
+import {
+  MOD_BRIDGE_PORT,
+  isModState,
+  type Faction,
+  type ModMatch,
+  type ModSignal,
+  type ModState,
+} from './mm';
+import type { PlayStatus } from './ladder-types';
 
 const BASE = `http://127.0.0.1:${MOD_BRIDGE_PORT}`;
 const ENABLED_KEY = 'sdb.bridge';
@@ -44,12 +53,27 @@ export interface BridgeWatch {
   error: string | null;
 }
 
+// The ladder queue the game holds (LadderReporter 0.6+, docs/local-bridge.md):
+// the site's last answer to the game's own queue poll, and how old it is.
+// While the game holds a queue the page shows this instead of polling.
+export interface BridgeQueue {
+  status: PlayStatus;
+  ageS: number;
+}
+
 export interface BridgeStatus {
   modVersion: string | null;
   gameVersion: string | null;
   state: ModState;
   match: BridgeMatch | null;
   watching: BridgeWatch | null;
+  // The Steam account the game runs as, when the mod says (0.6+): the page
+  // hands the queue to the game only when it is the signed-in account.
+  steamId: string | null;
+  // Whether the mod can queue (it has POST /queue), and its queue if it
+  // holds one.
+  canQueue: boolean;
+  queue: BridgeQueue | null;
 }
 
 export interface BridgeState {
@@ -112,6 +136,27 @@ function parseWatch(v: unknown): BridgeWatch | null {
   return { id: d.id, phase: str(d.phase) ?? '', error: str(d.error) };
 }
 
+// The PlayStatus the site gave the game, checked as far as the page reads
+// it: a mod relaying nonsense is a mod without a queue.
+function parseQueue(v: unknown): BridgeQueue | null {
+  const d = v as { status?: unknown; ageS?: unknown } | null;
+  const s = d?.status as Partial<PlayStatus> | null | undefined;
+  if (!d || typeof d !== 'object' || !s || typeof s !== 'object' || !s.queues) return null;
+  const queues = s.queues as Partial<Record<Mode, unknown>>;
+  if (!MODES.every((m) => typeof (queues[m] as { inQueue?: unknown } | undefined)?.inQueue === 'boolean'))
+    return null;
+  return {
+    status: {
+      matchId: str(s.matchId),
+      settlingMatchId: str(s.settlingMatchId),
+      queues: s.queues,
+      liveGames: typeof s.liveGames === 'number' ? s.liveGames : 0,
+      factions: Array.isArray(s.factions) ? s.factions : [],
+    },
+    ageS: typeof d.ageS === 'number' && d.ageS > 0 ? d.ageS : 0,
+  };
+}
+
 function parseStatus(v: unknown): BridgeStatus | null {
   const d = v as {
     state?: unknown;
@@ -119,6 +164,8 @@ function parseStatus(v: unknown): BridgeStatus | null {
     gameVersion?: unknown;
     match?: unknown;
     live?: unknown;
+    steamId?: unknown;
+    queue?: unknown;
   } | null;
   if (!d || typeof d !== 'object' || !isModState(d.state)) return null;
   return {
@@ -127,6 +174,9 @@ function parseStatus(v: unknown): BridgeStatus | null {
     gameVersion: str(d.gameVersion),
     match: parseMatch(d.match),
     watching: parseWatch(d.live),
+    steamId: str(d.steamId),
+    canQueue: 'queue' in d,
+    queue: parseQueue(d.queue),
   };
 }
 
@@ -136,6 +186,11 @@ const sameWatch = (a: BridgeWatch | null, b: BridgeWatch | null): boolean =>
 const sameMatch = (a: BridgeMatch | null, b: BridgeMatch | null): boolean =>
   a === b || (a !== null && b !== null && a.id === b.id && a.status === b.status && a.phase === b.phase);
 
+// The queue changes every poll the game makes (the age); what matters is
+// the site's answer itself.
+const sameQueue = (a: BridgeQueue | null, b: BridgeQueue | null): boolean =>
+  a === b || (a !== null && b !== null && JSON.stringify(a.status) === JSON.stringify(b.status));
+
 const same = (a: BridgeStatus | null, b: BridgeStatus | null): boolean =>
   a === b ||
   (a !== null &&
@@ -143,8 +198,11 @@ const same = (a: BridgeStatus | null, b: BridgeStatus | null): boolean =>
     a.state === b.state &&
     a.modVersion === b.modVersion &&
     a.gameVersion === b.gameVersion &&
+    a.steamId === b.steamId &&
+    a.canQueue === b.canQueue &&
     sameMatch(a.match, b.match) &&
-    sameWatch(a.watching, b.watching));
+    sameWatch(a.watching, b.watching) &&
+    sameQueue(a.queue, b.queue));
 
 // Only a change is news: the probe answers every two seconds and the same
 // answer must not re-render anything.
@@ -152,8 +210,19 @@ function set(status: BridgeStatus | null): void {
   failures = status ? 0 : failures + 1;
   if (status && state.enabled) writeEnabled(true);
   if (state.probed && same(state.status, status)) return;
+  const queueChanged = !sameQueue(state.status?.queue ?? null, status?.queue ?? null);
   state = { ...state, status, probed: true };
   emit();
+  if (queueChanged && status?.queue) queueListeners.forEach((l) => l(status));
+}
+
+// The queue watch follows the game's queue as soon as it changes, not on
+// its own next tick.
+const queueListeners = new Set<(s: BridgeStatus) => void>();
+
+export function onBridgeQueue(listener: (s: BridgeStatus) => void): () => void {
+  queueListeners.add(listener);
+  return () => queueListeners.delete(listener);
 }
 
 // One probe. Every failure — no listener, the browser refusing to reach the
@@ -261,6 +330,29 @@ export async function pushMatch(match: ModMatch | null): Promise<boolean> {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(match),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+// The Play page's Queue and Leave buttons, when the game can queue: the game
+// joins or leaves through its own session and holds the queue from then on,
+// so the tab can close and the game still launches. Answers whether the
+// game took the request; the queue itself shows up in the next /status.
+export async function pushQueue(req: {
+  join?: Mode[];
+  leave?: Mode[];
+  factions?: Faction[];
+}): Promise<boolean> {
+  if (!state.enabled || !canFetch()) return false;
+  try {
+    const res = await fetch(`${BASE}/queue`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
     return res.ok;

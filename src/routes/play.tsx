@@ -3,7 +3,10 @@
 // queue watch (src/lib/queue-watch.ts), which polls only while you're
 // queued; before that the counts come from the CDN-cached public endpoint,
 // shared by every viewer, and the game on this PC is read over the local
-// bridge (src/lib/mod-bridge.ts) for free. Degrades to counts-only when
+// bridge (src/lib/mod-bridge.ts) for free. When that game can queue
+// (LadderReporter 0.6+) the Queue and Leave buttons go to the game, which
+// then holds the queue itself: the tab can close and the match still
+// launches. Degrades to counts-only when
 // signed out, and to "unreachable" when there's no backend (the static e2e
 // build).
 
@@ -18,7 +21,7 @@ import { signInHref } from '../lib/return-to';
 import { MODES, type Mode } from '../lib/ladder-modes';
 import { primeAudio } from '../lib/match-alert';
 import { FACTIONS, isFaction, type Faction } from '../lib/mm';
-import { bridgeSignal, useModBridge, watchBridge } from '../lib/mod-bridge';
+import { bridgeSignal, pushQueue, useModBridge, watchBridge } from '../lib/mod-bridge';
 import { fetchQueueCounts } from '../lib/queue-counts';
 import { applyStatus, isQueued, markJoining, refreshQueue, useQueueState } from '../lib/queue-watch';
 import { useVisiblePoll } from '../lib/use-visible-poll';
@@ -29,6 +32,10 @@ import type { Me, PlayStatus, QueueCounts } from '../lib/ladder-types';
 // every open tab asking once a minute keeps that copy warm between them,
 // and a lone tab costs one function call a minute.
 const COUNTS_MS = 60_000;
+
+// How long a click handed to the game may take to show up in its queue: the
+// game's next frame, one site round trip and a bridge probe.
+const GAME_ACK_MS = 15_000;
 
 // Factions you'll accept in an auto-launched 1v1, remembered per browser.
 const FACTIONS_KEY = 'sdb.factions';
@@ -69,6 +76,8 @@ function PlayPage() {
   const [counts, setCounts] = useState<QueueCounts | null>(null);
   const [busy, setBusy] = useState<Mode | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // A Queue or Leave click handed to the game, until its queue shows it.
+  const [pending, setPending] = useState<{ mode: Mode; inQueue: boolean } | null>(null);
   const [factions, setFactions] = useState<Faction[]>(loadFactions);
   const navigate = useNavigate();
   const alive = useRef(true);
@@ -126,6 +135,39 @@ function PlayPage() {
       if (alive.current) setError('Something went wrong — try again.');
     } finally {
       if (alive.current) setBusy(null);
+    }
+  };
+
+  // The click is done once the game's queue (as this page sees it) agrees,
+  // or given up on after a while.
+  const done = !!pending && status?.queues[pending.mode].inQueue === pending.inQueue;
+  useEffect(() => {
+    if (!pending) return;
+    const t = setTimeout(
+      () => {
+        setPending(null);
+        setBusy(null);
+        if (!done)
+          setError("Your game didn't confirm that — check it's still in the main menu, then try again.");
+      },
+      done ? 0 : GAME_ACK_MS,
+    );
+    return () => clearTimeout(t);
+  }, [pending, done]);
+
+  // The game on this PC queues for this account itself.
+  const viaGame = !!me && !!bridge.status?.canQueue && bridge.status.steamId === me.steamId;
+
+  const actViaGame = async (mode: Mode, inQueue: boolean) => {
+    setBusy(mode);
+    setError(null);
+    const ok = await pushQueue(inQueue ? { join: [mode], factions } : { leave: [mode] });
+    if (!alive.current) return;
+    if (ok) {
+      setPending({ mode, inQueue });
+    } else {
+      setBusy(null);
+      setError("Couldn't reach your game — try again.");
     }
   };
 
@@ -203,9 +245,12 @@ function PlayPage() {
                 primeAudio();
                 // The join itself may complete the match (someone waiting).
                 markJoining();
-                void act(mode, () => queueJoin({ data: { mode, factions, mod: bridgeSignal() } }));
+                if (viaGame) void actViaGame(mode, true);
+                else void act(mode, () => queueJoin({ data: { mode, factions, mod: bridgeSignal() } }));
               }}
-              onLeave={() => act(mode, () => queueLeave({ data: { mode } }))}
+              onLeave={() =>
+                viaGame ? actViaGame(mode, false) : act(mode, () => queueLeave({ data: { mode } }))
+              }
             />
           ))}
         </div>
