@@ -2,12 +2,14 @@
 
 The server half of "queue on the site, get launched into the game". The mod
 authenticates once with a Steam web-API ticket and then posts with a bearer
-token. It never polls: what the game is doing, and the match it should act
-on, travel over the local bridge (`docs/local-bridge.md`) — the page reads
-the mod on `127.0.0.1`, relays its state inside the site's own polls, and
-hands it the match object. Nobody needs the mod to queue: it only decides
-whether a 1v1 pair gets the `auto` flow (both games launch themselves) or
-today's `manual` flow.
+token. It polls only while it holds a queue (`POST /api/mm/queue`, below:
+queued from the game's menu, or handed the Play page's click). Otherwise
+what the game is doing, and the match it should act on, travel over the
+local bridge (`docs/local-bridge.md`) — the page reads the mod on
+`127.0.0.1`, relays its state inside the site's own polls, and hands it
+the match object. Nobody needs the mod to queue: it only decides whether a
+1v1 pair gets the `auto` flow (both games launch themselves) or today's
+`manual` flow.
 
 All bodies and responses are JSON. Errors are `{ "error": "…" }` with a 4xx
 status; a `401` means the token is gone and the mod should mint a new one.
@@ -41,6 +43,39 @@ state is `menu`, `lobby` or `replay` — the mod leaves a lobby or closes a
 replay itself before launching. `loading` and `ingame` are not launchable.
 The site shows this next to the queue ("Auto-launch ready") but never gates
 queueing on it.
+
+## `POST /api/mm/queue` — the in-game queue (LadderReporter 0.6)
+
+```json
+{
+  "join": ["1v1", "2v2"],
+  "leave": [],
+  "factions": ["EDA"],
+  "mod": { "state": "menu", "modVersion": "0.6.0", "gameVersion": "…" }
+}
+```
+
+Join, leave and the queue heartbeat in one call; every field is optional.
+Leaves first, then joins (a no-op while the player has a game in
+progress), then does what the Play page's `queueStatus` poll does:
+records `mod` as presence, sweeps, bumps the player's entries and runs a
+pairing pass per mode. `factions` applies to the modes joined. →
+
+```json
+{ "status": { "…": "PlayStatus, as the Play page gets it" }, "match": null, "open": null }
+```
+
+- `match` is the 1v1 the player is in, as the match object below — the
+  mod acts on it as if the page had pushed it, so a 1v1 queued from the game
+  launches with no browser open.
+- `open` is any game the player is in, team modes included:
+  `{ id, mode, mapName, auto, host: { steamId, name } }`, for the game to
+  say who hosts a manual match.
+
+The mod calls it every 5 s while anything is queued (2.5 s through a 1v1's
+countdown and launch), so a queued game costs what a queued tab does. It
+relays the `status` on its bridge `/status`, and the page shows that
+instead of polling the site itself.
 
 ## The match object
 

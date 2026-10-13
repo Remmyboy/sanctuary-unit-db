@@ -12,14 +12,19 @@
 // the local mod (docs/local-bridge.md), so the bridge is watched for as long
 // as the poll runs.
 //
+// The game can hold the queue itself (LadderReporter 0.6+, queued from its
+// menu or handed the Play page's click over the bridge). While it does, its
+// own poll is the heartbeat, and this one reads the game's copy of the
+// answer over the bridge instead of asking the site a second time.
+//
 // Not signed in, no session hint → nothing runs, which keeps the static
 // build and anonymous visits free of requests.
 
 import { useSyncExternalStore } from 'react';
-import { hasSessionHint } from './auth';
+import { hasSessionHint, loadMe } from './auth';
 import { MODES, type Mode } from './ladder-modes';
 import { startMatchAlert } from './match-alert';
-import { bridgeSignal, watchBridge } from './mod-bridge';
+import { bridgeSignal, bridgeSnapshot, onBridgeQueue, watchBridge, type BridgeStatus } from './mod-bridge';
 import { queueStatus } from '../server/queue-fns';
 import type { PlayStatus } from './ladder-types';
 
@@ -119,8 +124,30 @@ export function clearOpenMatch(matchId: string): void {
   emit();
 }
 
+// The signed-in account, once known: the game's queue is only this page's
+// when the game runs as the same Steam account.
+let mySteamId: string | null = null;
+
+// The game's queue, as the site last answered the game, when the game holds
+// one for this account. Its timers are as old as that answer.
+export function gameQueue(s: BridgeStatus | null = bridgeSnapshot().status): PlayStatus | null {
+  const q = s?.queue;
+  if (!q || !mySteamId || s.steamId !== mySteamId) return null;
+  const queues = { ...q.status.queues };
+  for (const m of MODES) {
+    const secs = queues[m].queuedSeconds;
+    if (secs != null) queues[m] = { ...queues[m], queuedSeconds: secs + Math.floor(q.ageS) };
+  }
+  return { ...q.status, queues };
+}
+
 function poll(): void {
   if (inFlight || !hasSessionHint()) return;
+  const held = gameQueue();
+  if (held) {
+    applyStatus(held);
+    return;
+  }
   inFlight = true;
   queueStatus({ data: { mod: bridgeSignal() } })
     .then(applyStatus)
@@ -156,6 +183,12 @@ export function refreshQueue(): void {
 // the heartbeat straight back up. Another tab joining or leaving a queue
 // flips the hint, and this tab follows it.
 export function resumeQueueWatch(): void {
+  if (hasSessionHint()) {
+    void loadMe().then((me) => {
+      mySteamId = me?.steamId ?? null;
+    });
+  }
+
   if (state.status === null && readHint()) {
     wasQueued = true;
     poll();
@@ -163,6 +196,10 @@ export function resumeQueueWatch(): void {
   }
   if (typeof window !== 'undefined' && !listening) {
     listening = true;
+    onBridgeQueue((s) => {
+      const held = gameQueue(s);
+      if (held) applyStatus(held);
+    });
     window.addEventListener('storage', (e) => {
       if (e.key !== QUEUED_HINT) return;
       if (e.newValue === '1') wasQueued = true;
