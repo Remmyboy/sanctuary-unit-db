@@ -237,9 +237,13 @@ export const MODS: Mod[] = [
   {
     id: 'LadderReporter',
     name: 'Ladder Reporter',
-    version: '0.5.1',
-    tagline: 'Queue for a ranked 1v1 on the site, and the ladder does the rest.',
+    version: '0.6.0',
+    tagline: 'Queue for ranked 1v1, 2v2 or 3v3 from the game or the site, and the ladder does the rest.',
     features: [
+      {
+        title: 'Queue from the game',
+        text: 'Ranked 1v1, 2v2 and 3v3 sit on the game’s Play screen with how many are queued. Your queue shows on every menu screen with a button to leave, and you can close the site — the game keeps your place.',
+      },
       {
         title: 'Matches start themselves',
         text: 'Get paired with someone who also has it and both games make the lobby, take their seats and start. No hosting, no invites.',
