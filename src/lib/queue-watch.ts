@@ -24,7 +24,14 @@ import { useSyncExternalStore } from 'react';
 import { hasSessionHint, loadMe } from './auth';
 import { MODES, type Mode } from './ladder-modes';
 import { startMatchAlert } from './match-alert';
-import { bridgeSignal, bridgeSnapshot, onBridgeQueue, watchBridge, type BridgeStatus } from './mod-bridge';
+import {
+  bridgeSignal,
+  bridgeSnapshot,
+  onBridgeQueue,
+  pushQueue,
+  watchBridge,
+  type BridgeStatus,
+} from './mod-bridge';
 import { queueStatus } from '../server/queue-fns';
 import type { PlayStatus } from './ladder-types';
 
@@ -150,11 +157,30 @@ function poll(): void {
   }
   inFlight = true;
   queueStatus({ data: { mod: bridgeSignal() } })
-    .then(applyStatus)
+    .then((s) => {
+      applyStatus(s);
+      handToGame(s);
+    })
     .catch(() => {})
     .finally(() => {
       inFlight = false;
     });
+}
+
+// Queued from this page (or another tab) while the game on this PC can
+// queue as the same account: the game takes the queue over, so it shows
+// there and survives this tab closing. A rejoin keeps the place in line
+// (the join leaves joined_at alone). Retried at most every 30 s, while the
+// game is busy, say.
+let nextHandOver = 0;
+
+function handToGame(s: PlayStatus): void {
+  const b = bridgeSnapshot().status;
+  if (!b?.canQueue || b.queue || !mySteamId || b.steamId !== mySteamId) return;
+  const modes = MODES.filter((m) => s.queues[m].inQueue);
+  if (modes.length === 0 || Date.now() < nextHandOver) return;
+  nextHandOver = Date.now() + 30_000;
+  void pushQueue({ join: modes, factions: s.factions });
 }
 
 // Runs while we believe we're queued. The bridge is watched for exactly as
