@@ -20,13 +20,23 @@ import { factionsInput, heartbeatQueue, joinQueue, leaveQueue, playStatus } from
 import { MODES, isMode, type Mode } from '../lib/ladder-modes';
 import { parseModSignal } from '../lib/mm';
 
-// A game the player is in right now, as the in-game panel shows it.
+// A game the player is in right now, as the game shows it: everything a
+// player needs to host or join it by hand without the site open. `slot` is
+// the start to take, set on 1v1s only (team maps have no layout yet).
 interface OpenMatch {
   id: string;
   mode: Mode;
   mapName: string;
   auto: boolean;
   host: { steamId: string; name: string };
+  players: { steamId: string; name: string; team: number; slot: number | null }[];
+}
+
+interface OpenPlayerRow {
+  steam_id: string;
+  name: string;
+  team: number;
+  slot: number | null;
 }
 
 const modesInput = (v: unknown): Mode[] | null => {
@@ -37,9 +47,22 @@ const modesInput = (v: unknown): Mode[] | null => {
 
 async function loadOpen(matchId: string): Promise<OpenMatch | null> {
   const [row] = await sql()<
-    { id: string; mode: Mode; map_name: string; mm_mode: string; steam_id: string; name: string }[]
+    {
+      id: string;
+      mode: Mode;
+      map_name: string;
+      mm_mode: string;
+      steam_id: string;
+      name: string;
+      players: OpenPlayerRow[] | null;
+    }[]
   >`
-    select m.id, m.mode, m.map_name, m.mm_mode, p.steam_id, coalesce(p.display_name, p.persona_name) as name
+    select m.id, m.mode, m.map_name, m.mm_mode, p.steam_id, coalesce(p.display_name, p.persona_name) as name,
+           (select json_agg(json_build_object(
+              'steam_id', pp.steam_id, 'name', coalesce(pp.display_name, pp.persona_name),
+              'team', mp.team, 'slot', mp.slot) order by mp.team, mp.slot)
+            from match_participants mp join players pp on pp.id = mp.player_id
+            where mp.match_id = m.id) as players
     from matches m join players p on p.id = m.host_player_id
     where m.id = ${matchId}`;
   return row
@@ -49,6 +72,12 @@ async function loadOpen(matchId: string): Promise<OpenMatch | null> {
         mapName: row.map_name,
         auto: row.mm_mode === 'auto',
         host: { steamId: row.steam_id, name: row.name },
+        players: (row.players ?? []).map((pl) => ({
+          steamId: pl.steam_id,
+          name: pl.name,
+          team: pl.team,
+          slot: pl.slot,
+        })),
       }
     : null;
 }
