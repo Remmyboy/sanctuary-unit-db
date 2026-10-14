@@ -1,6 +1,6 @@
-// Where to land after Steam sign-in: the page the player was on, carried as
-// a `next` query param through the login route and the OpenID return_to
-// (which Steam echoes back and signs, so nothing needs storing server-side).
+// Where to land after Steam sign-in: the page the player was on, passed as
+// a `next` query param to the login route, which stashes it in a short-lived
+// cookie for the callback (see returnToCookie in src/server/session.ts).
 //
 // Shared by the client (building the sign-in href) and the server (checking
 // what came back), so it must stay free of server-only imports.

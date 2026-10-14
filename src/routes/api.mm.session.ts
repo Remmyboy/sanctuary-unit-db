@@ -7,12 +7,14 @@
 
 import { createFileRoute } from '@tanstack/react-router';
 import { bad, json, mintSession, readJson } from '../server/mm';
+import { allowRequest, clientIp, tooManyRequests } from '../server/rate-limit';
 import { TICKET_IDENTITY } from '../lib/mm';
 
 export const Route = createFileRoute('/api/mm/session')({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        if (!allowRequest(`session:${clientIp(request)}`)) return tooManyRequests();
         const body = await readJson(request);
         if (!body) return bad(400, 'Body is not JSON.');
         if (typeof body.ticket !== 'string') return bad(400, 'ticket required.');
