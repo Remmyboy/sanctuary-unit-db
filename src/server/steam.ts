@@ -10,6 +10,12 @@ const STEAM_OPENID = 'https://steamcommunity.com/openid/login';
 const OPENID_NS = 'http://specs.openid.net/auth/2.0';
 const IDENTIFIER_SELECT = 'http://specs.openid.net/auth/2.0/identifier_select';
 
+const callbackHref = () => `${siteUrl()}/api/auth/steam/callback`;
+
+// The fields Steam's signature must cover for the checks below to mean
+// anything: an unsigned return_to or claimed_id could be swapped freely.
+const REQUIRED_SIGNED = ['op_endpoint', 'claimed_id', 'identity', 'return_to', 'response_nonce'];
+
 // return_to is kept bare: where to land afterwards travels in a cookie (see
 // returnToCookie in session.ts), not in the URL Steam hands back.
 export function steamLoginUrl(): string {
@@ -18,10 +24,30 @@ export function steamLoginUrl(): string {
     'openid.mode': 'checkid_setup',
     'openid.claimed_id': IDENTIFIER_SELECT,
     'openid.identity': IDENTIFIER_SELECT,
-    'openid.return_to': `${siteUrl()}/api/auth/steam/callback`,
+    'openid.return_to': callbackHref(),
     'openid.realm': siteUrl(),
   });
   return `${STEAM_OPENID}?${params}`;
+}
+
+// Whether a returned assertion was issued for this site's callback. Steam
+// signs whatever return_to the requesting site asked for, and
+// check_authentication only confirms Steam issued it — not that it was
+// issued to us. Without this, an assertion minted for any other "Sign in
+// through Steam" site (which never redeemed its nonce) replays here as that
+// player. Origin and path only, so a query Steam adds can't lock anyone out.
+function isForUs(params: URLSearchParams): boolean {
+  if (params.get('openid.op_endpoint') !== STEAM_OPENID) return false;
+  const signed = new Set((params.get('openid.signed') ?? '').split(','));
+  if (!REQUIRED_SIGNED.every((field) => signed.has(field))) return false;
+  if (params.get('openid.identity') !== params.get('openid.claimed_id')) return false;
+  try {
+    const returnTo = new URL(params.get('openid.return_to') ?? '');
+    const ours = new URL(callbackHref());
+    return returnTo.origin === ours.origin && returnTo.pathname === ours.pathname;
+  } catch {
+    return false;
+  }
 }
 
 // Returns the verified 64-bit SteamID, or null if the assertion is invalid.
@@ -31,6 +57,7 @@ export async function verifySteamCallback(callbackUrl: URL): Promise<string | nu
     if (key.startsWith('openid.')) params.set(key, value);
   }
   if (params.get('openid.mode') !== 'id_res') return null;
+  if (!isForUs(params)) return null;
 
   params.set('openid.mode', 'check_authentication');
   const res = await fetch(STEAM_OPENID, {

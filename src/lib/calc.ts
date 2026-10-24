@@ -278,12 +278,16 @@ export function simulateQueue(
 export const packRows = (rows: CountedRow[]): string | undefined =>
   rows.length ? rows.map((r) => `${r.id}:${r.count}`).join(',') : undefined;
 
+// URLs are anyone's to write, and the queue expands each row into one entry
+// per build, so a count is cut to a whole number no bigger than any real plan.
+export const MAX_ROW_COUNT = 999;
+
 export const unpackRows = (raw: string | undefined, byId: Map<string, Unit>): CountedRow[] =>
   (raw ?? '')
     .split(',')
     .filter(Boolean)
     .map((chunk) => {
       const [id, count] = chunk.split(':');
-      return { id, count: Math.max(1, Number(count) || 1) };
+      return { id, count: Math.min(MAX_ROW_COUNT, Math.max(1, Math.floor(Number(count)) || 1)) };
     })
     .filter((r) => byId.has(r.id));

@@ -10,6 +10,7 @@ import {
   packRows,
   simulateQueue,
   unpackRows,
+  MAX_ROW_COUNT,
 } from './calc';
 import { duration } from './format';
 import type { UnitsData } from './types';
@@ -184,6 +185,12 @@ describe('URL row packing', () => {
   it('clamps malformed counts to at least 1', () => {
     expect(unpackRows('uel2501:0', byId)).toEqual([{ id: 'uel2501', count: 1 }]);
     expect(unpackRows('uel2501:banana', byId)).toEqual([{ id: 'uel2501', count: 1 }]);
+  });
+
+  it('caps counts and drops fractions, so a URL cannot balloon the queue', () => {
+    expect(unpackRows('uel2501:100000000', byId)).toEqual([{ id: 'uel2501', count: MAX_ROW_COUNT }]);
+    expect(unpackRows('uel2501:2.7', byId)).toEqual([{ id: 'uel2501', count: 2 }]);
+    expect(unpackRows('uel2501:Infinity', byId)).toEqual([{ id: 'uel2501', count: MAX_ROW_COUNT }]);
   });
 });
 
