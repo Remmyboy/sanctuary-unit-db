@@ -3,7 +3,7 @@
 //   npm run mod-releases                    compare src/lib/mods.ts with sanctuary-mods' releases
 //   npm run mod-releases -- --ref origin/main   compare a git ref's mods.ts instead
 //   npm run mod-releases -- --write         also bump the versions that are a plain bump
-//   npm run mod-releases -- --json          machine-readable, for the scheduled check
+//   npm run mod-releases -- --json          machine-readable
 //
 // Every download link on /mods and /gameplay-mods is derived from the
 // version in mods.ts, so a release only reaches the site once that version
@@ -19,7 +19,7 @@
 //              bump belongs on that PR's branch, not in a second PR
 //   new        a mod with releases that the site doesn't list at all
 //
-// Open PRs are read so an hourly check doesn't open a second PR for a bump
+// Open PRs are read so an update doesn't open a second PR for a bump
 // that is already waiting for review; the current branch's own PR doesn't
 // count. Exits 1 under --check when there is anything to do, else 0.
 //

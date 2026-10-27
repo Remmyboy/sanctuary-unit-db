@@ -1,6 +1,6 @@
 ---
 name: update-mods
-description: Bring the site's mod pages (/mods, /gameplay-mods, /balance-patch) up to date with new sanctuary-mods releases. Use when a mod has been released or updated, when a new mod needs adding to the site, or when the scheduled mod-release check finds something.
+description: Bring the site's mod pages (/mods, /gameplay-mods, /balance-patch) up to date with new sanctuary-mods releases. Use when a mod has been released or updated, when a new mod needs adding to the site.
 ---
 
 # Updating the site for mod releases
@@ -34,21 +34,8 @@ once you are on your branch, to check your own work.
 ## 2. Where to work
 
 Never on `main` (see the branch-and-PR rule). Work in this session's worktree
-branch, or the branch of the PR you are extending. With neither, use the
-release worktree that the scheduled check keeps at
-`C:\code\sanctuary-unit-db-releases`. Make it if it's missing, then branch off
-main there:
-
-```bash
-[ -d C:/code/sanctuary-unit-db-releases ] || git -C C:/code/sanctuary-unit-db worktree add --detach C:/code/sanctuary-unit-db-releases origin/main
-cd C:/code/sanctuary-unit-db-releases
-git fetch -q origin && git switch -c claude/mod-releases-<yyyymmdd> origin/main
-bash ~/.claude/hooks/sanctuary-worktree-setup.sh < /dev/null   # npm install + .env, needed by the build
-```
-
-Before you switch, check `git status`: that worktree must be clean. A branch
-left there by an earlier run stays on GitHub with its PR, so switching away is
-safe once it's pushed.
+branch (sessions in this repo normally start in one), or on the branch of the
+PR you are extending.
 
 The main checkout is often on someone's branch with work in progress. Don't
 switch it, and don't commit there.
@@ -156,6 +143,3 @@ Commit with a subject like `Mods page: Build Spacing 0.2.0, SanctuaryHud
 lists each version and any copy change. The release already exists by
 construction, so the links work as soon as it merges. **Don't merge.** The user
 reviews mod PRs, and GitHub auto-merge is off.
-
-If you opened a worktree in step 2 for a scheduled run, leave it in place. The
-PR's branch lives there.
