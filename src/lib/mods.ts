@@ -237,7 +237,7 @@ export const MODS: Mod[] = [
   {
     id: 'BuildSpacing',
     name: 'Build Spacing',
-    version: '0.1.0',
+    version: '0.2.0',
     tagline: 'Drag out a line of buildings with gaps between them, as wide as you like.',
     features: [
       {
@@ -249,8 +249,8 @@ export const MODS: Mod[] = [
         text: 'One spacing for every building and every engineer, kept from match to match, with a small label by the cursor whenever it changes.',
       },
       {
-        title: 'No chain reactions',
-        text: 'Power generators, storage and other buildings that explode always get enough room that one going up doesn’t take the row with it. One switch lets you pack them tight again.',
+        title: 'Warns before a chain reaction',
+        text: 'Pick a power generator, storage or anything else that explodes, and the label turns amber when the gap is too small to keep one going up from taking the next with it.',
       },
       {
         title: 'Only your game',
