@@ -25,7 +25,8 @@
     "test:modding-versions": "node scripts/test-modding-versions.js",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "mod-releases": "node scripts/mod-releases.js"
   },
   "engines": {
     "node": "^22.18.0 || >=23.6.0"

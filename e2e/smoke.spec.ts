@@ -115,9 +115,9 @@ test('mods page lists every mod with live download links', async ({ page, reques
   // a shell. Its downloads are release assets whose URL is derived from the
   // version in src/lib/mods.ts, which is the thing that goes stale.
   await page.goto('/mods');
-  // The UI mods: the Mod Manager in step 1, seven more in step 2. Gameplay
+  // The UI mods: the Mod Manager in step 1, eight more in step 2. Gameplay
   // mods have a page of their own.
-  expect(await page.locator('.mod-entry').count()).toBe(8);
+  expect(await page.locator('.mod-entry').count()).toBe(9);
   await expect(page.locator('#ZoneControl')).toHaveCount(0);
   // Two copyable lines in the rail: the engine path, then the Linux launch options.
   await expect(page.locator('.install-path code').first()).toContainText('Playtest\\engine');

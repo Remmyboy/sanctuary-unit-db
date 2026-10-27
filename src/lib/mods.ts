@@ -85,7 +85,7 @@ export const MODS: Mod[] = [
   {
     id: 'SanctuaryHud',
     name: 'SanctuaryDB HUD',
-    version: '0.18.0',
+    version: '0.18.1',
     tagline:
       'A mini-map, a proper economy readout, reclaim values, build timers, alerts and post-match stats.',
     features: [
@@ -233,6 +233,31 @@ export const MODS: Mod[] = [
       },
     ],
     keys: 'Every key can be rebound',
+  },
+  {
+    id: 'BuildSpacing',
+    name: 'Build Spacing',
+    version: '0.2.0',
+    tagline: 'Drag out a line of buildings with gaps between them, as wide as you like.',
+    features: [
+      {
+        title: 'Gaps at a scroll',
+        text: 'With a building picked, hold Shift and scroll up: every building in the line you drag gets another empty tile between it and the next. Scroll down to close them back up.',
+      },
+      {
+        title: 'Set it once',
+        text: 'One spacing for every building and every engineer, kept from match to match, with a small label by the cursor whenever it changes.',
+      },
+      {
+        title: 'Warns before a chain reaction',
+        text: 'Pick a power generator, storage or anything else that explodes, and the label turns amber when the gap is too small to keep one going up from taking the next with it.',
+      },
+      {
+        title: 'Only your game',
+        text: 'It changes where your own buildings go and nothing else, so nobody else in the lobby needs it.',
+      },
+    ],
+    keys: 'Shift + scroll while placing a building',
   },
   {
     id: 'LadderReporter',
