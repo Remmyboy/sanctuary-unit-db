@@ -79,7 +79,8 @@ describe('diffUnit', () => {
   });
 
   it('reads the Peregrine as faster shots, not a lost launcher', () => {
-    const peregrine = patches[0].changed.find((u) => u.id === 'uea3201')!;
+    const patch = patches.find((p) => p.to.buildId === 25856019)!;
+    const peregrine = patch.changed.find((u) => u.id === 'uea3201')!;
     expect(peregrine.changes.map((c) => c.key)).not.toContain('weapons');
     expect(peregrine.changes).toContainEqual({ key: 'weapon.1.projectileSpeed', before: 20, after: 35 });
   });

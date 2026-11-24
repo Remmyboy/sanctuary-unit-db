@@ -32,7 +32,7 @@ describe('economy roles', () => {
 
   it('reads a shield as pure upkeep and an extractor as free income', () => {
     expect(economyRole(byId.get('ues2401')!)).toBe('consumer');
-    expect(netRate(byId.get('ues2401')!)).toEqual({ alloys: 0, energy: -100 });
+    expect(netRate(byId.get('ues2401')!)).toEqual({ alloys: 0, energy: -200 }); // 100 before 0.0.1.22.1
     expect(economyRole(byId.get('ues1601')!)).toBe('generator');
     expect(netRate(byId.get('ues1601')!)).toEqual({ alloys: 1, energy: 0 });
   });

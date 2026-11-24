@@ -149,14 +149,12 @@ describe('extracted data invariants (pinned from the game formulas)', () => {
     // The QA list still had the Dart off in 0.0.1.21.1; its demo tag was gone,
     // and players build it.
     expect(byId.get('ucl1201')!.status).toBe('in-game');
-    // Every naval factory is demo-only: a blank button in the build menu ...
-    expect(byId.get('ucs1513')).toMatchObject({ status: 'in-progress', statusReason: 'Demo only' });
-    // ... so the ships only they build are out of reach, demo tag or not.
-    expect(byId.get('ucn1001')).toMatchObject({
-      demoOnly: false,
-      status: 'in-progress',
-      statusReason: 'No builder outside the demo',
-    });
+    // A demo-only unit is a blank button in the build menu, model or not.
+    expect(byId.get('ucs1801')).toMatchObject({ status: 'in-progress', statusReason: 'Demo only' });
+    // 0.0.1.22.1 lifted the naval factories' demo tag, so the ships only they
+    // build are reachable too.
+    expect(byId.get('ucs1513')).toMatchObject({ demoOnly: false, status: 'in-game' });
+    expect(byId.get('ucn1001')).toMatchObject({ demoOnly: false, status: 'in-game' });
     for (const u of data.units.filter((x) => x.status === 'in-game')) {
       expect(u.demoOnly, u.id).toBe(false);
       expect(u.hasModel, u.id).toBe(true);
