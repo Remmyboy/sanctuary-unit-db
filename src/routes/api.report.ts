@@ -19,14 +19,16 @@
 
 import { createFileRoute } from '@tanstack/react-router';
 import { sql } from '../server/db';
+import { allowRequest, clientIp, tooManyRequests } from '../server/rate-limit';
 import { verifyWebApiTicket } from '../server/steam';
+import { TICKET_IDENTITY } from '../lib/mm';
 import { answerSettled, SETTLED_WINDOW_HOURS, type SettledStatus } from '../lib/report-settled';
 
 const AUTO_CONFIRM_MINUTES = 15;
 
 interface ReportBody {
   ticket: string;
-  identity: string;
+  identity?: string;
   mapName?: string;
   matchId?: string; // the matchmade game this result belongs to, when the mod launched it
   participants: { steamId: string }[];
@@ -96,7 +98,11 @@ async function answerLate(body: ReportBody, steamIds: string[], winnerSteamId: s
 function parseBody(raw: unknown): ReportBody | string {
   const d = raw as ReportBody | null;
   if (typeof d?.ticket !== 'string') return 'ticket';
-  if (typeof d.identity !== 'string') return 'identity';
+  // The reporter mints every ticket with one identity, as for /api/mm/session.
+  // Pinning it means a ticket minted for some other purpose can't report.
+  if (d.identity !== undefined && d.identity !== TICKET_IDENTITY) {
+    return `identity (must be ${TICKET_IDENTITY})`;
+  }
   if (!Array.isArray(d.participants) || !Array.isArray(d.winnerSteamIds)) return 'arrays';
   const ids = d.participants.map((p) => p?.steamId);
   if (ids.length !== 2) return 'participant count';
@@ -113,6 +119,7 @@ export const Route = createFileRoute('/api/report')({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        if (!allowRequest(`report:${clientIp(request)}`)) return tooManyRequests();
         let raw: unknown;
         try {
           raw = await request.json();
@@ -122,7 +129,7 @@ export const Route = createFileRoute('/api/report')({
         const body = parseBody(raw);
         if (typeof body === 'string') return bad(400, `Malformed report: ${body}.`);
 
-        const reporterSteamId = await verifyWebApiTicket(body.ticket, body.identity);
+        const reporterSteamId = await verifyWebApiTicket(body.ticket, TICKET_IDENTITY);
         if (!reporterSteamId) return bad(403, 'Steam did not vouch for this ticket.');
 
         const steamIds = body.participants.map((p) => p.steamId);
@@ -144,10 +151,12 @@ export const Route = createFileRoute('/api/report')({
             reported_winner_team: number | null;
             winner_team: number;
             reporter_player_id: string;
+            reporter_banned: boolean;
           }[]
         >`
           select m.id as match_id, m.status, m.reported_by, m.reported_winner_team,
-                 mpw.team as winner_team, reporter.id as reporter_player_id
+                 mpw.team as winner_team, reporter.id as reporter_player_id,
+                 reporter.banned_at is not null as reporter_banned
           from matches m
           join match_participants mpa on mpa.match_id = m.id
           join players pa on pa.id = mpa.player_id and pa.steam_id = ${steamIds[0]}
@@ -160,6 +169,9 @@ export const Route = createFileRoute('/api/report')({
           order by (m.id = ${body.matchId ?? null}::uuid) desc nulls last, m.created_at desc
           limit 1`;
         if (!match) return answerLate(body, steamIds, winnerSteamId);
+        // A late answer above changes nothing, and a banned player has no bearer
+        // session to upload with; an open match is where a ban has to bite.
+        if (match.reporter_banned) return bad(403, 'This account is banned from the ladder.');
 
         const reporterWon = reporterSteamId === winnerSteamId;
 

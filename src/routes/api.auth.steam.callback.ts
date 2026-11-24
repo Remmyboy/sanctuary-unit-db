@@ -2,7 +2,7 @@
 // Steam itself, upsert the player row (never touching rating/stats — upsert
 // only writes the columns given), set the session cookies and land back on
 // the page the player signed in from (the cookie the login route set), or
-// the ladder if that's missing or not a same-site path.
+// the ladder if that's not a same-site path. No cookie at all is refused.
 
 import { createFileRoute } from '@tanstack/react-router';
 import { siteUrl, sql } from '../server/db';
@@ -14,6 +14,16 @@ export const Route = createFileRoute('/api/auth/steam/callback')({
   server: {
     handlers: {
       GET: async ({ request }) => {
+        // The login route sets this cookie, so its absence means this browser
+        // didn't start a sign-in here in the last ten minutes — most likely a
+        // callback link someone else minted to sign the visitor in as them.
+        const returnTo = readReturnToCookie(request);
+        if (returnTo === null) {
+          return new Response('Sign-in expired or did not start on this site. Please sign in again.', {
+            status: 403,
+          });
+        }
+
         const steamId = await verifySteamCallback(new URL(request.url));
         if (!steamId) return new Response('Steam sign-in failed.', { status: 403 });
 
@@ -30,7 +40,7 @@ export const Route = createFileRoute('/api/auth/steam/callback')({
         if (player.banned_at) return new Response('This account is banned from the ladder.', { status: 403 });
 
         const headers = new Headers({
-          Location: `${siteUrl()}${safeReturnTo(readReturnToCookie(request))}`,
+          Location: `${siteUrl()}${safeReturnTo(returnTo)}`,
         });
         for (const cookie of await sessionCookies({ playerId: player.id, steamId })) {
           headers.append('Set-Cookie', cookie);
