@@ -390,12 +390,12 @@ export const managerHref = (m: Mod): string =>
  *  out of MODS, and so out of the everything zip, which is the set you can
  *  just switch on; /gameplay-mods lists them, with how each one plays.
  *
- *  Zone Control is played on its own map, so its download carries the map
- *  too. */
+ *  Zone Control is played on its own map. Its download normally carries the
+ *  map too, but 0.5.2 shipped without it (see zoneControlHref). */
 export const ZONE_CONTROL: Mod = {
   id: 'ZoneControl',
   name: 'Zone Control',
-  version: '0.5.1',
+  version: '0.5.2',
   tagline:
     'Forged Alliance’s Zone Control: no commanders, no building — every zone you hold sends you units.',
   features: [
@@ -412,11 +412,12 @@ export const ZONE_CONTROL: Mod = {
 
 export const ZONE_CONTROL_MAP = 'Zone Control for FAF 8P V2';
 
-/** The mod and its map in one zip, laid out to extract straight into
- *  `engine`. The release's -ModManager.zip is the mod alone, for someone who
- *  already has the map. */
-const zoneControlHref = (): string =>
-  `${MODS_REPO}/releases/download/${releaseTag(ZONE_CONTROL)}/${releaseTag(ZONE_CONTROL)}-WithMap.zip`;
+/** Normally the -WithMap.zip (mod and map in one, laid out for `engine`).
+ *  0.5.2, for the 24 November 2026 game update, ships the mod alone: the
+ *  map's install folder moved and the converted map isn't checked against it
+ *  yet. When a release carries a -WithMap.zip again, switch back to it (and
+ *  the label, the set-up step on /gameplay-mods and the e2e pin). */
+const zoneControlHref = (): string => managerHref(ZONE_CONTROL);
 
 /** Phantom-X is Lua only, with no map: its release's -ModManager.zip is the
  *  whole download, and it plays on any map. Its panel is drawn by the Mod API,
@@ -564,7 +565,7 @@ export const BALANCE_PATCH: Mod = {
 
 /** Every gameplay mod on /gameplay-mods, in the order shown. */
 export const GAMEPLAY_MODS: { mod: Mod; href: string; label: string }[] = [
-  { mod: ZONE_CONTROL, href: zoneControlHref(), label: 'Download mod + map' },
+  { mod: ZONE_CONTROL, href: zoneControlHref(), label: 'Download' },
   { mod: PHANTOM_X, href: managerHref(PHANTOM_X), label: 'Download' },
   { mod: UNIT_RESTRICTIONS, href: managerHref(UNIT_RESTRICTIONS), label: 'Download' },
   { mod: BALANCE_PATCH, href: managerHref(BALANCE_PATCH), label: 'Download' },
