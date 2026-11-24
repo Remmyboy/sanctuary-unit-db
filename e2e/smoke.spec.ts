@@ -216,9 +216,11 @@ test('patches page shows the latest patch, picks another, and folds a range', as
 
   // A range folds every patch in it; the filters narrow it.
   await page.getByRole('button', { name: /Everything since/ }).click();
-  await expect(page.locator('.pt-cards li')).toHaveCount(15);
+  await expect(page.locator('.pt-cards li')).toHaveCount(63);
+  // Every naval unit entered the game inside the range, so all are new.
   await page.getByRole('button', { name: 'Naval', exact: true }).click();
-  await expect(page.locator('.bp-section')).toHaveCount(1);
+  await expect(page.locator('.pt-cards li')).toHaveCount(16);
+  await expect(page.locator('.bp-section')).toHaveCount(0);
   await expect(page).toHaveURL(/domain=Naval/);
 
   // A unit opens in the database.
