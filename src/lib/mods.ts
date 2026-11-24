@@ -85,7 +85,7 @@ export const MODS: Mod[] = [
   {
     id: 'SanctuaryHud',
     name: 'SanctuaryDB HUD',
-    version: '0.20.1',
+    version: '0.21.0',
     tagline:
       'A mini-map, a proper economy readout, reclaim values, build timers, alerts and post-match stats.',
     features: [
@@ -111,7 +111,7 @@ export const MODS: Mod[] = [
       },
       {
         title: 'Cleaner bottom panels',
-        text: 'Only the orders and build options your selection really has, and a unit card you can read at a glance. One switch brings the originals back.',
+        text: 'Only the orders and build options your selection really has, and a unit card you can read at a glance. Stop works and transports get a working Load button, where the game’s own don’t. One switch brings the originals back.',
       },
       {
         title: 'Find your commander',
@@ -270,7 +270,7 @@ export const MODS: Mod[] = [
   {
     id: 'LadderReporter',
     name: 'Ladder Reporter',
-    version: '0.6.2',
+    version: '0.6.3',
     tagline: 'Queue for ranked 1v1, 2v2 or 3v3 from the game or the site, and the ladder does the rest.',
     features: [
       {
