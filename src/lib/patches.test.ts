@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { diffUnit, type Patch, type PatchesFile } from './patch-diff';
+import { diffUnit, diffUnits, type Patch, type PatchesFile } from './patch-diff';
 import {
   buildTimeline,
   changeLabel,
@@ -38,8 +38,18 @@ describe('the patch history the site ships', () => {
     expect(dart.changes).toContainEqual({ key: 'health', before: 200, after: 220 });
     // 25135612 only tagged the Spitter demo-only.
     expect(byTo.get(25135612)!.changed.map((u) => u.id)).toEqual(['ues2101']);
-    // The September patch added the navies.
-    expect(byTo.get(25114838)!.added).toHaveLength(12);
+    // The September patch signed off gunships, scouts and the naval factories,
+    // and took the Dart out until 0.0.1.20 forgot to put it back on the list.
+    expect(byTo.get(25114838)!.added).toHaveLength(26);
+    expect(byTo.get(25114838)!.removed.map((u) => u.id)).toEqual(['ucl1201']);
+    // 0.0.1.22.1: new is what entered the game. The navy was there already,
+    // demo-only; the Chosen T3 transport is a new template with no model.
+    const p22 = byTo.get(26880003)!;
+    const added = p22.added.map((u) => u.id);
+    expect(added).toEqual(expect.arrayContaining(['ucn3001', 'ucs1513', 'uca2502', 'uga3502']));
+    expect(added).not.toContain('uca3502');
+    expect(p22.changed.map((u) => u.id)).not.toContain('ucn3001');
+    expect(p22.removed.map((u) => u.id)).toEqual(['ugs1803', 'ugs2803']);
   });
 
   it('has words for every patch it lists', () => {
@@ -50,6 +60,31 @@ describe('the patch history the site ships', () => {
     for (const p of patches)
       for (const u of p.changed)
         for (const c of u.changes) expect(changeLabel(c.key, u), c.key).not.toMatch(/[.]|^[a-z]+[A-Z]/);
+  });
+});
+
+describe('diffUnits', () => {
+  const data = (...us: Unit[]) => ({ ...units, units: us }) as UnitsData;
+
+  it('counts a unit as new when it enters the game, not when its template appears', () => {
+    const demo = unit({ id: 'x1', status: 'in-progress', health: 100 });
+    const live = unit({ id: 'x1', status: 'in-game', health: 120 });
+    const fresh = unit({ id: 'x2', status: 'in-game' });
+    const unmodelled = unit({ id: 'x3', status: 'no-model' });
+    const d = diffUnits(data(demo), data(live, fresh, unmodelled));
+    expect(d.added.map((u) => u.id)).toEqual(['x1', 'x2']);
+    // Its stats before were a version nobody played.
+    expect(d.changed).toEqual([]);
+  });
+
+  it('counts a unit as removed when it leaves the game, deleted or not', () => {
+    const live = unit({ id: 'x1', status: 'in-game' });
+    const gated = unit({ id: 'x1', status: 'in-progress' });
+    const gone = unit({ id: 'x2', status: 'in-game' });
+    const dev = unit({ id: 'x3', status: 'in-progress' });
+    const d = diffUnits(data(live, gone, dev), data(gated));
+    expect(d.removed.map((u) => u.id)).toEqual(['x1', 'x2']);
+    expect(d.changed).toEqual([]);
   });
 });
 

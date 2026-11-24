@@ -43,7 +43,10 @@ and `npm run patches`, which records a new game build's changes for `/patches`.
 `public/data/patches.json`. `scripts/patches.js` writes it with
 `src/lib/patch-diff.ts`: a patch is the extract before the update against the
 extract after it, made by the same extractor, so what moved is the game and
-not the extractor. A field is only compared when both extracts have it.
+not the extractor. A field is only compared when both extracts have it. A
+unit is new when it enters the game (status `in-game`), not when its template
+appears, and removed when it leaves; a template that never reaches the game
+isn't part of the patch.
 
 - After a refresh onto a new Steam build, `npm run patches` (part of `refresh`)
   diffs the new units.json against the committed one and adds that patch.

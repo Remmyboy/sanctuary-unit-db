@@ -24,8 +24,8 @@ export const PATCH_NOTES: Record<number, PatchNote> = {
     version: '0.0.1.22.1',
     title: 'Air transports, naval goes live',
     notes: [
-      'Air transports: T1 and T2 transports for every faction (Courier, Stork, Shuttle; Envoy, Pelican, Conveyer) are modelled and turn twice as fast, and T3 air factories add a T3 transport (Emissary, Albatross, Haulier). Nearly every land unit is now tagged as transportable.',
-      'Naval is signed off: submarines, destroyers, battleships, naval factories and torpedo launchers move from in progress to in game, and Chosen get a new T2 submarine.',
+      'Air transports: a T2 transport for every faction (Envoy, Pelican, Conveyer) and a T3 one for the Guardians (Haulier). Nearly every land unit can be carried. The T1 transports are still demo-only, and the Chosen and EDA T3 ones have no model yet.',
+      'The navy joins the game: frigates, submarines, destroyers, battleships, naval factories, sonar and torpedo launchers for every faction, plus a new Chosen T2 submarine. The naval tech centres go the other way: they’re demo-only now, which takes the Guardian ones out of the game.',
       'Torpedo launchers are armed for the first time (120 damage at 35 range at T1, 180 at 40 at T2), and submarines and T3 subs get sonar.',
       'T2 destroyers swap their cannon for a short pulse beam (160 damage every second at 27 range, was 200 every 3 s at 55). The Dreadnought’s main gun fires far faster at much shorter range (112.5 every 1.5 s at 50, was 583 every 10 s at 140), and the EDA and Guardian battleships gain an 80-range gun.',
       'T2 bombers (Typhoon, Kingfisher, Barometer) actually drop bombs now: 300 damage each, every 4 s.',
