@@ -212,15 +212,26 @@ export function diffUnit(was: Unit, now: Unit): PatchChange[] {
   return out;
 }
 
+/** Whether players can build the unit. An extract that doesn't record status
+ *  (none in the history so far) counts every unit it has. */
+const inGame = (u: Unit | undefined): boolean => u != null && (u.status == null || u.status === 'in-game');
+
+/** New and removed are what players gained and lost, not what the files did:
+ *  a unit is new when it enters the game, whether its template is new or it
+ *  was sitting there demo-only or unmodelled, and removed when it leaves.
+ *  Such a unit isn't also listed as changed, since its stats before were a
+ *  version nobody could play. A template that appears or disappears without
+ *  ever being in the game isn't part of the patch. */
 export function diffUnits(before: UnitsData, after: UnitsData): PatchDiff {
   const was = new Map(before.units.map((u) => [u.id, u]));
   const now = new Map(after.units.map((u) => [u.id, u]));
-  const added = after.units.filter((u) => !was.has(u.id)).map(unitInfo);
-  const removed = before.units.filter((u) => !now.has(u.id)).map(unitInfo);
+  const added = after.units.filter((u) => inGame(u) && !inGame(was.get(u.id))).map(unitInfo);
+  const removed = before.units.filter((u) => inGame(u) && !inGame(now.get(u.id))).map(unitInfo);
+  const moved = new Set([...added, ...removed].map((u) => u.id));
   const changed: PatchUnit[] = [];
   for (const u of after.units) {
     const old = was.get(u.id);
-    if (!old) continue;
+    if (!old || moved.has(u.id)) continue;
     const changes = diffUnit(old, u);
     if (changes.length) changed.push({ ...unitInfo(u), changes });
   }
