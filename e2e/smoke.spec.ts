@@ -198,8 +198,13 @@ test('patches page shows the latest patch, picks another, and folds a range', as
 
   await page.goto('/patches');
   await expect(page.getByRole('heading', { name: 'Game patches', level: 1 })).toBeVisible();
-  await expect(page.locator('.pt-patch')).toHaveCount(4);
-  await expect(page.locator('.pt-patch.active')).toContainText('0.0.1.21.1');
+  await expect(page.locator('.pt-patch')).toHaveCount(5);
+  await expect(page.locator('.pt-patch.active')).toContainText('0.0.1.22.1');
+  await expect(page.locator('.pt-row', { hasText: 'Centaur' })).toContainText('health');
+
+  // 0.0.1.21.1 gave the Dart 10% more health.
+  await page.locator('.pt-patch', { hasText: '0.0.1.21.1' }).click();
+  await expect(page).toHaveURL(/from=25474094&to=25856019/);
   const dart = page.locator('.pt-row', { hasText: 'Dart' });
   await expect(dart).toContainText('health');
   await expect(dart.locator('.pt-pct.buff', { hasText: '+10%' })).toBeVisible();
@@ -211,7 +216,7 @@ test('patches page shows the latest patch, picks another, and folds a range', as
 
   // A range folds every patch in it; the filters narrow it.
   await page.getByRole('button', { name: /Everything since/ }).click();
-  await expect(page.locator('.pt-cards li')).toHaveCount(12);
+  await expect(page.locator('.pt-cards li')).toHaveCount(15);
   await page.getByRole('button', { name: 'Naval', exact: true }).click();
   await expect(page.locator('.bp-section')).toHaveCount(1);
   await expect(page).toHaveURL(/domain=Naval/);
