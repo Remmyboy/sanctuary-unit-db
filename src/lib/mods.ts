@@ -51,7 +51,7 @@ export const MODS: Mod[] = [
   {
     id: 'ModManager',
     name: 'Mod Manager',
-    version: '0.17.0',
+    version: '0.17.1',
     tagline:
       'A Mods page in the game menu for switching mods on and off and keeping them up to date, and a Mods panel in the lobby for the host’s gameplay mods.',
     features: [
@@ -85,7 +85,7 @@ export const MODS: Mod[] = [
   {
     id: 'SanctuaryHud',
     name: 'SanctuaryDB HUD',
-    version: '0.18.1',
+    version: '0.21.0',
     tagline:
       'A mini-map, a proper economy readout, reclaim values, build timers, alerts and post-match stats.',
     features: [
@@ -99,7 +99,7 @@ export const MODS: Mod[] = [
       },
       {
         title: 'See what the wrecks are worth',
-        text: 'Hold Left Alt and every wreck on screen shows its reclaim, added up when you zoom out.',
+        text: 'Hold Left Alt and every wreck on screen shows its reclaim, added up when you zoom out. The economy strip and the match stats count what you’ve reclaimed so far.',
       },
       {
         title: 'Build timers',
@@ -111,7 +111,7 @@ export const MODS: Mod[] = [
       },
       {
         title: 'Cleaner bottom panels',
-        text: 'Only the orders and build options your selection really has, and a unit card you can read at a glance. One switch brings the originals back.',
+        text: 'Only the orders and build options your selection really has, and a unit card you can read at a glance. Stop works and transports get a working Load button, where the game’s own don’t. One switch brings the originals back.',
       },
       {
         title: 'Find your commander',
@@ -124,6 +124,10 @@ export const MODS: Mod[] = [
       {
         title: 'Quit from the result screen',
         text: 'A Quit button beside the result and the match stats takes you straight back to the menu.',
+      },
+      {
+        title: 'Find the map you want',
+        text: 'Search the lobby’s map list by name, and filter it by player count, size and custom maps. Every row shows its players and size.',
       },
       {
         title: 'Every panel your size',
@@ -143,7 +147,7 @@ export const MODS: Mod[] = [
       },
       {
         title: 'Optional extras',
-        text: 'Switch on the ones you want: cursors that show what a right-click will do, waypoints and rally points you can drag, a build queue you reorder by dragging, Ctrl-A for every unit of the selected types, Delete asking for a second press before it blows up your commander, and a match clock. The unit stats, engineer queue and engineer orders above are off until you switch them on too.',
+        text: 'Cursors that show what a right-click will do, waypoints and rally points you can drag, a build queue you reorder by dragging and a match clock are on from the start, along with the unit stats and engineer queue above. Delete asking for a second press before it blows up your commander, and the engineer orders, are there to switch on.',
       },
     ],
     keys: 'F10 shows and hides it · F2 the mini-map · F3 the match stats',
@@ -151,7 +155,7 @@ export const MODS: Mod[] = [
   {
     id: 'EcoManager',
     name: 'Eco Manager',
-    version: '0.9.2',
+    version: '0.9.3',
     tagline: 'See what’s eating your economy, and upgrade extractors without babysitting them.',
     features: [
       {
@@ -179,7 +183,7 @@ export const MODS: Mod[] = [
   {
     id: 'IdleEngineers',
     name: 'Idle Engineers',
-    version: '0.7.2',
+    version: '0.7.3',
     tagline: 'Never lose track of an engineer or factory with nothing to do.',
     features: [
       {
@@ -199,7 +203,7 @@ export const MODS: Mod[] = [
   {
     id: 'BuildHotkeys',
     name: 'Build Hotkeys',
-    version: '0.5.1',
+    version: '0.6.1',
     tagline:
       'One key per kind of unit, the same on every faction, and the game’s own keys wherever you want them.',
     features: [
@@ -224,6 +228,10 @@ export const MODS: Mod[] = [
         text: 'Pause and repeat-build your selection, and Escape stops your factories, as in FAF. The pause menu can move to a key you won’t hit by accident.',
       },
       {
+        title: 'Select every one of those',
+        text: 'One key (Ctrl-Shift-A) takes every unit of yours of the types you have selected, across the whole map.',
+      },
+      {
         title: 'Move any of the game’s keys',
         text: 'Every game action — orders, control groups, camera, chat, game speed — listed with its key. Type a new one, swap two, or unbind it. Take the mod out and the game’s own keys come back exactly.',
       },
@@ -237,7 +245,7 @@ export const MODS: Mod[] = [
   {
     id: 'BuildSpacing',
     name: 'Build Spacing',
-    version: '0.2.0',
+    version: '0.2.1',
     tagline: 'Drag out a line of buildings with gaps between them, as wide as you like.',
     features: [
       {
@@ -262,7 +270,7 @@ export const MODS: Mod[] = [
   {
     id: 'LadderReporter',
     name: 'Ladder Reporter',
-    version: '0.6.1',
+    version: '0.6.3',
     tagline: 'Queue for ranked 1v1, 2v2 or 3v3 from the game or the site, and the ladder does the rest.',
     features: [
       {
@@ -298,7 +306,7 @@ export const MODS: Mod[] = [
   {
     id: 'ReplayManager',
     name: 'Replay Manager',
-    version: '0.5.3',
+    version: '0.5.4',
     tagline: 'Watch replays properly: any player’s view, no fog, every economy.',
     features: [
       {
@@ -319,7 +327,7 @@ export const MODS: Mod[] = [
   {
     id: 'CameraUtilities',
     name: 'Camera Utilities',
-    version: '0.2.2',
+    version: '0.2.3',
     tagline: 'A clean picture for screenshots, videos and casting.',
     features: [
       {
@@ -382,12 +390,12 @@ export const managerHref = (m: Mod): string =>
  *  out of MODS, and so out of the everything zip, which is the set you can
  *  just switch on; /gameplay-mods lists them, with how each one plays.
  *
- *  Zone Control is played on its own map, so its download carries the map
- *  too. */
+ *  Zone Control is played on its own map. Its download normally carries the
+ *  map too, but 0.5.2 shipped without it (see zoneControlHref). */
 export const ZONE_CONTROL: Mod = {
   id: 'ZoneControl',
   name: 'Zone Control',
-  version: '0.5.1',
+  version: '0.5.2',
   tagline:
     'Forged Alliance’s Zone Control: no commanders, no building — every zone you hold sends you units.',
   features: [
@@ -404,11 +412,12 @@ export const ZONE_CONTROL: Mod = {
 
 export const ZONE_CONTROL_MAP = 'Zone Control for FAF 8P V2';
 
-/** The mod and its map in one zip, laid out to extract straight into
- *  `engine`. The release's -ModManager.zip is the mod alone, for someone who
- *  already has the map. */
-const zoneControlHref = (): string =>
-  `${MODS_REPO}/releases/download/${releaseTag(ZONE_CONTROL)}/${releaseTag(ZONE_CONTROL)}-WithMap.zip`;
+/** Normally the -WithMap.zip (mod and map in one, laid out for `engine`).
+ *  0.5.2, for the 24 November 2026 game update, ships the mod alone: the
+ *  map's install folder moved and the converted map isn't checked against it
+ *  yet. When a release carries a -WithMap.zip again, switch back to it (and
+ *  the label, the set-up step on /gameplay-mods and the e2e pin). */
+const zoneControlHref = (): string => managerHref(ZONE_CONTROL);
 
 /** Phantom-X is Lua only, with no map: its release's -ModManager.zip is the
  *  whole download, and it plays on any map. Its panel is drawn by the Mod API,
@@ -556,7 +565,7 @@ export const BALANCE_PATCH: Mod = {
 
 /** Every gameplay mod on /gameplay-mods, in the order shown. */
 export const GAMEPLAY_MODS: { mod: Mod; href: string; label: string }[] = [
-  { mod: ZONE_CONTROL, href: zoneControlHref(), label: 'Download mod + map' },
+  { mod: ZONE_CONTROL, href: zoneControlHref(), label: 'Download' },
   { mod: PHANTOM_X, href: managerHref(PHANTOM_X), label: 'Download' },
   { mod: UNIT_RESTRICTIONS, href: managerHref(UNIT_RESTRICTIONS), label: 'Download' },
   { mod: BALANCE_PATCH, href: managerHref(BALANCE_PATCH), label: 'Download' },

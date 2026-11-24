@@ -251,7 +251,8 @@ test('gameplay mods page sets up each mode and shows the map', async ({ page, re
   await expect(page.locator('.mod-entry')).toHaveCount(4);
   await expect(page.locator('#ZoneControl .mod-entry-head .dl-btn')).toHaveAttribute(
     'href',
-    /ZoneControl-[\d.]+\/ZoneControl-[\d.]+-WithMap\.zip$/,
+    // Mod-only while 0.5.2 has no -WithMap.zip; see zoneControlHref.
+    /ZoneControl-[\d.]+\/ZoneControl-[\d.]+-(WithMap|ModManager)\.zip$/,
   );
   await expect(page.locator('#PhantomX .mod-entry-head .dl-btn')).toHaveAttribute(
     'href',

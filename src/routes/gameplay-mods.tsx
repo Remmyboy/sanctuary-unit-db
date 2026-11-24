@@ -110,8 +110,6 @@ function GameplayModsPage() {
               <code>SanctuaryMods\UnitRestrictions\</code>
               <br />
               <code>SanctuaryMods\BalancePatch\</code>
-              <br />
-              <code>Sanctuary_Data\Maps\Zone_Control_for_FAF_8P_V2\</code> (the map)
             </p>
           </div>
 
@@ -184,8 +182,13 @@ function ZoneControlGuide() {
         </h4>
         <ol className="gm-steps">
           <li>
-            Extract the zip into your <code>engine</code> folder. It holds the mod and its map, and lands both
-            where the game looks for them. It needs Mod Manager 0.17.0 or later, for every player.
+            Extract the zip into your <code>engine</code> folder. It needs Mod Manager 0.17.1 or later, for
+            every player.
+            <span className="hint">
+              {' '}
+              For now this is the mod alone. The November game update moved where maps go, and the converted
+              map hasn&rsquo;t been checked against it yet, so a download with the map will follow.
+            </span>
           </li>
           <li>
             Host a lobby and pick the map <strong>{ZONE_CONTROL_MAP}</strong>.
