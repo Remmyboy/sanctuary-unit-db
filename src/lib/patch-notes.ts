@@ -18,6 +18,22 @@ export interface PatchNote {
 }
 
 export const PATCH_NOTES: Record<number, PatchNote> = {
+  26880003: {
+    // The mods hadn't named this one yet; this is the bundleVersion in the
+    // build's own globalgamemanagers.
+    version: '0.0.1.22.1',
+    title: 'Air transports, naval goes live',
+    notes: [
+      'Air transports: T1 and T2 transports for every faction (Courier, Stork, Shuttle; Envoy, Pelican, Conveyer) are modelled and turn twice as fast, and T3 air factories add a T3 transport (Emissary, Albatross, Haulier). Nearly every land unit is now tagged as transportable.',
+      'Naval is signed off: submarines, destroyers, battleships, naval factories and torpedo launchers move from in progress to in game, and Chosen get a new T2 submarine.',
+      'Torpedo launchers are armed for the first time (120 damage at 35 range at T1, 180 at 40 at T2), and submarines and T3 subs get sonar.',
+      'T2 destroyers swap their cannon for a short pulse beam (160 damage every second at 27 range, was 200 every 3 s at 55). The Dreadnought’s main gun fires far faster at much shorter range (112.5 every 1.5 s at 50, was 583 every 10 s at 140), and the EDA and Guardian battleships gain an 80-range gun.',
+      'T2 bombers (Typhoon, Kingfisher, Barometer) actually drop bombs now: 300 damage each, every 4 s.',
+      'T4 rework: the EDA Centaur costs more (5,295 alloy, 52,950 energy), has 35k health (was 55k) and moves slower, but outranges everything at 70 with 5,000-damage shots. The Ares and the Guardian T4 move faster; the Guardian one gains health and hits almost twice as hard.',
+      'Economy: shields cost twice as much energy to run at T2 and 60% more at T3, T2 air factories take longer to build, the Prophet costs twice the energy, and the Crucible costs and takes twice as long. Engineers build from one unit further away.',
+      'The Gladius hovers instead of riding tracks. T1 interceptors fire slower shells, and the Guardian one trades its fast single shots for slow splash every 5 s.',
+    ],
+  },
   25856019: {
     version: '0.0.1.21.1',
     title: 'Anti-air pass, submarines, new flight model',

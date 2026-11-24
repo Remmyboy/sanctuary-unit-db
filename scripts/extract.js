@@ -338,8 +338,31 @@ function scanUnitModels(gameDir) {
     }
 
     for (const file of files) scanForIds(file, pattern, found);
+
+    // The November 2026 patch split the packs into Addressables-style bundles,
+    // one folder per unit: Gamedata/<game>/<platform>/Units/<tpId>/LOD<n>/.
+    // Bundles are compressed, so the ids no longer show in the bytes; the
+    // folder holding a LOD bundle is the signal instead.
+    if (fs.existsSync(packs)) scanLodFolders(packs, found);
   }
   return found;
+}
+
+function scanLodFolders(dir, found) {
+  const unitId = /^u[ecgw][lans]\d{4}$/;
+  const lod = /^LOD\d+$/i;
+  let entries;
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return;
+  }
+  const subdirs = entries.filter((e) => e.isDirectory());
+  if (unitId.test(path.basename(dir)) && subdirs.some((e) => lod.test(e.name))) {
+    found.add(path.basename(dir));
+    return;
+  }
+  for (const e of subdirs) scanLodFolders(path.join(dir, e.name), found);
 }
 
 // Read in chunks: these files run from ~100 MB to well over a gigabyte, past

@@ -104,9 +104,13 @@ export function steamBuild(gameDir) {
 //
 // Unit data comes from `engine`; art is taken from `prototype`, the only place
 // it exists. Set SANCTUARY_TREE=prototype to read the older data instead.
+//
+// The November 2026 patch moved the engine tree up to engine/lua (engine/LJ/lua
+// is left holding only AI logs) and dropped the prototype build. Each tree
+// lists its paths newest first, so older installs still resolve.
 const TREES = {
-  engine: path.join('engine', 'LJ', 'lua'),
-  prototype: path.join('prototype', 'RuntimeContent', 'Lua'),
+  engine: [path.join('engine', 'lua'), path.join('engine', 'LJ', 'lua')],
+  prototype: [path.join('prototype', 'RuntimeContent', 'Lua')],
 };
 
 export function contentRoot(gameDir) {
@@ -117,14 +121,16 @@ export function contentRoot(gameDir) {
 
   const order = requested ? [requested] : ['engine', 'prototype'];
   for (const tree of order) {
-    const root = path.join(gameDir, TREES[tree]);
-    if (fs.existsSync(path.join(root, 'common', 'units', 'unitsTemplates'))) {
-      return { root, tree };
+    for (const rel of TREES[tree]) {
+      const root = path.join(gameDir, rel);
+      if (fs.existsSync(path.join(root, 'common', 'units', 'unitsTemplates'))) {
+        return { root, tree };
+      }
     }
   }
 
   throw new Error(
     `No unit templates found under ${gameDir}. Looked in:\n` +
-      order.map((t) => `  ${path.join(gameDir, TREES[t])}`).join('\n'),
+      order.flatMap((t) => TREES[t].map((rel) => `  ${path.join(gameDir, rel)}`)).join('\n'),
   );
 }
