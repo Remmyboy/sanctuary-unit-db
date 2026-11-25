@@ -107,9 +107,11 @@ function BoardPage() {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
 
+  // Filters live in the URL, but changing one is in-page state, not a new page:
+  // keep the scroll position rather than the router's default jump to the top.
   const patch = useCallback(
     (p: Partial<BoardSearch>) =>
-      navigate({ search: (prev: BoardSearch) => ({ ...prev, ...p }), replace: true }),
+      navigate({ search: (prev: BoardSearch) => ({ ...prev, ...p }), replace: true, resetScroll: false }),
     [navigate],
   );
 
@@ -163,6 +165,7 @@ function BoardPage() {
           return { ...prev, compare: ids.length ? ids.join(',') : undefined };
         },
         replace: true,
+        resetScroll: false,
       }),
     [navigate, known],
   );
@@ -203,6 +206,7 @@ function BoardPage() {
     navigate({
       search: { view: search.view, compare: search.compare, balance: search.balance },
       replace: true,
+      resetScroll: false,
     });
 
   return (

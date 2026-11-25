@@ -59,6 +59,7 @@ function ComparePage() {
     navigate({
       search: { units: ids.filter((x) => x !== id).join(',') || undefined, balance },
       replace: true,
+      resetScroll: false,
     });
 
   const { copied, copy } = useCopyFeedback();
@@ -82,7 +83,11 @@ function ComparePage() {
           <BalanceToggle
             on={!!balance}
             onChange={(on) =>
-              navigate({ search: { units: joined, balance: on ? 'remmy' : undefined }, replace: true })
+              navigate({
+                search: { units: joined, balance: on ? 'remmy' : undefined },
+                replace: true,
+                resetScroll: false,
+              })
             }
           />
           {units.length > 0 && (
@@ -96,7 +101,7 @@ function ComparePage() {
       {balance && (
         <BalanceStrip
           meta={loaded.data.meta}
-          onOff={() => navigate({ search: { units: joined }, replace: true })}
+          onOff={() => navigate({ search: { units: joined }, replace: true, resetScroll: false })}
         />
       )}
 

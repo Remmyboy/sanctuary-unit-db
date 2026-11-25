@@ -131,7 +131,9 @@ function CalculatorPage() {
     copied,
     copyLink,
     reset,
-  } = useCalculatorState(loaded, search, (next) => navigate({ search: next, replace: true }));
+  } = useCalculatorState(loaded, search, (next) =>
+    navigate({ search: next, replace: true, resetScroll: false }),
+  );
 
   return (
     <>
