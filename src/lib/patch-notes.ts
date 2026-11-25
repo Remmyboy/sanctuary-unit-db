@@ -18,6 +18,18 @@ export interface PatchNote {
 }
 
 export const PATCH_NOTES: Record<number, PatchNote> = {
+  26907462: {
+    // Two hotfixes landed between extracts (0.0.1.22.2 and 0.0.1.22.3); this
+    // is the bundleVersion in the build's own globalgamemanagers.
+    version: '0.0.1.22.3',
+    title: 'T1 transports, subs hit the seabed',
+    notes: [
+      'Hotfixes 0.0.1.22.2 and 0.0.1.22.3, shown together.',
+      'The T1 air transports join the game for every faction (Courier, Stork, Shuttle), and the Chosen and EDA get their T3 ones (Emissary, Albatross), so every faction now has a transport at each tier.',
+      'Submarines and torpedo launchers can hit targets on the seabed, such as commanders walking underwater.',
+      'The EDA T3 sonar sees 450, up from 150, in line with the Guardian one.',
+    ],
+  },
   26880003: {
     // The mods hadn't named this one yet; this is the bundleVersion in the
     // build's own globalgamemanagers.

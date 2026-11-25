@@ -198,9 +198,9 @@ test('patches page shows the latest patch, picks another, and folds a range', as
 
   await page.goto('/patches');
   await expect(page.getByRole('heading', { name: 'Game patches', level: 1 })).toBeVisible();
-  await expect(page.locator('.pt-patch')).toHaveCount(5);
-  await expect(page.locator('.pt-patch.active')).toContainText('0.0.1.22.1');
-  await expect(page.locator('.pt-row', { hasText: 'Centaur' })).toContainText('health');
+  await expect(page.locator('.pt-patch')).toHaveCount(6);
+  await expect(page.locator('.pt-patch.active')).toContainText('0.0.1.22.3');
+  await expect(page.locator('.pt-row', { hasText: 'Leviathan' })).toContainText('Seabed');
 
   // 0.0.1.21.1 gave the Dart 10% more health.
   await page.locator('.pt-patch', { hasText: '0.0.1.21.1' }).click();
@@ -216,7 +216,7 @@ test('patches page shows the latest patch, picks another, and folds a range', as
 
   // A range folds every patch in it; the filters narrow it.
   await page.getByRole('button', { name: /Everything since/ }).click();
-  await expect(page.locator('.pt-cards li')).toHaveCount(63);
+  await expect(page.locator('.pt-cards li')).toHaveCount(68);
   // Every naval unit entered the game inside the range, so all are new.
   await page.getByRole('button', { name: 'Naval', exact: true }).click();
   await expect(page.locator('.pt-cards li')).toHaveCount(16);
@@ -225,8 +225,8 @@ test('patches page shows the latest patch, picks another, and folds a range', as
 
   // A unit opens in the database.
   await page.goto('/patches');
-  await page.locator('.pt-row a.pt-name', { hasText: 'Dart' }).click();
-  await expect(page.locator('.detail h2')).toHaveText('Dart');
+  await page.locator('.pt-row a.pt-name', { hasText: 'Leviathan' }).click();
+  await expect(page.locator('.detail h2')).toHaveText('Leviathan');
 
   expect(errors).toEqual([]);
 });
